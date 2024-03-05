@@ -1,0 +1,33 @@
+{
+  "name": "d1-rastreio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": {
+    "node": "18"
+  },
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "debbug": "nodemon src/server.ts --inspect",
+    "build": "tsup src",
+    "start": "node dist/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.20",
+    "nodemon": "^3.0.3",
+    "prisma": "^5.9.1",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.2",
+    "fastify": "^4.25.2",
+    "gh": "^1.13.9",
+    "github": "^14.0.0",
+    "nvm": "^0.0.4"
+  },
+  "description": ""
+}
