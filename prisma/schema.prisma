@@ -19,3 +19,60 @@ model AdminUsers {
   password         String
   token            String @default(cuid())
 }
+
+model Venda{
+   id String @id @default(cuid())
+   codigo Int @unique
+   clienteCodigo  Int
+   clienteTipoPessoa  String
+   clienteDocumento String
+   transportadoraCodigo Int
+   dataVenda String
+   entrega Boolean
+   entregaNome String
+   entregaEmail String
+   numeroObjeto String
+   entregaTelefone String
+   entregaLogradouro String
+   entregaLogradouroNumero String
+   entregaLogradouroComplemento String
+   entregaBairro String
+   entregaMunicipioNome String
+   entregaUnidadeFederativa String
+   entregaCEP String
+   observacoes String
+   observacoesLoja String
+   codigoStatus Int
+   descricaoStatus String
+   dataHoraStatus String
+   previsaoEntrega String
+   codigoNotaFiscal String
+   dataEntrega String
+   cancelada Boolean
+   dataEnvio String
+   notaFiscalNumero Int
+   dataColeta String
+   nfe Nfe[]
+}
+
+model Nfe{
+    id String @id @default(cuid())
+    codigo Int
+    codigoVenda Int
+    codigoCliente Int
+    dataEmissao String
+    horaEmissao String
+    horaSaida String
+    nfe Boolean
+    nfce Boolean
+    notaFiscalNumero Int
+    transportadoraCodigo Int
+    transportadoraNome String
+    meioTransporte String
+    numeroObjeto String
+    notaFiscalEletronica String
+    cancelada Boolean
+    motivoCancelamento String
+    venda Venda @relation(fields: [codigoVendaRel], references: [codigo]) 
+    codigoVendaRel Int    
+}
