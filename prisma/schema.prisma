@@ -45,7 +45,7 @@ model Venda{
    codigoStatus Int
    descricaoStatus String
    dataHoraStatus String?
-   previsaoEntrega String
+   previsaoEntrega String?
    codigoNotaFiscal String
    dataEntrega String
    cancelada Boolean
