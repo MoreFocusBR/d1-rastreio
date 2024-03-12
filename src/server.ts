@@ -3,10 +3,16 @@ import { PrismaClient, AdminUsers } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from 'fastify';
 import fastify from "fastify";
 import { JsonArray, JsonConvertible, JsonObject, JsonValue } from '@prisma/client/runtime/library';
+import { notaFiscalRoutes } from './routes/nota-fiscal.routes'
 
 const app = fastify();
 
 const prisma = new PrismaClient();
+
+app.register(notaFiscalRoutes, {
+    prefix: '/nfe'
+});
+
 
 const authToken = "effca82a-7127-45de-9a53-b71fc01a9064";
 
