@@ -40,11 +40,11 @@ model Venda{
    entregaMunicipioNome String
    entregaUnidadeFederativa String
    entregaCEP String
-   observacoes String
-   observacoesLoja String
+   observacoes String?
+   observacoesLoja String?
    codigoStatus Int
    descricaoStatus String
-   dataHoraStatus String
+   dataHoraStatus String?
    previsaoEntrega String
    codigoNotaFiscal String
    dataEntrega String
