@@ -29,7 +29,7 @@ model Venda{
    transportadoraCodigo Int
    dataVenda String
    entrega Boolean
-   entregaNome String
+   entregaNome String?
    entregaEmail String
    numeroObjeto String
    entregaTelefone String
