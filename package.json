@@ -25,11 +25,13 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^5.10.2",
     "@prisma/client": "^5.10.2",
     "fastify": "^4.26.2",
     "gh": "^1.13.9",
     "github": "^14.0.0",
-    "nvm": "^0.0.4"
+    "nvm": "^0.0.4",
+    "pg": "^8.11.3"
   },
   "description": ""
 }
