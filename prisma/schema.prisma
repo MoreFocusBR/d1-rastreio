@@ -24,10 +24,10 @@ model Venda{
    id String @id @default(cuid())
    codigo Int @unique
    clienteCodigo  Int
-   clienteTipoPessoa  String
+   clienteTipoPessoa  String?
    clienteDocumento String
-   transportadoraCodigo Int
-   dataVenda String
+   transportadoraCodigo Int?
+   dataVenda String?
    entrega Boolean
    entregaNome String
    entregaEmail String
