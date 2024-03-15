@@ -119,10 +119,8 @@ app.get("/consomeFilaIntegracaoVendas", async (request, reply) => {
                 headers: postRequest.headers
             });
 
-            const data = await resListaIntegracao.json();
-
-            if (data.success) {
-                return data;
+            if (resListaIntegracao.status == 200) {
+                return resListaIntegracao.json();
             } else {
                 throw new Error("Erro ao obter o lista integração.");
             }
@@ -137,7 +135,9 @@ app.get("/consomeFilaIntegracaoVendas", async (request, reply) => {
 
         if (resListaIntegracao) {
 
-            resListaIntegracao.forEach(async (venda: any) => {
+            const resListaIntegracaoJson = await resListaIntegracao.json();
+
+            resListaIntegracaoJson.forEach(async (venda: any) => {
 
                 try {
 
