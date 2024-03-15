@@ -6,12 +6,12 @@ class NfeUseCase {
     constructor() {
         this.notaFiscalRepository = new nf_repository_1.NotaFiscalRepositoryPrisma();
     }
-    async create({ codigo, codigoVenda }) {
-        const result = await this.notaFiscalRepository.create({ codigo, codigoVenda });
+    async create({ Codigo, CodigoVenda }) {
+        const result = await this.notaFiscalRepository.create({ Codigo, CodigoVenda });
         return result;
     }
-    async get({ codigoVenda }) {
-        const result = await this.notaFiscalRepository.get({ codigoVenda });
+    async get({ CodigoVenda }) {
+        const result = await this.notaFiscalRepository.get({ CodigoVenda });
         return result;
     }
 }

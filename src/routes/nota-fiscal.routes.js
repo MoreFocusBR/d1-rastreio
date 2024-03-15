@@ -5,11 +5,11 @@ const nfe_usecase_1 = require("../usecases/nfe.usecase");
 async function notaFiscalRoutes(fastify) {
     const nfeUseCase = new nfe_usecase_1.NfeUseCase();
     fastify.post('/', (req, reply) => {
-        const { codigo, codigoVenda } = req.body;
+        const { Codigo, CodigoVenda } = req.body;
         try {
             const data = nfeUseCase.create({
-                codigo,
-                codigoVenda,
+                Codigo,
+                CodigoVenda,
             });
             return reply.send(data);
         }
@@ -18,10 +18,10 @@ async function notaFiscalRoutes(fastify) {
         }
     });
     fastify.get('/', (req, reply) => {
-        const { codigoVenda } = req.body;
+        const { CodigoVenda } = req.body;
         try {
             const data = nfeUseCase.get({
-                codigoVenda,
+                CodigoVenda,
             });
             return reply.send(data);
         }

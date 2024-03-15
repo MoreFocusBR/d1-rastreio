@@ -5,12 +5,12 @@ import { NotaFiscal, NotaFiscalCreate, NotaFiscalGet } from "../intefaces/nota-f
 export async function notaFiscalRoutes(fastify: FastifyInstance){
     const nfeUseCase = new NfeUseCase();
     fastify.post< {Body: NotaFiscalCreate} >('/', (req, reply)=>{
-        const {codigo, codigoVenda} = req.body
+        const {Codigo, CodigoVenda} = req.body
 
         try {
             const data  = nfeUseCase.create({
-                codigo,
-                codigoVenda,
+                Codigo,
+                CodigoVenda,
             });
             return reply.send(data);
         } catch (error) {
@@ -18,10 +18,10 @@ export async function notaFiscalRoutes(fastify: FastifyInstance){
         }  
     });
     fastify.get<{Body: NotaFiscalGet}>('/', (req, reply)=> {
-        const {codigoVenda} = req.body
+        const {CodigoVenda} = req.body
         try {
             const data = nfeUseCase.get({
-                codigoVenda,
+                CodigoVenda,
             });
             return reply.send(data);
         } catch (error) {
