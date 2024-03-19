@@ -6,13 +6,13 @@ class NfeUseCase {
         this.notaFiscalRepository = new NotaFiscalRepositoryPrisma()
     }
 
-    async create({codigo, codigoVenda }: NotaFiscalCreate): Promise<NotaFiscal>{
-        const result = await this.notaFiscalRepository.create({codigo, codigoVenda});
+    async create({Codigo, CodigoVenda }: NotaFiscalCreate): Promise<NotaFiscal>{
+        const result = await this.notaFiscalRepository.create({Codigo, CodigoVenda});
         return result;
     }
 
-    async get({codigoVenda }: NotaFiscalGet): Promise<NFE>{
-        const result = await this.notaFiscalRepository.get({codigoVenda});
+    async get({CodigoVenda }: NotaFiscalGet): Promise<NFE>{
+        const result = await this.notaFiscalRepository.get({CodigoVenda});
         return result;
     }
 }   
