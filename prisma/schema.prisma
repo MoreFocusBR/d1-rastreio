@@ -20,59 +20,66 @@ model AdminUsers {
   token            String @default(cuid())
 }
 
-model Venda{
-   id String @id @default(cuid())
-   codigo Int @unique
-   clienteCodigo  Int
-   clienteTipoPessoa  String?
-   clienteDocumento String
-   transportadoraCodigo Int?
-   dataVenda String?
-   entrega Boolean
-   entregaNome String?
-   entregaEmail String
-   numeroObjeto String
-   entregaTelefone String
-   entregaLogradouro String
-   entregaLogradouroNumero String
-   entregaLogradouroComplemento String
-   entregaBairro String
-   entregaMunicipioNome String
-   entregaUnidadeFederativa String
-   entregaCEP String
-   observacoes String?
-   observacoesLoja String?
-   codigoStatus Int
-   descricaoStatus String
-   dataHoraStatus String?
-   previsaoEntrega String?
-   codigoNotaFiscal String
-   dataEntrega String
-   cancelada Boolean
-   dataEnvio String
-   notaFiscalNumero Int
-   dataColeta String
-   nfe Nfe[]
+model Venda {
+   Id String @id @default(cuid())
+   Codigo Int @unique
+   ClienteCodigo  Int
+   ClienteTipoPessoa  String?
+   ClienteDocumento String
+   TransportadoraCodigo Int?
+   DataVenda String?
+   Entrega Boolean
+   EntregaNome String?
+   EntregaEmail String
+   NumeroObjeto String
+   EntregaTelefone String
+   EntregaLogradouro String
+   EntregaLogradouroNumero String
+   EntregaLogradouroComplemento String
+   EntregaBairro String
+   EntregaMunicipioNome String
+   EntregaUnidadeFederativa String
+   EntregaCEP String
+   Observacoes String?
+   ObservacoesLoja String?
+   CodigoStatus Int
+   DescricaoStatus String
+   DataHoraStatus String?
+   PrevisaoEntrega String?
+   CodigoNotaFiscal Int
+   DataEntrega String
+   Cancelada Boolean
+   DataEnvio String
+   NotaFiscalNumero Int
+   DataColeta String
+   Nfe Nfe[]
 }
 
-model Nfe{
-    id String @id @default(cuid())
-    codigo Int
-    codigoVenda Int
-    codigoCliente Int
-    dataEmissao String
-    horaEmissao String
-    horaSaida String
-    nfe Boolean
-    nfce Boolean
-    notaFiscalNumero Int
-    transportadoraCodigo Int
-    transportadoraNome String
-    meioTransporte String
-    numeroObjeto String
-    notaFiscalEletronica String
-    cancelada Boolean
-    motivoCancelamento String
-    venda Venda @relation(fields: [codigoVendaRel], references: [codigo]) 
-    codigoVendaRel Int    
+model Nfe {
+    Id String @id @default(cuid())
+    Codigo Int
+    CodigoVenda Int
+    CodigoCliente Int?
+    DataEmissao String?
+    HoraEmissao String?
+    HoraSaida String?
+    Nfe Boolean?
+    Nfce Boolean?
+    NotaFiscalNumero Int
+    TransportadoraCodigo Int?
+    TransportadoraNome String?
+    MeioTransporte String?
+    NumeroObjeto String?
+    NotaFiscalEletronica String
+    Cancelada Boolean
+    MotivoCancelamento String?
+    Venda Venda @relation(fields: [CodigoVendaRel], references: [Codigo]) 
+    CodigoVendaRel Int    
+}
+
+model VendaFilaIntegracao {
+  Id String @id @default(cuid())
+  Codigo Int
+  ClienteDocumento String
+  Payload String @db.Text
 }
