@@ -488,7 +488,7 @@ app.get("/cargaVendas", async (request, reply) => {
               });
 
               // Se não existir, insere o novo registro
-              if (!existingRecord) {
+              if (!existingRecord && Cancelada != true) {
                 console.log("Inserindo Venda: " + Codigo);
 
                 await prisma.venda.create({
@@ -578,6 +578,7 @@ app.get("/vendas", async (request, reply) => {
       CodigoNotaFiscal: {
         gt: 0,
       },
+      Cancelada: false,
     },
   });
 
@@ -748,6 +749,224 @@ app.get("/cargaNfes", async (request, reply) => {
 });
 
 // Endpoint: Cadastra Nfe das Vendas últimos 3 meses  - fim
+
+// Busca Vendas por CPF - inicio
+
+app.get("/ultimaVendaCPFCNPJ", async (request, reply) => {
+  interface RouteParams {
+    cpfcnpj: string;
+  }
+
+  const params = request.query as RouteParams;
+  const cpfcnpj = params.cpfcnpj;
+
+  const ultimaVendaCPFCNPJ = await prisma.venda.findFirst({
+    select: {
+      Codigo: true,
+      ClienteDocumento: true,
+      DataVenda: true,
+      DescricaoStatus: true,
+      CodigoNotaFiscal: true,
+      CodigoStatus: true,
+      TransportadoraCodigo: true,
+      Cancelada: true,
+      DataHoraStatus: true,
+      Entrega: true,
+      NumeroObjeto: true,
+      Observacoes: true,
+    },
+    where: {
+      ClienteDocumento: cpfcnpj,
+    },
+    orderBy: {
+      Codigo: "desc",
+    },
+  });
+
+  if (ultimaVendaCPFCNPJ) {
+    return reply.status(200).send({ ultimaVendaCPFCNPJ });
+  } else {
+    const retorno = `{ "cpfcnpj": "${cpfcnpj}", "Codigo": "", "Mensagem": "Nenhuma venda localizada." }`;
+    return reply.status(200).send(JSON.parse(retorno));
+  }
+});
+
+// Busca Vendas por CPF - fim
+
+// Busca  Venda - inicio
+
+app.get("/buscaVenda", async (request, reply) => {
+  interface RouteParams {
+    codigo: number;
+    cpfcnpj: string;
+  }
+
+  const params = request.query as RouteParams;
+  const codigo = params.codigo;
+  const cpfcnpj = params.cpfcnpj;
+
+  const buscaVenda = await prisma.venda.findFirst({
+    where: {
+      Codigo: +codigo,
+    },
+    orderBy: {
+      Codigo: "desc",
+    },
+  });
+
+  if (buscaVenda) {
+    return reply.status(200).send({ buscaVenda });
+  } else {
+    const retorno = `{ "cpfcnpj": "${cpfcnpj}", "Codigo": "", "Mensagem": "Nenhuma venda localizada." }`;
+    return reply.status(200).send(JSON.parse(retorno));
+  }
+});
+
+// Busca  Venda - fim
+
+// Busca  Nfe - inicio
+
+app.get("/buscaNfe", async (request, reply) => {
+  interface RouteParams {
+    codigonfe: number;
+    cpfcnpj: string;
+  }
+
+  const params = request.query as RouteParams;
+  const codigonfe = params.codigonfe;
+  const cpfcnpj = params.cpfcnpj;
+
+  const buscaNfe = await prisma.nfe.findFirst({
+    where: {
+      Codigo: +codigonfe,
+    },
+    orderBy: {
+      Codigo: "desc",
+    },
+  });
+
+  if (buscaNfe) {
+    return reply.status(200).send({ buscaNfe });
+  } else {
+    const retorno = `{ "cpfcnpj": "${cpfcnpj}", "Codigo": "", "Mensagem": "Nenhuma venda localizada." }`;
+    return reply.status(200).send(JSON.parse(retorno));
+  }
+});
+
+// Busca  Nfe - fim
+
+// Endpoint: retorna Status última venda cpfcnpf - início
+
+app.get("/retornaStatusEntrega", async (request, reply) => {
+  interface RouteParams {
+    codigo: number;
+    cpfcnpj: string;
+  }
+
+  const params = request.query as RouteParams;
+  const codigo = params.codigo;
+  const cpfcnpj = params.cpfcnpj;
+
+  // consome cada item da Lista Vendas - inicio
+
+  async function mainBuscaOcorrencias(cpfcnpj: string) {
+    const request = require("superagent");
+    const resUltimaVendaCpfCnpj = await request
+      .get(`localhost:3334/ultimaVendaCPFCNPJ?cpfcnpj=${cpfcnpj}`)
+      .set("Accept", "application/json");
+
+    if (resUltimaVendaCpfCnpj) {
+      const resUltimaVendaCpfCnpjJson = await JSON.parse(
+        resUltimaVendaCpfCnpj.text
+      );
+
+      try {
+        const request = require("superagent");
+        const resNfe = await request
+          .get(
+            `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.CodigoNotaFiscal}`
+          )
+          .set("Accept", "application/json")
+          .set("accept-encoding", "gzip")
+          .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+
+        const NfeJson = JSON.parse(resNfe.text);
+
+        interface Nfe {
+          Codigo: number;
+          CodigoVenda: number;
+          CodigoCliente: number;
+          DataEmissao: string;
+          HoraEmissao: string;
+          HoraSaida: string;
+          Nfe: boolean;
+          Nfce: boolean;
+          NotaFiscalNumero: number;
+          TransportadoraCodigo: number;
+          TransportadoraNome: string;
+          MeioTransporte: string;
+          NumeroObjeto: string;
+          NotaFiscalEletronica: string;
+          Cancelada: boolean;
+          MotivoCancelamento: string;
+        }
+
+        const NotaFIscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
+        const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome;
+
+        // Se não existir, insere o novo registro
+        if (TransportadoraNome == "BAUER" && NotaFIscalEletronica > 0) {
+          console.log(
+            "Transportadora Bauer. Buscando ocorrências na DataFrete. Nfe: " +
+              NotaFIscalEletronica
+          );
+
+          const resDataFrete = await request
+            .get(
+              `https://services.v1.datafreteapi.com/ocorrencias/nota-fiscal?nota_fiscal[chave]=${NotaFIscalEletronica}`
+            )
+            .set("Accept", "application/json")
+            .set("accept-encoding", "gzip")
+            .set("x-api-key", "26a98a8a-b58b-45fb-bcdb-c8b96d0f7c38");
+
+          const resDataFreteJson = JSON.parse(resDataFrete.text);
+
+          console.log(resDataFreteJson.data);
+
+          return resDataFreteJson.data;
+        } else {
+          // Realiza o UPDATE da venda já cadastrada
+          console.log("Não é BAUER: " + NotaFIscalEletronica);
+
+          return "Não é BAUER: " + NotaFIscalEletronica;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      console.error("Erro ao obter o lista de vendas.");
+      return;
+    }
+  }
+
+  const retornoEndpoint = mainBuscaOcorrencias(cpfcnpj);
+
+  // Função para formatar os dados conforme o desejado
+  function formatarDados(dados: any[]) {
+    return dados.map((item) => ({
+      "Data/Hora da ocorrência": `${item.dt_ocorrencia} ${item.hora_ocorrencia}`,
+      Observação: item.observacao,
+      Descrição: item.desc_ocorrencia,
+    }));
+  }
+
+  // Aplicando a formatação aos dados originais
+  const dadosFormatados = formatarDados(await retornoEndpoint);
+
+  return reply.status(200).send(await dadosFormatados);
+});
+
+// Endpoint: retorna Status última venda cpfcnpf - fim
 
 // Endpoint: Admin - fim
 
