@@ -883,64 +883,68 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
       );
 
       try {
-        const request = require("superagent");
-        const resNfe = await request
-          .get(
-            `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.CodigoNotaFiscal}`
-          )
-          .set("Accept", "application/json")
-          .set("accept-encoding", "gzip")
-          .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
-
-        const NfeJson = JSON.parse(resNfe.text);
-
-        interface Nfe {
-          Codigo: number;
-          CodigoVenda: number;
-          CodigoCliente: number;
-          DataEmissao: string;
-          HoraEmissao: string;
-          HoraSaida: string;
-          Nfe: boolean;
-          Nfce: boolean;
-          NotaFiscalNumero: number;
-          TransportadoraCodigo: number;
-          TransportadoraNome: string;
-          MeioTransporte: string;
-          NumeroObjeto: string;
-          NotaFiscalEletronica: string;
-          Cancelada: boolean;
-          MotivoCancelamento: string;
-        }
-
-        const NotaFIscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
-        const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome;
-
-        // Se não existir, insere o novo registro
-        if (TransportadoraNome == "BAUER" && NotaFIscalEletronica > 0) {
-          console.log(
-            "Transportadora Bauer. Buscando ocorrências na DataFrete. Nfe: " +
-              NotaFIscalEletronica
-          );
-
-          const resDataFrete = await request
+        if (resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.CodigoNotaFiscal) {
+          const request = require("superagent");
+          const resNfe = await request
             .get(
-              `https://services.v1.datafreteapi.com/ocorrencias/nota-fiscal?nota_fiscal[chave]=${NotaFIscalEletronica}`
+              `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.CodigoNotaFiscal}`
             )
             .set("Accept", "application/json")
             .set("accept-encoding", "gzip")
-            .set("x-api-key", "26a98a8a-b58b-45fb-bcdb-c8b96d0f7c38");
+            .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
 
-          const resDataFreteJson = JSON.parse(resDataFrete.text);
+          const NfeJson = JSON.parse(resNfe.text);
 
-          console.log(resDataFreteJson.data);
+          interface Nfe {
+            Codigo: number;
+            CodigoVenda: number;
+            CodigoCliente: number;
+            DataEmissao: string;
+            HoraEmissao: string;
+            HoraSaida: string;
+            Nfe: boolean;
+            Nfce: boolean;
+            NotaFiscalNumero: number;
+            TransportadoraCodigo: number;
+            TransportadoraNome: string;
+            MeioTransporte: string;
+            NumeroObjeto: string;
+            NotaFiscalEletronica: string;
+            Cancelada: boolean;
+            MotivoCancelamento: string;
+          }
 
-          return resDataFreteJson.data;
+          const NotaFIscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
+          const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome;
+
+          // Se não existir, insere o novo registro
+          if (TransportadoraNome == "BAUER" && NotaFIscalEletronica > 0) {
+            console.log(
+              "Transportadora Bauer. Buscando ocorrências na DataFrete. Nfe: " +
+                NotaFIscalEletronica
+            );
+
+            const resDataFrete = await request
+              .get(
+                `https://services.v1.datafreteapi.com/ocorrencias/nota-fiscal?nota_fiscal[chave]=${NotaFIscalEletronica}`
+              )
+              .set("Accept", "application/json")
+              .set("accept-encoding", "gzip")
+              .set("x-api-key", "26a98a8a-b58b-45fb-bcdb-c8b96d0f7c38");
+
+            const resDataFreteJson = JSON.parse(resDataFrete.text);
+
+            console.log(resDataFreteJson.data);
+
+            return resDataFreteJson.data;
+          } else {
+            // Realiza o UPDATE da venda já cadastrada
+            console.log("Não é BAUER: " + NotaFIscalEletronica);
+
+            return "Não é BAUER: " + NotaFIscalEletronica;
+          }
         } else {
-          // Realiza o UPDATE da venda já cadastrada
-          console.log("Não é BAUER: " + NotaFIscalEletronica);
-
-          return "Não é BAUER: " + NotaFIscalEletronica;
+          return "Nota fiscal não localizada."
         }
       } catch (error) {
         console.error(error);
