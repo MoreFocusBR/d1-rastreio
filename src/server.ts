@@ -867,7 +867,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
 
   const params = request.query as RouteParams;
   const codigo = params.codigo;
-  const cpfcnpj = params.cpfcnpj;
+  const cpfcnpj =  (params.cpfcnpj).replace(/[^\d]+/g, "").replace(/[^0-9]/g, "");
 
   // consome cada item da Lista Vendas - inicio
 
@@ -883,11 +883,22 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
       );
 
       try {
-        if (!resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ == null) {
-          const request = require("superagent");
-          const resNfe = await request
+        if (resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ != null) {
+          const requestVenda = require("superagent");
+          const resVenda = await requestVenda
             .get(
-              `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.CodigoNotaFiscal}`
+              `http://cloud01.alternativa.net.br:2086/root/venda/${resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.Codigo}`
+            )
+            .set("Accept", "application/json")
+            .set("accept-encoding", "gzip")
+            .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+          //.set("Limit", "1");
+
+          
+          const requestNF = require("superagent");
+          const resNfe = await requestNF
+            .get(
+              `http://cloud01.alternativa.net.br:2086/root/nfe/${ await resVenda.body.venda[0].CodigoNotaFiscal}`
             )
             .set("Accept", "application/json")
             .set("accept-encoding", "gzip")
@@ -918,7 +929,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
           const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome;
 
           // Se não existir, insere o novo registro
-          if (TransportadoraNome == "BAUER" && NotaFIscalEletronica > 0) {
+          if (NotaFIscalEletronica > 0) {
             console.log(
               "Transportadora Bauer. Buscando ocorrências na DataFrete. Nfe: " +
                 NotaFIscalEletronica
@@ -939,9 +950,9 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             return resDataFreteJson.data;
           } else {
             // Realiza o UPDATE da venda já cadastrada
-            console.log("Não é BAUER: " + NotaFIscalEletronica);
+            console.log("Nota fiscal não localizada.");
 
-            return "Não é BAUER: " + NotaFIscalEletronica;
+            return "Nota fiscal não localizada.";
           }
         } else {
           return "Nota fiscal não localizada.";
@@ -950,7 +961,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
         console.error(error);
       }
     } else {
-      console.error("Erro ao obter o lista de vendas.");
+      console.error("Nota fiscal não localizada.");
       return;
     }
   }
