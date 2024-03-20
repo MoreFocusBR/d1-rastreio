@@ -965,7 +965,25 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   // Aplicando a formatação aos dados originais
   const dadosFormatados = formatarDados(await retornoEndpoint);
 
-  return reply.status(200).send(await dadosFormatados);
+  let resultadoFormatado = "";
+
+  dadosFormatados.forEach((item, index) => {
+    const {
+      "Data/Hora da ocorrência": dataHora,
+      Observação: observacao,
+      Descrição: descricao,
+    } = item;
+
+    resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
+    resultadoFormatado += `Observação: ${observacao}\n`;
+    resultadoFormatado += `Descrição: ${descricao}\n`;
+
+    if (index !== dadosFormatados.length - 1) {
+      resultadoFormatado += "------\n";
+    }
+  });
+
+  return reply.status(200).send(await resultadoFormatado);
 });
 
 // Endpoint: retorna Status última venda cpfcnpf - fim
