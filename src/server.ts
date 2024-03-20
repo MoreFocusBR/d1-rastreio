@@ -20,6 +20,8 @@ app.register(notaFiscalRoutes, {
 
 const authToken = "effca82a-7127-45de-9a53-b71fc01a9064";
 
+const API_URL = "https://d1-rastreio.onrender.com";
+
 // Endpoint: Admin - inicio
 
 // Endpoint: authUsers - inicio
@@ -609,7 +611,7 @@ app.get("/cargaNfes", async (request, reply) => {
     const request = require("superagent");
     const resListaVendas = await request
       .get(
-        `localhost:3334/vendas?codigoInicial=${codigoInicial}&codigoFinal=${codigoFinal}`
+        `${API_URL}/vendas?codigoInicial=${codigoInicial}&codigoFinal=${codigoFinal}`
       )
       .set("Accept", "application/json");
 
@@ -872,7 +874,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   async function mainBuscaOcorrencias(cpfcnpj: string) {
     const request = require("superagent");
     const resUltimaVendaCpfCnpj = await request
-      .get(`localhost:3334/ultimaVendaCPFCNPJ?cpfcnpj=${cpfcnpj}`)
+      .get(`${API_URL}/ultimaVendaCPFCNPJ?cpfcnpj=${cpfcnpj}`)
       .set("Accept", "application/json");
 
     if (resUltimaVendaCpfCnpj) {
