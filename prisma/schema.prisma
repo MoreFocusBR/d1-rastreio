@@ -53,6 +53,7 @@ model Venda {
    NotaFiscalNumero Int
    DataColeta String
    Nfe Nfe[]
+
 }
 
 model Nfe {
