@@ -883,7 +883,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
       );
 
       try {
-        if (resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.CodigoNotaFiscal) {
+        if (!resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ == null) {
           const request = require("superagent");
           const resNfe = await request
             .get(
@@ -944,7 +944,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             return "Não é BAUER: " + NotaFIscalEletronica;
           }
         } else {
-          return "Nota fiscal não localizada."
+          return "Nota fiscal não localizada.";
         }
       } catch (error) {
         console.error(error);
@@ -957,35 +957,39 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
 
   const retornoEndpoint = mainBuscaOcorrencias(cpfcnpj);
 
-  // Função para formatar os dados conforme o desejado
-  function formatarDados(dados: any[]) {
-    return dados.map((item) => ({
-      "Data/Hora da ocorrência": `${item.dt_ocorrencia} ${item.hora_ocorrencia}`,
-      Observação: item.observacao,
-      Descrição: item.desc_ocorrencia,
-    }));
-  }
-
-  // Aplicando a formatação aos dados originais
-  const dadosFormatados = formatarDados(await retornoEndpoint);
-
   let resultadoFormatado = "";
 
-  dadosFormatados.forEach((item, index) => {
-    const {
-      "Data/Hora da ocorrência": dataHora,
-      Observação: observacao,
-      Descrição: descricao,
-    } = item;
-
-    resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
-    resultadoFormatado += `Observação: ${observacao}\n`;
-    resultadoFormatado += `Descrição: ${descricao}\n`;
-
-    if (index !== dadosFormatados.length - 1) {
-      resultadoFormatado += "------\n";
+  if ((await retornoEndpoint) != "Nota fiscal não localizada.") {
+    // Função para formatar os dados conforme o desejado
+    function formatarDados(dados: any[]) {
+      return dados.map((item) => ({
+        "Data/Hora da ocorrência": `${item.dt_ocorrencia} ${item.hora_ocorrencia}`,
+        Observação: item.observacao,
+        Descrição: item.desc_ocorrencia,
+      }));
     }
-  });
+
+    // Aplicando a formatação aos dados originais
+    const dadosFormatados = formatarDados(await retornoEndpoint);
+
+    dadosFormatados.forEach((item, index) => {
+      const {
+        "Data/Hora da ocorrência": dataHora,
+        Observação: observacao,
+        Descrição: descricao,
+      } = item;
+
+      resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
+      resultadoFormatado += `Observação: ${observacao}\n`;
+      resultadoFormatado += `Descrição: ${descricao}\n`;
+
+      if (index !== dadosFormatados.length - 1) {
+        resultadoFormatado += "------\n";
+      }
+    });
+  } else {
+    resultadoFormatado = "Nota fiscal não localizada.";
+  }
 
   return reply.status(200).send(await resultadoFormatado);
 });
