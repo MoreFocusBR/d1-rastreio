@@ -900,20 +900,19 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
       .get(`${API_URL}/ultimaVendaCPFCNPJ?cpfcnpj=${cpfcnpj}`)
       .set("Accept", "application/json");
 
-    if (resUltimaVendaCpfCnpj) {
+    if (await resUltimaVendaCpfCnpj) {
       const resUltimaVendaCpfCnpjJson = await JSON.parse(
         resUltimaVendaCpfCnpj.text
       );
 
       try {
         if (
-          (await resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ
-            .CodigoNotaFiscal) > 0
+          (await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0
         ) {
           const requestNF = require("superagent");
           const resNfe = await requestNF
             .get(
-              `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.ultimaVendaCPFCNPJ.CodigoNotaFiscal}`
+              `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.venda[0].CodigoNotaFiscal}`
             )
             .set("Accept", "application/json")
             .set("accept-encoding", "gzip")
