@@ -84,3 +84,12 @@ model VendaFilaIntegracao {
   ClienteDocumento String
   Payload String @db.Text
 }
+
+model RastreioChat {
+    Id            String @id @default(cuid())
+    Titulo        String
+    Etapa         Int
+    Prioridade    Int
+    Mensagem      String
+    Ativo         Boolean
+}
