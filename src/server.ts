@@ -1291,7 +1291,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
     resultadoFormatado += retornoEndpointString;
   }
 
-  return reply.status(200).send(await resultadoFormatado);
+  return reply.status(200).send(JSON.parse( JSON.stringify(`{ "ocorrencias": "${ resultadoFormatado}" }`)));
 });
 
 // Endpoint: retorna Status última venda cpfcnpf - fim
