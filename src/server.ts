@@ -1204,11 +1204,16 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
 
             // Busca Ocorrências BERTOLINI
             else if (TransportadoraNome == "BERTOLINI") {
+              return `Ocorrências não localizadas.`;
             }
 
             // Busca Ocorrências CORREIOS
             else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
               return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
+            }
+
+            else {
+              return `Ocorrências não localizadas.`;
             }
 
             /*const resDataFrete = await request
