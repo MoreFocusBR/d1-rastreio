@@ -25,6 +25,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "@fastify/static": "github:fastify/fastify-static",
     "@prisma/adapter-pg": "^5.10.2",
     "@prisma/client": "^5.10.2",
     "fastify": "^4.26.2",

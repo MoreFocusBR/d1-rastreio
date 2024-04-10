@@ -1,0 +1,68 @@
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<div style="width: 100%" class="shop-tracking-status">
+  <div
+    class="col-sm-12"
+    style="
+      width: 100%;
+      float: left;
+      background-color: transparent;
+      border: none;
+      display: block;
+    "
+  >
+    <div class="col-md-12">
+      <img
+        src="https://www.datafrete.com.br/d1fitness/d1fitness.png"
+        class="col-md-2"
+        id="imgLogo"
+      />
+      <script
+        src="https://unpkg.com/blip-chat-widget"
+        type="text/javascript"
+      ></script>
+
+      <script>
+        (function () {
+          window.onload = function () {
+            blipClient = new BlipChat()
+
+              .withAppKey("ZDFyYXN0cmVpbzo4Yjk3MGEzZi1lOTY1LTQ5ZmYtYmViYi00NzMxZjRjZDI3N2E=")
+
+              .withEventHandler(BlipChat.LOAD_EVENT, function () {
+                blipClient.sendMessage({
+                  type: "text/plain",
+
+                  content: "Olá gostaria de rastrear minha compra",
+                });
+              })
+
+              .withButton({ color: "#2CC3D5", icon: "" })
+
+              .withCustomCommonUrl("https://chat.blip.ai/");
+
+            blipClient.build();
+
+            window.setTimeout(function () {
+              blipClient.toogleChat();
+            }, 500);
+
+            const blipChatButton = document.getElementById(
+              "blip-chat-open-iframe"
+            );
+
+            blipChatButton.classList.remove("opened");
+          };
+        })();
+      </script>
+    </div>
+  </div>
+</div>
+<script
+  type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+></script>
+<script
+  type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"
+></script>
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>

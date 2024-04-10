@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import fastifyStatic from "@fastify/static";
 import { PrismaClient, Venda } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import fastify from "fastify";
@@ -12,6 +13,14 @@ import { notaFiscalRoutes } from "./routes/nota-fiscal.routes";
 
 const app = fastify();
 
+const path = require("node:path");
+
+app.register(require("@fastify/static"), {
+  root: path.join(__dirname, ""),
+  prefix: "/", // optional: default '/'
+  constraints: {}, // optional: default {}
+});
+
 const prisma = new PrismaClient();
 
 app.register(notaFiscalRoutes, {
@@ -20,7 +29,7 @@ app.register(notaFiscalRoutes, {
 
 const authToken = "effca82a-7127-45de-9a53-b71fc01a9064";
 
-const API_URL = "https://d1-rastreio.onrender.com";
+const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onrender.com   http://localhost:3334
 
 // Endpoint: Admin - inicio
 
@@ -810,7 +819,7 @@ app.get("/ultimaVendaCPFCNPJ", async (request, reply) => {
     const vendaAtualizada = await pegaVenda(ultimaVendaCPFCNPJ.Codigo);
     return reply.status(200).send(await JSON.parse("" + vendaAtualizada));
   } else {
-    const retorno = `{ "cpfcnpj": "${cpfcnpj}", "Codigo": "", "Mensagem": "Nenhuma venda localizada." }`;
+    const retorno = `{ "venda": [ { "NotaFiscalNumero": "0" } ] }`;
     return reply.status(200).send(JSON.parse(retorno));
   }
 });
@@ -841,7 +850,7 @@ app.get("/buscaVenda", async (request, reply) => {
   if (buscaVenda) {
     return reply.status(200).send({ buscaVenda });
   } else {
-    const retorno = `{ "cpfcnpj": "${cpfcnpj}", "Codigo": "", "Mensagem": "Nenhuma venda localizada." }`;
+    const retorno = `{ "venda": [ { "NotaFiscalNumero": "0" } ] }`;
     return reply.status(200).send(JSON.parse(retorno));
   }
 });
@@ -872,7 +881,7 @@ app.get("/buscaNfe", async (request, reply) => {
   if (buscaNfe) {
     return reply.status(200).send({ buscaNfe });
   } else {
-    const retorno = `{ "cpfcnpj": "${cpfcnpj}", "Codigo": "", "Mensagem": "Nenhuma venda localizada." }`;
+    const retorno = `{ "venda": [ { "NotaFiscalNumero": "0" } ] }`;
     return reply.status(200).send(JSON.parse(retorno));
   }
 });
@@ -906,9 +915,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
       );
 
       try {
-        if (
-          (await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0
-        ) {
+        if ((await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0) {
           const requestNF = require("superagent");
           const resNfe = await requestNF
             .get(
@@ -1141,7 +1148,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             else if (TransportadoraNome == "JAMEF") {
               const payloadJAMEF000000 = {
                 username: "d1fitness",
-                password: "d1fitness@188"
+                password: "d1fitness@188",
               };
               const payloadJAMEF0000 = JSON.stringify(payloadJAMEF000000);
 
@@ -1150,21 +1157,16 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
                 .set("Content-Type", "application/json")
                 .send(payloadJAMEF0000);
 
-              
-
               const JAMEFlogin = JSON.parse(resJAMEF00.text);
-
-              
 
               const ChaveAcessoJAMEF = JAMEFlogin.access_token;
 
               const payloadJAMEF00 = {
-                
                 documentoResponsavelPagamento: "52544047000110",
                 documentoDestinatario: `${cpfcnpj}`,
                 numeroNotaFiscal: `${NotaFiscalNumero}`,
                 numeroSerieNotaFiscal: "",
-                codigoFilialOrigem: ""
+                codigoFilialOrigem: "",
               };
               const payloadJAMEF = JSON.stringify(payloadJAMEF00);
 
@@ -1177,19 +1179,43 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
 
               const JAMEFocorrenciasJson = JSON.parse(resJAMEF.text);
 
-              if (JAMEFocorrenciasJson && JAMEFocorrenciasJson.conhecimentos[0].historico) {
+              if (
+                JAMEFocorrenciasJson &&
+                JAMEFocorrenciasJson.conhecimentos[0].historico
+              ) {
                 JAMEFocorrenciasJson.conhecimentos[0].historico.forEach(
                   (
-                    row: { statusRastreamento: string; dataAtualizacao: string; numeroManifesto: string; ufOrigem: string; municipioOrigem: string; ufDestino: string; municipioDestino: string; codigoOcorrencia: string },
+                    row: {
+                      statusRastreamento: string;
+                      dataAtualizacao: string;
+                      numeroManifesto: string;
+                      ufOrigem: string;
+                      municipioOrigem: string;
+                      ufDestino: string;
+                      municipioDestino: string;
+                      codigoOcorrencia: string;
+                    },
                     index: number
                   ) => {
-                    const { statusRastreamento, dataAtualizacao, numeroManifesto, ufOrigem, municipioOrigem, ufDestino, municipioDestino, codigoOcorrencia } = row;
+                    const {
+                      statusRastreamento,
+                      dataAtualizacao,
+                      numeroManifesto,
+                      ufOrigem,
+                      municipioOrigem,
+                      ufDestino,
+                      municipioDestino,
+                      codigoOcorrencia,
+                    } = row;
 
                     resultadoFormatado += `Data/Hora da ocorrência: ${dataAtualizacao}\n`;
                     resultadoFormatado += `Observação: \n`;
                     resultadoFormatado += `Descrição: ${statusRastreamento}\n`;
 
-                    if (index !== JAMEFocorrenciasJson.conhecimentos[0].historico.length - 1) {
+                    if (
+                      index !==
+                      JAMEFocorrenciasJson.conhecimentos[0].historico.length - 1
+                    ) {
                       resultadoFormatado += "------\n";
                     }
                   }
@@ -1210,9 +1236,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             // Busca Ocorrências CORREIOS
             else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
               return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
-            }
-
-            else {
+            } else {
               return `Ocorrências não localizadas.`;
             }
 
@@ -1290,16 +1314,22 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
     } else {
       resultadoFormatado = "Nota fiscal não localizada.";
     }
-  } else if (TransportadoraVenda == "MANNTRANSPORTES" || TransportadoraVenda == "MOVVI" || TransportadoraVenda == "JAMEF") {
+  } else if (
+    TransportadoraVenda == "MANNTRANSPORTES" ||
+    TransportadoraVenda == "MOVVI" ||
+    TransportadoraVenda == "JAMEF"
+  ) {
     // Mantem formato já pronto
   } else {
     resultadoFormatado += retornoEndpointString;
   }
 
-  return reply.status(200).send(JSON.parse( JSON.stringify(`{ "ocorrencias": "${ resultadoFormatado}" }`)));
+  return reply
+    .status(200)
+    .send(
+      JSON.parse(JSON.stringify(`{ "ocorrencias": "${resultadoFormatado}" }`))
+    );
 });
-
-
 
 app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   interface RouteParams {
@@ -1326,9 +1356,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
       );
 
       try {
-        if (
-          (await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0
-        ) {
+        if ((await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0) {
           const requestNF = require("superagent");
           const resNfe = await requestNF
             .get(
@@ -1561,7 +1589,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
             else if (TransportadoraNome == "JAMEF") {
               const payloadJAMEF000000 = {
                 username: "d1fitness",
-                password: "d1fitness@188"
+                password: "d1fitness@188",
               };
               const payloadJAMEF0000 = JSON.stringify(payloadJAMEF000000);
 
@@ -1570,21 +1598,16 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
                 .set("Content-Type", "application/json")
                 .send(payloadJAMEF0000);
 
-              
-
               const JAMEFlogin = JSON.parse(resJAMEF00.text);
-
-              
 
               const ChaveAcessoJAMEF = JAMEFlogin.access_token;
 
               const payloadJAMEF00 = {
-                
                 documentoResponsavelPagamento: "52544047000110",
                 documentoDestinatario: `${cpfcnpj}`,
                 numeroNotaFiscal: `${NotaFiscalNumero}`,
                 numeroSerieNotaFiscal: "",
-                codigoFilialOrigem: ""
+                codigoFilialOrigem: "",
               };
               const payloadJAMEF = JSON.stringify(payloadJAMEF00);
 
@@ -1597,19 +1620,43 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
               const JAMEFocorrenciasJson = JSON.parse(resJAMEF.text);
 
-              if (JAMEFocorrenciasJson && JAMEFocorrenciasJson.conhecimentos[0].historico) {
+              if (
+                JAMEFocorrenciasJson &&
+                JAMEFocorrenciasJson.conhecimentos[0].historico
+              ) {
                 JAMEFocorrenciasJson.conhecimentos[0].historico.forEach(
                   (
-                    row: { statusRastreamento: string; dataAtualizacao: string; numeroManifesto: string; ufOrigem: string; municipioOrigem: string; ufDestino: string; municipioDestino: string; codigoOcorrencia: string },
+                    row: {
+                      statusRastreamento: string;
+                      dataAtualizacao: string;
+                      numeroManifesto: string;
+                      ufOrigem: string;
+                      municipioOrigem: string;
+                      ufDestino: string;
+                      municipioDestino: string;
+                      codigoOcorrencia: string;
+                    },
                     index: number
                   ) => {
-                    const { statusRastreamento, dataAtualizacao, numeroManifesto, ufOrigem, municipioOrigem, ufDestino, municipioDestino, codigoOcorrencia } = row;
+                    const {
+                      statusRastreamento,
+                      dataAtualizacao,
+                      numeroManifesto,
+                      ufOrigem,
+                      municipioOrigem,
+                      ufDestino,
+                      municipioDestino,
+                      codigoOcorrencia,
+                    } = row;
 
                     resultadoFormatado += `Data/Hora da ocorrência: ${dataAtualizacao}\n`;
                     resultadoFormatado += `Observação: \n`;
                     resultadoFormatado += `Descrição: ${statusRastreamento}\n`;
 
-                    if (index !== JAMEFocorrenciasJson.conhecimentos[0].historico.length - 1) {
+                    if (
+                      index !==
+                      JAMEFocorrenciasJson.conhecimentos[0].historico.length - 1
+                    ) {
                       resultadoFormatado += "------\n";
                     }
                   }
@@ -1630,9 +1677,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
             // Busca Ocorrências CORREIOS
             else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
               return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
-            }
-
-            else {
+            } else {
               return `Ocorrências não localizadas.`;
             }
 
@@ -1710,13 +1755,17 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
     } else {
       resultadoFormatado = "Nota fiscal não localizada.";
     }
-  } else if (TransportadoraVenda == "MANNTRANSPORTES" || TransportadoraVenda == "MOVVI" || TransportadoraVenda == "JAMEF") {
+  } else if (
+    TransportadoraVenda == "MANNTRANSPORTES" ||
+    TransportadoraVenda == "MOVVI" ||
+    TransportadoraVenda == "JAMEF"
+  ) {
     // Mantem formato já pronto
   } else {
     resultadoFormatado += retornoEndpointString;
   }
 
-  return reply.status(200).send( resultadoFormatado );
+  return reply.status(200).send(resultadoFormatado);
 });
 
 // Endpoint: retorna Status última venda cpfcnpf - fim
@@ -1747,6 +1796,12 @@ app.get("/rastreioChat", async (request, reply) => {
 });
 
 // Busca  RastreioChat - fim
+
+// Exibe HTML - inicio
+
+app.get("/webchat", async (request, reply) => {
+  return reply.status(200).sendFile("rastreio-site-chat.html");
+});
 
 // Endpoint: Admin - fim
 
