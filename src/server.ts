@@ -1299,6 +1299,426 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   return reply.status(200).send(JSON.parse( JSON.stringify(`{ "ocorrencias": "${ resultadoFormatado}" }`)));
 });
 
+
+
+app.get("/retornaStatusEntregaBlip", async (request, reply) => {
+  interface RouteParams {
+    codigo: number;
+    cpfcnpj: string;
+  }
+
+  const params = request.query as RouteParams;
+  const codigo = params.codigo;
+  const cpfcnpj = params.cpfcnpj.replace(/[^\d]+/g, "").replace(/[^0-9]/g, "");
+  let TransportadoraVenda = "";
+
+  // consome cada item da Lista Vendas - inicio
+
+  async function mainBuscaOcorrencias(cpfcnpj: string) {
+    const request = require("superagent");
+    const resUltimaVendaCpfCnpj = await request
+      .get(`${API_URL}/ultimaVendaCPFCNPJ?cpfcnpj=${cpfcnpj}`)
+      .set("Accept", "application/json");
+
+    if (await resUltimaVendaCpfCnpj) {
+      const resUltimaVendaCpfCnpjJson = await JSON.parse(
+        resUltimaVendaCpfCnpj.text
+      );
+
+      try {
+        if (
+          (await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0
+        ) {
+          const requestNF = require("superagent");
+          const resNfe = await requestNF
+            .get(
+              `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.venda[0].CodigoNotaFiscal}`
+            )
+            .set("Accept", "application/json")
+            .set("accept-encoding", "gzip")
+            .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+
+          const NfeJson = JSON.parse(resNfe.text);
+
+          interface Nfe {
+            Codigo: number;
+            CodigoVenda: number;
+            CodigoCliente: number;
+            DataEmissao: string;
+            HoraEmissao: string;
+            HoraSaida: string;
+            Nfe: boolean;
+            Nfce: boolean;
+            NotaFiscalNumero: number;
+            TransportadoraCodigo: number;
+            TransportadoraNome: string;
+            MeioTransporte: string;
+            NumeroObjeto: string;
+            NotaFiscalEletronica: string;
+            Cancelada: boolean;
+            MotivoCancelamento: string;
+          }
+
+          const NotaFIscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
+          const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.trim();
+          // Atualiza TransportadoraVenda para utilizar fora desse nó
+          TransportadoraVenda = TransportadoraNome;
+
+          const NotaFiscalNumero = NfeJson.nfe[0].NotaFiscalNumero;
+          const NotaFiscalObjeto = NfeJson.nfe[0].NumeroObjeto;
+
+          // Se não existir, insere o novo registro
+          if (NotaFIscalEletronica > 0) {
+            console.log(
+              `Transportadora ${TransportadoraNome}. Buscando ocorrências da Nfe: ` +
+                NotaFIscalEletronica
+            );
+
+            // Busca Ocorrências Bauer, Aceville, Gobor, TPL
+
+            if (
+              TransportadoraNome == "BAUER" ||
+              TransportadoraNome == "ACEVILLE" ||
+              TransportadoraNome == "GOBOR" ||
+              TransportadoraNome == "TPL"
+            ) {
+              return `Utilize o código DANFE ${NotaFIscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
+            }
+
+            // Busca Ocorrências MODULAR
+            else if (TransportadoraNome == "MODULAR") {
+              // 1. Busca lista de notas na Modular pra pegar o CONTROLE para passo 2
+              const requestMODULAR = require("superagent");
+              const resMODULAR = await requestMODULAR
+                .post(`https://www.modular.com.br/rastrear/listar`)
+                .set("Content-Type", "multipart/form-data")
+                .field("dados[nfs]", `${NotaFiscalNumero}`)
+                .field("dados[cnpjcpf]", `${cpfcnpj}`)
+                .set("Accept", "application/json");
+
+              const MODULARJson = JSON.parse(resMODULAR.text);
+
+              // 2. Pega lista ocorrências do da NF[0]
+
+              const requestMODULARocorrencias = require("superagent");
+              const resMODULARocorrencias = await requestMODULARocorrencias
+                .post(`https://www.modular.com.br/rastrear/listar/posicao`)
+                .set("Content-Type", "multipart/form-data")
+                .field(
+                  "dados[filialorigem]",
+                  `${MODULARJson.notas[0].Filial_Origem}`
+                )
+                .field("dados[controle]", `${MODULARJson.notas[0].Controle}`)
+                .set("Accept", "application/json");
+
+              const MODULARocorrenciasJson = JSON.parse(
+                resMODULARocorrencias.text
+              );
+
+              function formatarDados(dados: any[]) {
+                return dados.map((item) => ({
+                  dataHora: item.Data_Inicial,
+                  observacao: item.Localizacao,
+                  descricao: item.Descricao,
+                }));
+              }
+
+              // Aplicando a formatação aos dados originais
+              const dadosFormatados = formatarDados(
+                MODULARocorrenciasJson.posicao
+              );
+
+              return JSON.stringify(dadosFormatados);
+            }
+
+            // Busca Ocorrências MANN
+            else if (TransportadoraVenda == "MANNTRANSPORTES") {
+              const payloadMANN000000 = {
+                user: {
+                  name: "Chief",
+                  filial: "117",
+                  filialNum: 27,
+                  auth: {
+                    value:
+                      "SSM13wnMAzrqbri/I3z0B6cw82xSDT+iBQSvDOxK8IrEv58kZnLDoO13DWnmPZEP8q7QO6AqQ0XEDW+7noeS60yyjQQlvKGU",
+                    expire: "0001-01-01T00:00:00",
+                  },
+                },
+                app: {
+                  application: 2,
+                  version: "1.000.000",
+                },
+                parameters: [`${cpfcnpj}`, 0],
+              };
+              const payloadMANN0000 = JSON.stringify(payloadMANN000000);
+
+              const resMANN00 = await request
+                .post("https://api.transmann.com.br/old/site/track/Simple")
+                .set("Accept", "application/json")
+                .set("Content-Type", "application/json")
+                .send(payloadMANN0000);
+
+              interface Report {
+                columns: string[];
+                rows: string[][];
+              }
+
+              const MANNocorrenciasJson00 = JSON.parse(resMANN00.text);
+
+              const MANNocorrenciasJson001: Report =
+                MANNocorrenciasJson00.report;
+
+              const ChaveAcessoMANN = MANNocorrenciasJson001.rows[0][10];
+
+              const payloadMANN00 = {
+                user: {
+                  name: "Chief",
+                  filial: "117",
+                  filialNum: 27,
+                  auth: {
+                    value:
+                      "SSM13wnMAzrqbri/I3z0B6cw82xSDT+iBQSvDOxK8IrEv58kZnLDoO13DWnmPZEP8q7QO6AqQ0XEDW+7noeS60yyjQQlvKGU",
+                    expire: "0001-01-01T00:00:00",
+                  },
+                },
+                app: { application: 2, version: "1.000.000" },
+                parameters: [`${ChaveAcessoMANN}`],
+              };
+              const payloadMANN = JSON.stringify(payloadMANN00);
+
+              const resMANN = await request
+                .post("https://api.transmann.com.br/old/site/track/NFhistory")
+                .set("Accept", "application/json")
+                .set("Content-Type", "application/json")
+                .send(payloadMANN);
+
+              const MANNocorrenciasJson = JSON.parse(resMANN.text);
+
+              interface ReportRow {
+                columns: string[];
+                rows: [string[], string[]];
+              }
+
+              const report: ReportRow = MANNocorrenciasJson.report;
+
+              if (report && report.rows) {
+                report.rows.forEach((row, index) => {
+                  const [dataHora, descricao] = row;
+
+                  resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
+                  resultadoFormatado += `Observação: \n`;
+                  resultadoFormatado += `Descrição: ${descricao}\n`;
+
+                  if (index !== report.rows.length - 1) {
+                    resultadoFormatado += "------\n";
+                  }
+                });
+              } else {
+                resultadoFormatado +=
+                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+              }
+
+              return JSON.stringify(resultadoFormatado);
+            }
+
+            // Busca Ocorrências MOVVI
+            else if (TransportadoraNome == "MOVVI") {
+              const resMOVVI = await request
+                .get(
+                  `https://apimovvi.meridionalcargas.com.br/api/rastrear-carga/${cpfcnpj}/${NotaFiscalNumero}`
+                )
+                .set("Accept", "application/json")
+                .set("Content-Type", "application/json");
+
+              const MOVVIocorrenciasJson = JSON.parse(resMOVVI.text);
+
+              if (MOVVIocorrenciasJson && MOVVIocorrenciasJson.ocorrencias) {
+                MOVVIocorrenciasJson.ocorrencias.forEach(
+                  (
+                    row: { descricao: string; unidade: string; data: string },
+                    index: number
+                  ) => {
+                    const { descricao, unidade, data } = row;
+
+                    resultadoFormatado += `Data/Hora da ocorrência: ${data}\n`;
+                    resultadoFormatado += `Observação: Unidade ${unidade}\n`;
+                    resultadoFormatado += `Descrição: ${descricao}\n`;
+
+                    if (index !== MOVVIocorrenciasJson.ocorrencias.length - 1) {
+                      resultadoFormatado += "------\n";
+                    }
+                  }
+                );
+              } else {
+                resultadoFormatado +=
+                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+              }
+
+              return JSON.stringify(resultadoFormatado);
+            }
+
+            // Busca Ocorrências JAMEF
+            else if (TransportadoraNome == "JAMEF") {
+              const payloadJAMEF000000 = {
+                username: "d1fitness",
+                password: "d1fitness@188"
+              };
+              const payloadJAMEF0000 = JSON.stringify(payloadJAMEF000000);
+
+              const resJAMEF00 = await request
+                .post("https://api.jamef.com.br/login")
+                .set("Content-Type", "application/json")
+                .send(payloadJAMEF0000);
+
+              
+
+              const JAMEFlogin = JSON.parse(resJAMEF00.text);
+
+              
+
+              const ChaveAcessoJAMEF = JAMEFlogin.access_token;
+
+              const payloadJAMEF00 = {
+                
+                documentoResponsavelPagamento: "52544047000110",
+                documentoDestinatario: `${cpfcnpj}`,
+                numeroNotaFiscal: `${NotaFiscalNumero}`,
+                numeroSerieNotaFiscal: "",
+                codigoFilialOrigem: ""
+              };
+              const payloadJAMEF = JSON.stringify(payloadJAMEF00);
+
+              const resJAMEF = await request
+                .post("https://api.jamef.com.br/rastreamento/ver")
+                .set("Accept", "application/json")
+                .set("Content-Type", "application/json")
+                .set("Authorization", `Bearer ${ChaveAcessoJAMEF}`)
+                .send(payloadJAMEF);
+
+              const JAMEFocorrenciasJson = JSON.parse(resJAMEF.text);
+
+              if (JAMEFocorrenciasJson && JAMEFocorrenciasJson.conhecimentos[0].historico) {
+                JAMEFocorrenciasJson.conhecimentos[0].historico.forEach(
+                  (
+                    row: { statusRastreamento: string; dataAtualizacao: string; numeroManifesto: string; ufOrigem: string; municipioOrigem: string; ufDestino: string; municipioDestino: string; codigoOcorrencia: string },
+                    index: number
+                  ) => {
+                    const { statusRastreamento, dataAtualizacao, numeroManifesto, ufOrigem, municipioOrigem, ufDestino, municipioDestino, codigoOcorrencia } = row;
+
+                    resultadoFormatado += `Data/Hora da ocorrência: ${dataAtualizacao}\n`;
+                    resultadoFormatado += `Observação: \n`;
+                    resultadoFormatado += `Descrição: ${statusRastreamento}\n`;
+
+                    if (index !== JAMEFocorrenciasJson.conhecimentos[0].historico.length - 1) {
+                      resultadoFormatado += "------\n";
+                    }
+                  }
+                );
+              } else {
+                resultadoFormatado +=
+                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+              }
+
+              return JSON.stringify(resultadoFormatado);
+            }
+
+            // Busca Ocorrências BERTOLINI
+            else if (TransportadoraNome == "BERTOLINI") {
+              return `Ocorrências não localizadas.`;
+            }
+
+            // Busca Ocorrências CORREIOS
+            else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
+              return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
+            }
+
+            else {
+              return `Ocorrências não localizadas.`;
+            }
+
+            /*const resDataFrete = await request
+              .get(
+                `https://services.v1.datafreteapi.com/ocorrencias/nota-fiscal?nota_fiscal[chave]=${NotaFIscalEletronica}`
+              )
+              .set("Accept", "application/json")
+              .set("accept-encoding", "gzip")
+              .set("x-api-key", "26a98a8a-b58b-45fb-bcdb-c8b96d0f7c38");
+
+            const resDataFreteJson = JSON.parse(resDataFrete.text); */
+
+            // console.log(resDataFreteJson.data);
+
+            // return resDataFreteJson.data;
+          } else {
+            // Realiza o UPDATE da venda já cadastrada
+            console.log("Nota fiscal não localizada.");
+
+            return "Nota fiscal não localizada.";
+          }
+        } else {
+          return "Nota fiscal não localizada.";
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    } else {
+      console.error("Nota fiscal não localizada.");
+      return;
+    }
+  }
+
+  let resultadoFormatado = "";
+
+  interface Ocorrencia {
+    dataHora: string;
+    observacao: string;
+    descricao: string;
+  }
+
+  const retornoEndpointString = await mainBuscaOcorrencias(cpfcnpj);
+
+  async function formatarOcorrencias() {
+    const retornoEndpoint: Ocorrencia[] = await JSON.parse(
+      "" + retornoEndpointString
+    ); // Suponha que obterRetornoEndpoint() é a função que retorna a promessa
+
+    let resultadoFormatado = "";
+
+    retornoEndpoint.forEach((item, index) => {
+      const { dataHora, observacao, descricao } = item;
+
+      resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
+      resultadoFormatado += `Observação: ${observacao}\n`;
+      resultadoFormatado += `Descrição: ${descricao}\n`;
+
+      if (index !== retornoEndpoint.length - 1) {
+        resultadoFormatado += "------\n";
+      }
+    });
+
+    return resultadoFormatado;
+  }
+
+  if (TransportadoraVenda == "MODULAR") {
+    // Chamada da função para formatar as ocorrências
+    const retornoEndpointFormatado = formatarOcorrencias();
+
+    if ((await retornoEndpointFormatado) != "Nota fiscal não localizada.") {
+      // Função para formatar os dados conforme o desejado
+
+      resultadoFormatado += await retornoEndpointFormatado;
+    } else {
+      resultadoFormatado = "Nota fiscal não localizada.";
+    }
+  } else if (TransportadoraVenda == "MANNTRANSPORTES" || TransportadoraVenda == "MOVVI" || TransportadoraVenda == "JAMEF") {
+    // Mantem formato já pronto
+  } else {
+    resultadoFormatado += retornoEndpointString;
+  }
+
+  return reply.status(200).send( resultadoFormatado );
+});
+
 // Endpoint: retorna Status última venda cpfcnpf - fim
 
 // Busca  RastreioChat - inicio - DEPRACADE
