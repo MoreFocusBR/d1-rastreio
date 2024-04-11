@@ -33,6 +33,13 @@ const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onren
 
 // Endpoint: Admin - inicio
 
+// Endpoint: ping - inicio
+app.post("/ping", async (request, reply) => {
+  return reply.status(200).send("API ativa.");
+});
+
+// Endpoint: ping - fim
+
 // Endpoint: authUsers - inicio
 app.post("/login", async (request, reply) => {
   const authTokenHeader = request.headers.token;
