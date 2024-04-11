@@ -1781,7 +1781,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
 // Endpoint: retorna Status última venda cpfcnpf - fim
 
-// Busca  RastreioChat - inicio - DEPRACADE
+// Busca  RastreioChat - inicio - DEPRACATED
 
 app.get("/rastreioChat", async (request, reply) => {
   interface RouteParams {
@@ -1804,6 +1804,36 @@ app.get("/rastreioChat", async (request, reply) => {
     const retorno = `{ "Nenhuma mensagem cadastrada." }`;
     return reply.status(200).send(JSON.parse(retorno));
   }
+});
+
+// Busca  RastreioChat - fim
+
+// Webhook Whats Rastreio - inicio - DEPRACATED
+
+app.post("/whatsrastreio", async (request, reply) => {
+  // const bodyWhats = `{"phone": "5548988038546","message": "Agente: ${data.respondent.respondent_utms.utm_source}\nProtocolo: ${data.respondent.respondent_utms.utm_campaign}\nNota: ${data.respondent.answers["Avalie o atendimento que você recebeu no Whatsapp!"]}\nSugestão: ${data.respondent.answers["Quer deixar alguma sugestão pra gente?"]} "}`;
+  const bodyWhats = `{"phone": "5551991508579","message": "Teste 03"}`;
+
+  const sendWhats = {
+    url: "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Client-Token": "F622e76b1e3f64e2a9517d207fe923fa5S",
+    },
+    body: bodyWhats,
+  };
+
+  const res3 = await fetch(sendWhats.url, {
+    method: sendWhats.method,
+    headers: sendWhats.headers,
+    body: sendWhats.body,
+  });
+
+  console.log(request.body);
+
+  return reply.status(200).send( await JSON.parse(JSON.stringify(request.body)) );
+  
 });
 
 // Busca  RastreioChat - fim
