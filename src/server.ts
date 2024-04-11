@@ -144,220 +144,224 @@ app.get("/consomeFilaIntegracaoVendas", async (request, reply) => {
     if (resListaIntegracao) {
       const resListaIntegracaoJson = await JSON.parse(resListaIntegracao);
 
-      resListaIntegracaoJson.venda.forEach(async (venda: any) => {
-        try {
-          interface Venda {
-            Codigo: number;
-            ClienteCodigo: number;
-            ClienteTipoPessoa: string;
-            ClienteDocumento: string;
-            TransportadoraCodigo: number;
-            DataVenda: string;
-            Entrega: boolean;
-            EntregaNome: string;
-            EntregaEmail: string;
-            NumeroObjeto: string;
-            EntregaTelefone: string;
-            EntregaLogradouro: string;
-            EntregaLogradouroNumero: string;
-            EntregaLogradouroComplemento: string;
-            EntregaBairro: string;
-            EntregaMunicipioNome: string;
-            EntregaUnidadeFederativa: string;
-            EntregaCEP: string;
-            Observacoes: string;
-            ObservacoesLoja: string;
-            CodigoStatus: number;
-            DescricaoStatus: string;
-            DataHoraStatus: string;
-            PrevisaoEntrega: string;
-            CodigoNotaFiscal: number;
-            DataEntrega: string;
-            Cancelada: boolean;
-            DataEnvio: string;
-            NotaFiscalNumero: number;
-            DataColeta: string;
-          }
-
-          const {
-            Codigo,
-            ClienteCodigo,
-            ClienteTipoPessoa,
-            ClienteDocumento,
-            TransportadoraCodigo,
-            DataVenda,
-            Entrega,
-            EntregaNome,
-            EntregaEmail,
-            NumeroObjeto,
-            EntregaTelefone,
-            EntregaLogradouro,
-            EntregaLogradouroNumero,
-            EntregaLogradouroComplemento,
-            EntregaBairro,
-            EntregaMunicipioNome,
-            EntregaUnidadeFederativa,
-            EntregaCEP,
-            Observacoes,
-            ObservacoesLoja,
-            CodigoStatus,
-            DescricaoStatus,
-            DataHoraStatus,
-            PrevisaoEntrega,
-            CodigoNotaFiscal,
-            DataEntrega,
-            Cancelada,
-            DataEnvio,
-            NotaFiscalNumero,
-            DataColeta,
-          } = venda as Venda;
-
-          const existingRecord = await prisma.venda.findFirst({
-            where: {
-              Codigo: Codigo,
-            },
-          });
-
-          // Se não existir, insere o novo registro
-          if (!existingRecord) {
-            console.log("Inserindo Venda: " + Codigo);
-
-            await prisma.venda.create({
-              data: {
-                Codigo,
-                ClienteCodigo,
-                ClienteTipoPessoa,
-                ClienteDocumento,
-                TransportadoraCodigo,
-                DataVenda,
-                Entrega,
-                EntregaNome,
-                EntregaEmail,
-                NumeroObjeto,
-                EntregaTelefone,
-                EntregaLogradouro,
-                EntregaLogradouroNumero,
-                EntregaLogradouroComplemento,
-                EntregaBairro,
-                EntregaMunicipioNome,
-                EntregaUnidadeFederativa,
-                EntregaCEP,
-                Observacoes,
-                ObservacoesLoja,
-                CodigoStatus,
-                DescricaoStatus,
-                DataHoraStatus,
-                PrevisaoEntrega,
-                CodigoNotaFiscal,
-                DataEntrega,
-                Cancelada,
-                DataEnvio,
-                NotaFiscalNumero,
-                DataColeta,
-              },
-            });
-
-            // insere o payload completo em VendaFilaIntegração como backup
-
-            let resCreate = await prisma.vendaFilaIntegracao.create({
-              data: {
-                Codigo,
-                ClienteDocumento,
-                Payload: JSON.stringify(venda),
-              },
-            });
-
-            if ((await resCreate.Id) != null) {
-              // retira da fila de integração do ERP
-              const request = require("superagent");
-              const resListaIntegracao = await request
-                .post(
-                  "http://cloud01.alternativa.net.br:2086/root/venda/" +
-                    resCreate.Codigo +
-                    "/ok"
-                )
-                .set("Accept", "application/json")
-                .set("accept-encoding", "gzip")
-                .set(
-                  "X-Token",
-                  "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs"
-                );
-
-              resListaIntegracao.body;
+      if (resListaIntegracaoJson.venda.length > 0) {
+        resListaIntegracaoJson.venda.forEach(async (venda: any) => {
+          try {
+            interface Venda {
+              Codigo: number;
+              ClienteCodigo: number;
+              ClienteTipoPessoa: string;
+              ClienteDocumento: string;
+              TransportadoraCodigo: number;
+              DataVenda: string;
+              Entrega: boolean;
+              EntregaNome: string;
+              EntregaEmail: string;
+              NumeroObjeto: string;
+              EntregaTelefone: string;
+              EntregaLogradouro: string;
+              EntregaLogradouroNumero: string;
+              EntregaLogradouroComplemento: string;
+              EntregaBairro: string;
+              EntregaMunicipioNome: string;
+              EntregaUnidadeFederativa: string;
+              EntregaCEP: string;
+              Observacoes: string;
+              ObservacoesLoja: string;
+              CodigoStatus: number;
+              DescricaoStatus: string;
+              DataHoraStatus: string;
+              PrevisaoEntrega: string;
+              CodigoNotaFiscal: number;
+              DataEntrega: string;
+              Cancelada: boolean;
+              DataEnvio: string;
+              NotaFiscalNumero: number;
+              DataColeta: string;
             }
-          } else {
-            // Realiza o UPDATE da venda já cadastrada
-            console.log("Realizando Update da Venda: " + Codigo);
 
-            await prisma.venda.update({
-              where: { Codigo: Codigo },
-              data: {
-                Codigo,
-                ClienteCodigo,
-                ClienteTipoPessoa,
-                ClienteDocumento,
-                TransportadoraCodigo,
-                DataVenda,
-                Entrega,
-                EntregaNome,
-                EntregaEmail,
-                NumeroObjeto,
-                EntregaTelefone,
-                EntregaLogradouro,
-                EntregaLogradouroNumero,
-                EntregaLogradouroComplemento,
-                EntregaBairro,
-                EntregaMunicipioNome,
-                EntregaUnidadeFederativa,
-                EntregaCEP,
-                Observacoes,
-                ObservacoesLoja,
-                CodigoStatus,
-                DescricaoStatus,
-                DataHoraStatus,
-                PrevisaoEntrega,
-                CodigoNotaFiscal,
-                DataEntrega,
-                Cancelada,
-                DataEnvio,
-                NotaFiscalNumero,
-                DataColeta,
+            const {
+              Codigo,
+              ClienteCodigo,
+              ClienteTipoPessoa,
+              ClienteDocumento,
+              TransportadoraCodigo,
+              DataVenda,
+              Entrega,
+              EntregaNome,
+              EntregaEmail,
+              NumeroObjeto,
+              EntregaTelefone,
+              EntregaLogradouro,
+              EntregaLogradouroNumero,
+              EntregaLogradouroComplemento,
+              EntregaBairro,
+              EntregaMunicipioNome,
+              EntregaUnidadeFederativa,
+              EntregaCEP,
+              Observacoes,
+              ObservacoesLoja,
+              CodigoStatus,
+              DescricaoStatus,
+              DataHoraStatus,
+              PrevisaoEntrega,
+              CodigoNotaFiscal,
+              DataEntrega,
+              Cancelada,
+              DataEnvio,
+              NotaFiscalNumero,
+              DataColeta,
+            } = venda as Venda;
+
+            const existingRecord = await prisma.venda.findFirst({
+              where: {
+                Codigo: Codigo,
               },
             });
 
-            // insere o payload completo em VendaFilaIntegração como backup
+            // Se não existir, insere o novo registro
+            if (!existingRecord) {
+              console.log("Inserindo Venda: " + Codigo);
 
-            let resCreate = await prisma.vendaFilaIntegracao.create({
-              data: {
-                Codigo,
-                ClienteDocumento,
-                Payload: JSON.stringify(venda),
-              },
-            });
+              await prisma.venda.create({
+                data: {
+                  Codigo,
+                  ClienteCodigo,
+                  ClienteTipoPessoa,
+                  ClienteDocumento,
+                  TransportadoraCodigo,
+                  DataVenda,
+                  Entrega,
+                  EntregaNome,
+                  EntregaEmail,
+                  NumeroObjeto,
+                  EntregaTelefone,
+                  EntregaLogradouro,
+                  EntregaLogradouroNumero,
+                  EntregaLogradouroComplemento,
+                  EntregaBairro,
+                  EntregaMunicipioNome,
+                  EntregaUnidadeFederativa,
+                  EntregaCEP,
+                  Observacoes,
+                  ObservacoesLoja,
+                  CodigoStatus,
+                  DescricaoStatus,
+                  DataHoraStatus,
+                  PrevisaoEntrega,
+                  CodigoNotaFiscal,
+                  DataEntrega,
+                  Cancelada,
+                  DataEnvio,
+                  NotaFiscalNumero,
+                  DataColeta,
+                },
+              });
 
-            if ((await resCreate.Id) != null) {
-              // retira da fila de integração do ERP
-              const request = require("superagent");
-              const resListaIntegracao = await request
-                .post(
-                  "http://cloud01.alternativa.net.br:2086/root/venda/" +
-                    resCreate.Codigo +
-                    "/ok"
-                )
-                .set("Accept", "application/json")
-                .set("accept-encoding", "gzip")
-                .set(
-                  "X-Token",
-                  "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs"
-                );
+              // insere o payload completo em VendaFilaIntegração como backup
 
-              resListaIntegracao.body;
+              let resCreate = await prisma.vendaFilaIntegracao.create({
+                data: {
+                  Codigo,
+                  ClienteDocumento,
+                  Payload: JSON.stringify(venda),
+                },
+              });
+
+              if ((await resCreate.Id) != null) {
+                // retira da fila de integração do ERP
+                const request = require("superagent");
+                const resListaIntegracao = await request
+                  .post(
+                    "http://cloud01.alternativa.net.br:2086/root/venda/" +
+                      resCreate.Codigo +
+                      "/ok"
+                  )
+                  .set("Accept", "application/json")
+                  .set("accept-encoding", "gzip")
+                  .set(
+                    "X-Token",
+                    "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs"
+                  );
+
+                resListaIntegracao.body;
+              }
+            } else {
+              // Realiza o UPDATE da venda já cadastrada
+              console.log("Realizando Update da Venda: " + Codigo);
+
+              await prisma.venda.update({
+                where: { Codigo: Codigo },
+                data: {
+                  Codigo,
+                  ClienteCodigo,
+                  ClienteTipoPessoa,
+                  ClienteDocumento,
+                  TransportadoraCodigo,
+                  DataVenda,
+                  Entrega,
+                  EntregaNome,
+                  EntregaEmail,
+                  NumeroObjeto,
+                  EntregaTelefone,
+                  EntregaLogradouro,
+                  EntregaLogradouroNumero,
+                  EntregaLogradouroComplemento,
+                  EntregaBairro,
+                  EntregaMunicipioNome,
+                  EntregaUnidadeFederativa,
+                  EntregaCEP,
+                  Observacoes,
+                  ObservacoesLoja,
+                  CodigoStatus,
+                  DescricaoStatus,
+                  DataHoraStatus,
+                  PrevisaoEntrega,
+                  CodigoNotaFiscal,
+                  DataEntrega,
+                  Cancelada,
+                  DataEnvio,
+                  NotaFiscalNumero,
+                  DataColeta,
+                },
+              });
+
+              // insere o payload completo em VendaFilaIntegração como backup
+
+              let resCreate = await prisma.vendaFilaIntegracao.create({
+                data: {
+                  Codigo,
+                  ClienteDocumento,
+                  Payload: JSON.stringify(venda),
+                },
+              });
+
+              if ((await resCreate.Id) != null) {
+                // retira da fila de integração do ERP
+                const request = require("superagent");
+                const resListaIntegracao = await request
+                  .post(
+                    "http://cloud01.alternativa.net.br:2086/root/venda/" +
+                      resCreate.Codigo +
+                      "/ok"
+                  )
+                  .set("Accept", "application/json")
+                  .set("accept-encoding", "gzip")
+                  .set(
+                    "X-Token",
+                    "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs"
+                  );
+
+                resListaIntegracao.body;
+              }
             }
+          } catch (error) {
+            console.error(error);
           }
-        } catch (error) {
-          console.error(error);
-        }
-      });
+        });
+      } else {
+        console.log("Lista de vendas vazia.");
+      }
     } else {
       console.error("Erro ao obter o lista integração.");
       return;
