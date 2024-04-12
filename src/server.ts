@@ -1897,11 +1897,11 @@ app.post("/whatsrastreio", async (request, reply) => {
       .status(200)
       .send(await JSON.parse(JSON.stringify(request.body)));
   } else {
-    console.error(error);
+    console.log("Nao entrou no if");
 
     return reply
-      .status(500)
-      .send(error);
+      .status(200)
+      .send("500 NOK");
   }
 });
 
