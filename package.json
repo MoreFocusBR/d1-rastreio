@@ -28,6 +28,7 @@
     "@fastify/static": "github:fastify/fastify-static",
     "@prisma/adapter-pg": "^5.10.2",
     "@prisma/client": "^5.10.2",
+    "@types/uuid": "^9.0.8",
     "fastify": "^4.26.2",
     "gh": "^1.13.9",
     "github": "^14.0.0",

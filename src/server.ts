@@ -3,6 +3,7 @@ import fastifyStatic from "@fastify/static";
 import { PrismaClient, Venda } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import fastify from "fastify";
+import { v4 as uuid } from 'uuid';
 import {
   JsonArray,
   JsonConvertible,
@@ -10,6 +11,7 @@ import {
   JsonValue,
 } from "@prisma/client/runtime/library";
 import { notaFiscalRoutes } from "./routes/nota-fiscal.routes";
+import { error } from "console";
 
 const app = fastify();
 
@@ -34,7 +36,7 @@ const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onren
 // Endpoint: Admin - inicio
 
 // Endpoint: ping - inicio
-app.post("/ping", async (request, reply) => {
+app.get("/ping", async (request, reply) => {
   return reply.status(200).send("API ativa.");
 });
 
@@ -1808,32 +1810,98 @@ app.get("/rastreioChat", async (request, reply) => {
 
 // Busca  RastreioChat - fim
 
-// Webhook Whats Rastreio - inicio - DEPRACATED
+// Webhook Z-API -> Blip Rastreio - inicio 
+
+app.post("/zapi", async (request, reply) => {
+  if (typeof request.body === "object" && request.body !== null) {
+    const telefoneCliente = (request.body as { phone: string }).phone;
+    const mensagemCliente = (request.body as { text: { message: string } }).text.message;
+    // Use telefoneCliente e mensagemCliente aqui
+
+    const requestSA = require("superagent");
+
+    const blipuuid: string = uuid();
+    const bodyWhats = `{"id": "${blipuuid}","from": "${telefoneCliente}.rastreiod1whats@0mn.io/default", "to": "rastreiod1whats@msging.net", "type": "text/plain", "content": "${mensagemCliente}", "metadata": { "contato": "${telefoneCliente}" }}`;
+
+    const resBlip = await requestSA
+                .post("https://rodrigo-albuquerque-4ur1h.http.msging.net/messages")
+                .set("Accept", "application/json")
+                .set("Content-Type", "application/json")
+                .set("Authorization", `Key cmFzdHJlaW9kMXdoYXRzOlNTT0s3RGdqRUtINzV0VXZ4V2hF`)
+                .send(bodyWhats);
+
+              // const JAMEFocorrenciasJson = JSON.parse(resJAMEF.text);
+
+
+    return reply
+      .status(200)
+      .send(await JSON.parse(JSON.stringify("200 OK")));
+  } else {
+    console.error(error);
+
+    return reply
+      .status(500)
+      .send(error);
+  }
+});
+
+
+// Blip -> Whats Rastreio - inicio 
 
 app.post("/whatsrastreio", async (request, reply) => {
-  // const bodyWhats = `{"phone": "5548988038546","message": "Agente: ${data.respondent.respondent_utms.utm_source}\nProtocolo: ${data.respondent.respondent_utms.utm_campaign}\nNota: ${data.respondent.answers["Avalie o atendimento que você recebeu no Whatsapp!"]}\nSugestão: ${data.respondent.answers["Quer deixar alguma sugestão pra gente?"]} "}`;
-  const bodyWhats = `{"phone": "5551991508579","message": "Teste 03"}`;
+  if (typeof request.body === "object" && request.body !== null) {
+    const telefoneCliente = (request.body as { phone: string }).phone;
+    const blocoCliente = (request.body as { bloco: string }).bloco;
 
-  const sendWhats = {
-    url: "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text",
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Client-Token": "F622e76b1e3f64e2a9517d207fe923fa5S",
-    },
-    body: bodyWhats,
-  };
+    let mensagem = "";
 
-  const res3 = await fetch(sendWhats.url, {
+    if (blocoCliente == "solicita_cfpcnpj") {
+      mensagem = "Olá!!\nEstou aqui pra te responder sobre status da entrega da sua compra 😉\nPara prosseguirmos, informe o seu CPF ou CNPJ";
+    }
+    else if (blocoCliente == "solicita_cfpcnpj_novamente") {
+      mensagem = "Por gentileza informe apenas os números do seu CPF ou CNPJ novamente";
+    }
+    else if (blocoCliente == "verificando_ocorrencias") {
+      mensagem = "Estamos consultando o status da entrega";
+    }
+    else if (blocoCliente == "envia_ocorrencias") {
+      const ocorrencias = (request.body as { bloco: string }).bloco;
+      mensagem = ocorrencias;
+    } else {
+      mensagem = "Não foi possível realizar a consulta de forma automática. Por gentileza, procure nosso time de atendimento através do link: https://wa.me/5511930373935 "
+    }
+
+    // const bodyWhats = `{"phone": "5548988038546","message": "Agente: ${data.respondent.respondent_utms.utm_source}\nProtocolo: ${data.respondent.respondent_utms.utm_campaign}\nNota: ${data.respondent.answers["Avalie o atendimento que você recebeu no Whatsapp!"]}\nSugestão: ${data.respondent.answers["Quer deixar alguma sugestão pra gente?"]} "}`;
+    const bodyWhats = `{"phone": "${telefoneCliente}","message": "${mensagem}"}`;
+
+    const sendWhats = {
+      url: "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Client-Token": "F622e76b1e3f64e2a9517d207fe923fa5S",
+      },
+      body: bodyWhats,
+    };
+
+    /* const res3 = await fetch(sendWhats.url, {
     method: sendWhats.method,
     headers: sendWhats.headers,
     body: sendWhats.body,
-  });
+  }); */
 
-  console.log(request.body);
+    console.log(request.body);
 
-  return reply.status(200).send( await JSON.parse(JSON.stringify(request.body)) );
-  
+    return reply
+      .status(200)
+      .send(await JSON.parse(JSON.stringify(request.body)));
+  } else {
+    console.error(error);
+
+    return reply
+      .status(500)
+      .send(error);
+  }
 });
 
 // Busca  RastreioChat - fim
