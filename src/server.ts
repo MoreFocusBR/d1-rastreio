@@ -1849,6 +1849,9 @@ app.post("/zapi", async (request, reply) => {
 // Blip -> Whats Rastreio - inicio 
 
 app.post("/whatsrastreio", async (request, reply) => {
+
+  const requestSA = require("superagent");
+
   if (typeof request.body === "object" && request.body !== null) {
     const telefoneCliente = (request.body as { phone: string }).phone;
     const blocoCliente = (request.body as { bloco: string }).bloco;
@@ -1874,15 +1877,11 @@ app.post("/whatsrastreio", async (request, reply) => {
     // const bodyWhats = `{"phone": "5548988038546","message": "Agente: ${data.respondent.respondent_utms.utm_source}\nProtocolo: ${data.respondent.respondent_utms.utm_campaign}\nNota: ${data.respondent.answers["Avalie o atendimento que você recebeu no Whatsapp!"]}\nSugestão: ${data.respondent.answers["Quer deixar alguma sugestão pra gente?"]} "}`;
     const bodyWhats = `{"phone": "${telefoneCliente}","message": "${mensagem}"}`;
 
-    const sendWhats = {
-      url: "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text",
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Client-Token": "F622e76b1e3f64e2a9517d207fe923fa5S",
-      },
-      body: bodyWhats,
-    };
+    const resZAPI = await requestSA
+                .post("https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text")
+                .set("Content-Type", "application/json")
+                .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+                .send(bodyWhats);
 
     /* const res3 = await fetch(sendWhats.url, {
     method: sendWhats.method,
@@ -1891,6 +1890,8 @@ app.post("/whatsrastreio", async (request, reply) => {
   }); */
 
     console.log(request.body);
+    
+    console.log(resZAPI);
 
     return reply
       .status(200)
