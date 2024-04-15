@@ -3,7 +3,7 @@ import fastifyStatic from "@fastify/static";
 import { PrismaClient, Venda } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import fastify from "fastify";
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid } from "uuid";
 import {
   JsonArray,
   JsonConvertible,
@@ -1810,81 +1810,324 @@ app.get("/rastreioChat", async (request, reply) => {
 
 // Busca  RastreioChat - fim
 
-// Webhook Z-API -> Blip Rastreio - inicio 
+// Webhook Z-API -> Blip Rastreio - inicio
 
 app.post("/zapi", async (request, reply) => {
-  if (typeof request.body === "object" && request.body !== null) {
-    const telefoneCliente = (request.body as { phone: string }).phone;
-    const mensagemCliente = (request.body as { text: { message: string } }).text.message;
-    // Use telefoneCliente e mensagemCliente aqui
-
-    const requestSA = require("superagent");
-
-    const blipuuid: string = uuid();
-    const bodyWhats = `{"id": "9861b523-b490-4233-9fa8-ea2442aa6a07","from": "${telefoneCliente}.rastreiod1whats@0mn.io/default", "to": "rastreiod1whats@msging.net", "type": "text/plain", "content": "${mensagemCliente}", "metadata": { "contato": "${telefoneCliente}" }}`;
-
-    const resBlip = await requestSA
-                .post("https://rodrigo-albuquerque-4ur1h.http.msging.net/messages")
-                .set("Accept", "application/json")
-                .set("Content-Type", "application/json")
-                .set("Authorization", `Key cmFzdHJlaW9kMXdoYXRzOlNTT0s3RGdqRUtINzV0VXZ4V2hF`)
-                .send(bodyWhats);
-
-              // const JAMEFocorrenciasJson = JSON.parse(resJAMEF.text);
-
-
-    return reply
-      .status(200)
-      .send(await JSON.parse(JSON.stringify("200 OK")));
-  } else {
-    console.error(error);
-
-    return reply
-      .status(500)
-      .send(error);
-  }
-});
-
-
-// Blip -> Whats Rastreio - inicio 
-
-app.post("/whatsrastreio", async (request, reply) => {
-
   const requestSA = require("superagent");
 
   if (typeof request.body === "object" && request.body !== null) {
-
-    console.log(request.body);
-
     const telefoneCliente = (request.body as { phone: string }).phone;
-    const blocoCliente = (request.body as { bloco: string }).bloco;
+    const mensagemCliente = (request.body as { text: { message: string } }).text
+      .message;
+
+    let mensagem = "";
+    let Etapa = 0;
+
+    const bodyBlip = `{"ocorrencias": "Lista de ocorrencias"}`;
+
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}-${(now.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")} ${now
+      .getHours()
+      .toString()
+      .padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now
+      .getSeconds()
+      .toString()
+      .padStart(2, "0")}`;
+
+    function valida_cpfcnpj(inputCPFCNPJ: string): string {
+      let documentoValido: string = "false";
+
+      // Identifica e valida se o campo é de CPF ou CNPJ
+      CPFouCNPJ(inputCPFCNPJ);
+
+      function CPFouCNPJ(inputCPFCNPJ: string) {
+        const contador: number = inputCPFCNPJ.replace(/[^0-9]/g, "").length;
+        if (contador == 0) {
+          documentoValido = "false";
+        } else if (contador == 11) {
+          if (validaCPF(inputCPFCNPJ)) {
+            documentoValido = "cpf_valido";
+          } else {
+            documentoValido = "false";
+          }
+        } else if (contador == 14) {
+          if (validaCNPJ(inputCPFCNPJ)) {
+            documentoValido = "cnpj_valido";
+          } else {
+            documentoValido = "false";
+          }
+        } else {
+          documentoValido = "false";
+        }
+      }
+
+      // Valida CPF
+      function validaCPF(cpf: string): boolean {
+        cpf = cpf.replace(/[^\d]+/g, "");
+        if (cpf == "") return false;
+        if (
+          cpf.length != 11 ||
+          cpf == "00000000000" ||
+          cpf == "11111111111" ||
+          cpf == "22222222222" ||
+          cpf == "33333333333" ||
+          cpf == "44444444444" ||
+          cpf == "55555555555" ||
+          cpf == "66666666666" ||
+          cpf == "77777777777" ||
+          cpf == "88888888888" ||
+          cpf == "99999999999" ||
+          cpf == "01234567890"
+        )
+          return false;
+        let add: number = 0;
+        for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
+        let rev: number = 11 - (add % 11);
+        if (rev == 10 || rev == 11) rev = 0;
+        if (rev != parseInt(cpf.charAt(9))) return false;
+        add = 0;
+        for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
+        rev = 11 - (add % 11);
+        if (rev == 10 || rev == 11) rev = 0;
+        if (rev != parseInt(cpf.charAt(10))) return false;
+        return true;
+      }
+
+      // Valida CNPJ
+      function validaCNPJ(CNPJ: string): boolean {
+        CNPJ = CNPJ.replace(/[^\d]+/g, "");
+        const a: number[] = [];
+        let b: number = 0;
+        const c: number[] = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        for (let i = 0; i < 12; i++) {
+          a[i] = parseInt(CNPJ.charAt(i));
+          b += a[i] * c[i + 1];
+        }
+        let x: number = b % 11;
+        if (x < 2) {
+          a[12] = 0;
+        } else {
+          a[12] = 11 - x;
+        }
+        b = 0;
+        for (let y = 0; y < 13; y++) {
+          b += a[y] * c[y];
+        }
+        x = b % 11;
+        if (x < 2) {
+          a[13] = 0;
+        } else {
+          a[13] = 11 - x;
+        }
+        if (
+          parseInt(CNPJ.charAt(12)) != a[12] ||
+          parseInt(CNPJ.charAt(13)) != a[13]
+        ) {
+          return false;
+        }
+        if (parseInt(CNPJ) == 0) {
+          return false;
+        }
+        return true;
+      }
+
+      return documentoValido; // Return value will be saved as "Return value variable" field name
+    }
+
+    // Verifica se já existe um registro com o mesmo agente e data_login
+    const existingRecord = await prisma.contextoRastreio.findFirst({
+      where: {
+        Telefone: telefoneCliente,
+      },
+    });
+
+    if (existingRecord) {
+      Etapa = existingRecord.Etapa;
+    } else {
+      try {
+        const createdContexto = await prisma.contextoRastreio.create({
+          data: {
+            Telefone: telefoneCliente,
+            Data: formattedDate,
+            MensagemCliente: mensagemCliente,
+            Etapa: 1,
+          },
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (Etapa == 0) {
+      mensagem =
+        "Olá!!\nEstou aqui pra te responder sobre status da entrega da sua compra 😉\nPara prosseguirmos, informe o seu CPF ou CNPJ";
+
+      try {
+        const createdContexto = await prisma.contextoRastreio.create({
+          data: {
+            Telefone: telefoneCliente,
+            Data: formattedDate,
+            MensagemCliente: mensagemCliente,
+            Etapa: 1,
+          },
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    } else if (Etapa == 1) {
+      const cpfcnpf = mensagemCliente;
+      const documentoValido = valida_cpfcnpj(cpfcnpf.trim());
+
+      if (documentoValido == "cpf_valido" || documentoValido == "cnpj_valido") {
+        mensagem = "Estamos consultando o status da entrega";
+
+        try {
+          const createdContexto = await prisma.contextoRastreio.create({
+            data: {
+              Telefone: telefoneCliente,
+              MensagemCliente: mensagemCliente,
+              Data: formattedDate,
+              Etapa: 2,
+            },
+          });
+        } catch (error) {
+          console.error(error);
+        }
+
+        // Envia mensagem de que foi buscar as ocorrências
+        const bodyWhats0 = `{"phone": "${telefoneCliente}","message": "${mensagem}"}`;
+
+        const resZAPI0 = await requestSA
+          .post(
+            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+          )
+          .set("Content-Type", "application/json")
+          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .send(bodyWhats0);
+
+        // Busca ocorrências
+        const resOcorrencias = await requestSA
+          .get(
+            `https://d1-rastreio.onrender.com/retornaStatusEntregaBlip?cpfcnpj=${cpfcnpf}`
+          )
+          .set("Content-Type", "application/json");
+
+        // Envia ocorrencias pro Whats
+        const bodyWhats1 = `{"phone": "${telefoneCliente}","message": "${resOcorrencias.text}"}`;
+
+        const resZAPI1 = await requestSA
+          .post(
+            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+          )
+          .set("Content-Type", "application/json")
+          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .send(bodyWhats1);
+
+          // FInaliza com mensagem para buscar mais informações no Whats oficial 
+          mensagem = "Para mais informações, fale com nosso atendimento pelo Whatsapp: 11930373935";
+
+        
+
+          // Zera o fluxo para recomeçar
+          try {
+            const createdContexto = await prisma.contextoRastreio.create({
+              data: {
+                Telefone: telefoneCliente,
+                MensagemCliente: mensagemCliente,
+                Data: formattedDate,
+                Etapa: 0,
+              },
+            });
+          } catch (error) {
+            console.error(error);
+          }
+
+      } else {
+        mensagem =
+          "Por gentileza informe apenas os números do seu CPF ou CNPJ novamente";
+      }
+    } else {
+      mensagem =
+        "Não foi possível realizar a consulta de forma automática. Por gentileza, procure nosso time de atendimento através do link: https://wa.me/5511930373935 ";
+
+      try {
+        const createdContexto = await prisma.contextoRastreio.create({
+          data: {
+            Telefone: telefoneCliente,
+            MensagemCliente: mensagemCliente,
+            Data: formattedDate,
+            Etapa: 0,
+          },
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    // const blipuuid: string = uuid();
+    const bodyWhats = `{"phone": "${telefoneCliente}","message": "${mensagem}"}`;
+
+    const resZAPI = await requestSA
+      .post(
+        "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+      )
+      .set("Content-Type", "application/json")
+      .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+      .send(bodyWhats);
+
+    return reply
+      .status(200)
+      .send(await JSON.parse(JSON.stringify(`Etapa atual: ${Etapa}`)));
+  } else {
+    console.error(error);
+
+    return reply.status(500).send(error);
+  }
+});
+
+// Blip -> Whats Rastreio - inicio
+
+app.post("/whatsrastreio", async (request, reply) => {
+  const requestSA = require("superagent");
+
+  const bodyBlip = JSON.parse(JSON.stringify(request.body));
+
+  if (typeof bodyBlip === "object" && bodyBlip !== null) {
+    console.log(bodyBlip);
+
+    const telefoneCliente = (bodyBlip as { phone: string }).phone;
+    const blocoCliente = (bodyBlip as { bloco: string }).bloco;
 
     let mensagem = "";
 
     if (blocoCliente == "solicita_cfpcnpj") {
-      mensagem = "Olá!!\nEstou aqui pra te responder sobre status da entrega da sua compra 😉\nPara prosseguirmos, informe o seu CPF ou CNPJ";
-    }
-    else if (blocoCliente == "solicita_cfpcnpj_novamente") {
-      mensagem = "Por gentileza informe apenas os números do seu CPF ou CNPJ novamente";
-    }
-    else if (blocoCliente == "verificando_ocorrencias") {
+      mensagem =
+        "Olá!!\nEstou aqui pra te responder sobre status da entrega da sua compra 😉\nPara prosseguirmos, informe o seu CPF ou CNPJ";
+    } else if (blocoCliente == "solicita_cfpcnpj_novamente") {
+      mensagem =
+        "Por gentileza informe apenas os números do seu CPF ou CNPJ novamente";
+    } else if (blocoCliente == "verificando_ocorrencias") {
       mensagem = "Estamos consultando o status da entrega";
-    }
-    else if (blocoCliente == "envia_ocorrencias") {
-      const ocorrencias = (request.body as { ocorrencias: string }).ocorrencias;
+    } else if (blocoCliente == "envia_ocorrencias") {
+      const ocorrencias = (bodyBlip as { ocorrencias: string }).ocorrencias;
       mensagem = ocorrencias;
     } else {
-      mensagem = "Não foi possível realizar a consulta de forma automática. Por gentileza, procure nosso time de atendimento através do link: https://wa.me/5511930373935 "
+      mensagem =
+        "Não foi possível realizar a consulta de forma automática. Por gentileza, procure nosso time de atendimento através do link: https://wa.me/5511930373935 ";
     }
 
     // const bodyWhats = `{"phone": "5548988038546","message": "Agente: ${data.respondent.respondent_utms.utm_source}\nProtocolo: ${data.respondent.respondent_utms.utm_campaign}\nNota: ${data.respondent.answers["Avalie o atendimento que você recebeu no Whatsapp!"]}\nSugestão: ${data.respondent.answers["Quer deixar alguma sugestão pra gente?"]} "}`;
     const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
 
     const resZAPI = await requestSA
-                .post("https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text")
-                .set("Content-Type", "application/json")
-                .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-                .send(bodyWhats);
+      .post(
+        "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+      )
+      .set("Content-Type", "application/json")
+      .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+      .send(bodyWhats);
 
     /* const res3 = await fetch(sendWhats.url, {
     method: sendWhats.method,
@@ -1892,7 +2135,6 @@ app.post("/whatsrastreio", async (request, reply) => {
     body: sendWhats.body,
   }); */
 
-    
     //console.log(resZAPI);
 
     return reply
@@ -1901,9 +2143,7 @@ app.post("/whatsrastreio", async (request, reply) => {
   } else {
     console.log("Nao entrou no if");
 
-    return reply
-      .status(200)
-      .send("500 NOK");
+    return reply.status(200).send("500 NOK");
   }
 });
 

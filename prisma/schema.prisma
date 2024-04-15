@@ -93,3 +93,11 @@ model RastreioChat {
     Mensagem      String
     Ativo         Boolean
 }
+
+model contextoRastreio {
+    Id                String @id @default(cuid())
+    Telefone          String
+    MensagemCliente   String?
+    Etapa             Int
+    Data              String
+}
