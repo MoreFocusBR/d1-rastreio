@@ -1821,7 +1821,7 @@ app.post("/zapi", async (request, reply) => {
     const requestSA = require("superagent");
 
     const blipuuid: string = uuid();
-    const bodyWhats = `{"id": "${blipuuid}","from": "${telefoneCliente}.rastreiod1whats@0mn.io/default", "to": "rastreiod1whats@msging.net", "type": "text/plain", "content": "${mensagemCliente}", "metadata": { "contato": "${telefoneCliente}" }}`;
+    const bodyWhats = `{"id": "9861b523-b490-4233-9fa8-ea2442aa6a07","from": "${telefoneCliente}.rastreiod1whats@0mn.io/default", "to": "rastreiod1whats@msging.net", "type": "text/plain", "content": "${mensagemCliente}", "metadata": { "contato": "${telefoneCliente}" }}`;
 
     const resBlip = await requestSA
                 .post("https://rodrigo-albuquerque-4ur1h.http.msging.net/messages")
