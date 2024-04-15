@@ -1853,6 +1853,9 @@ app.post("/whatsrastreio", async (request, reply) => {
   const requestSA = require("superagent");
 
   if (typeof request.body === "object" && request.body !== null) {
+
+    console.log(request.body);
+
     const telefoneCliente = (request.body as { phone: string }).phone;
     const blocoCliente = (request.body as { bloco: string }).bloco;
 
@@ -1868,7 +1871,7 @@ app.post("/whatsrastreio", async (request, reply) => {
       mensagem = "Estamos consultando o status da entrega";
     }
     else if (blocoCliente == "envia_ocorrencias") {
-      const ocorrencias = (request.body as { bloco: string }).bloco;
+      const ocorrencias = (request.body as { ocorrencias: string }).ocorrencias;
       mensagem = ocorrencias;
     } else {
       mensagem = "Não foi possível realizar a consulta de forma automática. Por gentileza, procure nosso time de atendimento através do link: https://wa.me/5511930373935 "
@@ -1889,9 +1892,8 @@ app.post("/whatsrastreio", async (request, reply) => {
     body: sendWhats.body,
   }); */
 
-    console.log(request.body);
     
-    console.log(resZAPI);
+    //console.log(resZAPI);
 
     return reply
       .status(200)
