@@ -1875,7 +1875,7 @@ app.post("/whatsrastreio", async (request, reply) => {
     }
 
     // const bodyWhats = `{"phone": "5548988038546","message": "Agente: ${data.respondent.respondent_utms.utm_source}\nProtocolo: ${data.respondent.respondent_utms.utm_campaign}\nNota: ${data.respondent.answers["Avalie o atendimento que você recebeu no Whatsapp!"]}\nSugestão: ${data.respondent.answers["Quer deixar alguma sugestão pra gente?"]} "}`;
-    const bodyWhats = `{"phone": "${telefoneCliente}","message": "${mensagem}"}`;
+    const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
 
     const resZAPI = await requestSA
                 .post("https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text")
