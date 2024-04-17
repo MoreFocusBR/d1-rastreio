@@ -1687,11 +1687,16 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               return `Ocorrências não localizadas.`;
             }
 
-            // Busca Ocorrências CORREIOS
-            else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
+            // Busca Ocorrências Mercado Livre
+            else if (/EBAZAR/i.test(TransportadoraNome)) {
+              return `Consulte a localização do seu pedido diretamente no site ou aplicativo do Mercado Livre.`;
+            }
+             // Busca Ocorrências CORREIOS
+             else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
               return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
-            } else {
-              return `Ocorrências não localizadas.`;
+            } 
+            else {
+              return `Sem resposta da Transportadora ${TransportadoraNome}. Por favor, tente novamente em alguns instantes.`;
             }
 
             /*const resDataFrete = await request
@@ -1783,7 +1788,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
 // Endpoint: retorna Status última venda cpfcnpf - fim
 
-// Busca  RastreioChat - inicio - DEPRACATED
+// Busca  RastreioChat - inicio - DEPRACATED -> foi pro orquestrador
 
 app.get("/rastreioChat", async (request, reply) => {
   interface RouteParams {
@@ -1797,6 +1802,33 @@ app.get("/rastreioChat", async (request, reply) => {
   const buscaRastreioChat = await prisma.rastreioChat.findMany({
     orderBy: {
       Etapa: "asc",
+    },
+  });
+
+  if (buscaRastreioChat) {
+    return reply.status(200).send({ buscaRastreioChat });
+  } else {
+    const retorno = `{ "Nenhuma mensagem cadastrada." }`;
+    return reply.status(200).send(JSON.parse(retorno));
+  }
+});
+
+// SHOW
+
+app.get("/rastreioChat/:idMensagem", async (request, reply) => {
+
+  const idMensagem: any = (request as any).parametro;
+  interface RouteParams {
+    Titulo: string;
+    Etapa: number;
+    Prioridade: number;
+    Mensagem: string;
+    Ativo: boolean;
+  }
+
+  const buscaRastreioChat = await prisma.rastreioChat.findFirst({
+    where: {
+      Id: `${idMensagem}`
     },
   });
 
