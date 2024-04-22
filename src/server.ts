@@ -913,6 +913,9 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   const codigo = params.codigo;
   const cpfcnpj = params.cpfcnpj.replace(/[^\d]+/g, "").replace(/[^0-9]/g, "");
   let TransportadoraVenda = "";
+  let resUltimaVendaCpfCnpjJsonFinal = { venda: [{Codigo: "", DataVenda: ""}]  };
+  let NotaFiscalNumero;
+  let NotaFiscalEletronica;
 
   // consome cada item da Lista Vendas - inicio
 
@@ -926,6 +929,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
       const resUltimaVendaCpfCnpjJson = await JSON.parse(
         resUltimaVendaCpfCnpj.text
       );
+      resUltimaVendaCpfCnpjJsonFinal = resUltimaVendaCpfCnpjJson;
 
       try {
         if ((await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0) {
@@ -959,19 +963,19 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             MotivoCancelamento: string;
           }
 
-          const NotaFIscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
+          NotaFiscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
           const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.trim();
           // Atualiza TransportadoraVenda para utilizar fora desse nó
           TransportadoraVenda = TransportadoraNome;
 
-          const NotaFiscalNumero = NfeJson.nfe[0].NotaFiscalNumero;
+          NotaFiscalNumero = NfeJson.nfe[0].NotaFiscalNumero;
           const NotaFiscalObjeto = NfeJson.nfe[0].NumeroObjeto;
 
           // Se não existir, insere o novo registro
-          if (NotaFIscalEletronica > 0) {
+          if (NotaFiscalEletronica > 0) {
             console.log(
               `Transportadora ${TransportadoraNome}. Buscando ocorrências da Nfe: ` +
-                NotaFIscalEletronica
+                NotaFiscalEletronica
             );
 
             // Busca Ocorrências Bauer, Aceville, Gobor, TPL
@@ -982,7 +986,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
               TransportadoraNome == "GOBOR" ||
               TransportadoraNome == "TPL"
             ) {
-              return `Utilize o código DANFE ${NotaFIscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
+              return `Utilize o código DANFE ${NotaFiscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
             }
 
             // Busca Ocorrências MODULAR
@@ -1246,6 +1250,11 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
               return `Ocorrências não localizadas.`;
             }
 
+            // Busca Ocorrências Mercado Livre
+            else if (/EBAZAR/i.test(TransportadoraNome)) {
+              return `Consulte a localização do seu pedido diretamente no site ou aplicativo do Mercado Livre.`;
+            }
+
             // Busca Ocorrências CORREIOS
             else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
               return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
@@ -1268,18 +1277,18 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             // return resDataFreteJson.data;
           } else {
             // Realiza o UPDATE da venda já cadastrada
-            console.log("Nota fiscal não localizada.");
+            console.log("Aguardando emissão da Nota Fiscal.");
 
-            return "Nota fiscal não localizada.";
+            return "Aguardando emissão da Nota Fiscal.";
           }
         } else {
-          return "Nota fiscal não localizada.";
+          return "Aguardando emissão da Nota Fiscal.";
         }
       } catch (error) {
         console.error(error);
       }
     } else {
-      console.error("Nota fiscal não localizada.");
+      console.error("Aguardando emissão da Nota Fiscal.");
       return;
     }
   }
@@ -1320,12 +1329,14 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
     // Chamada da função para formatar as ocorrências
     const retornoEndpointFormatado = formatarOcorrencias();
 
-    if ((await retornoEndpointFormatado) != "Nota fiscal não localizada.") {
+    if (
+      (await retornoEndpointFormatado) != "Aguardando emissão da Nota Fiscal."
+    ) {
       // Função para formatar os dados conforme o desejado
 
       resultadoFormatado += await retornoEndpointFormatado;
     } else {
-      resultadoFormatado = "Nota fiscal não localizada.";
+      resultadoFormatado = "Aguardando emissão da Nota Fiscal.";
     }
   } else if (
     TransportadoraVenda == "MANNTRANSPORTES" ||
@@ -1335,6 +1346,21 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
     // Mantem formato já pronto
   } else {
     resultadoFormatado += retornoEndpointString;
+  }
+
+  // insere registro de metricas
+  try {
+    const createdMetric = await prisma.rastreioChatMetricas.create({
+      data: {
+        CodigoVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].Codigo}`,
+        DataVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].DataVenda}`,
+        NotaFiscalEletronica: `${NotaFiscalEletronica}`,
+        TransportadoraNome: `${TransportadoraVenda}`,
+        Ocorrencias: `${resultadoFormatado}`,
+      },
+    });
+  } catch (error) {
+    console.error(error);
   }
 
   return reply
@@ -1691,11 +1717,10 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
             else if (/EBAZAR/i.test(TransportadoraNome)) {
               return `Consulte a localização do seu pedido diretamente no site ou aplicativo do Mercado Livre.`;
             }
-             // Busca Ocorrências CORREIOS
-             else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
+            // Busca Ocorrências CORREIOS
+            else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
               return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
-            } 
-            else {
+            } else {
               return `Sem resposta da Transportadora ${TransportadoraNome}. Por favor, tente novamente em alguns instantes.`;
             }
 
@@ -1714,18 +1739,18 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
             // return resDataFreteJson.data;
           } else {
             // Realiza o UPDATE da venda já cadastrada
-            console.log("Nota fiscal não localizada.");
+            console.log("Aguardando emissão da Nota Fiscal.");
 
-            return "Nota fiscal não localizada.";
+            return "Aguardando emissão da Nota Fiscal.";
           }
         } else {
-          return "Nota fiscal não localizada.";
+          return "Aguardando emissão da Nota Fiscal.";
         }
       } catch (error) {
         console.error(error);
       }
     } else {
-      console.error("Nota fiscal não localizada.");
+      console.error("Aguardando emissão da Nota Fiscal.");
       return;
     }
   }
@@ -1766,12 +1791,14 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
     // Chamada da função para formatar as ocorrências
     const retornoEndpointFormatado = formatarOcorrencias();
 
-    if ((await retornoEndpointFormatado) != "Nota fiscal não localizada.") {
+    if (
+      (await retornoEndpointFormatado) != "Aguardando emissão da Nota Fiscal."
+    ) {
       // Função para formatar os dados conforme o desejado
 
       resultadoFormatado += await retornoEndpointFormatado;
     } else {
-      resultadoFormatado = "Nota fiscal não localizada.";
+      resultadoFormatado = "Aguardando emissão da Nota Fiscal.";
     }
   } else if (
     TransportadoraVenda == "MANNTRANSPORTES" ||
@@ -1816,7 +1843,6 @@ app.get("/rastreioChat", async (request, reply) => {
 // SHOW
 
 app.get("/rastreioChat/:idMensagem", async (request, reply) => {
-
   const idMensagem: any = (request as any).parametro;
   interface RouteParams {
     Titulo: string;
@@ -1828,7 +1854,7 @@ app.get("/rastreioChat/:idMensagem", async (request, reply) => {
 
   const buscaRastreioChat = await prisma.rastreioChat.findFirst({
     where: {
-      Id: `${idMensagem}`
+      Id: `${idMensagem}`,
     },
   });
 
@@ -2057,25 +2083,23 @@ app.post("/zapi", async (request, reply) => {
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
           .send(bodyWhats1);
 
-          // FInaliza com mensagem para buscar mais informações no Whats oficial 
-          mensagem = "Para mais informações, fale com nosso atendimento pelo Whatsapp: 11930373935";
+        // FInaliza com mensagem para buscar mais informações no Whats oficial
+        mensagem =
+          "Para mais informações, fale com nosso atendimento pelo Whatsapp: 11930373935";
 
-        
-
-          // Zera o fluxo para recomeçar
-          try {
-            const createdContexto = await prisma.contextoRastreio.create({
-              data: {
-                Telefone: telefoneCliente,
-                MensagemCliente: mensagemCliente,
-                Data: formattedDate,
-                Etapa: 0,
-              },
-            });
-          } catch (error) {
-            console.error(error);
-          }
-
+        // Zera o fluxo para recomeçar
+        try {
+          const createdContexto = await prisma.contextoRastreio.create({
+            data: {
+              Telefone: telefoneCliente,
+              MensagemCliente: mensagemCliente,
+              Data: formattedDate,
+              Etapa: 0,
+            },
+          });
+        } catch (error) {
+          console.error(error);
+        }
       } else {
         mensagem =
           "Por gentileza informe apenas os números do seu CPF ou CNPJ novamente";

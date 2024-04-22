@@ -101,3 +101,13 @@ model contextoRastreio {
     Etapa             Int
     Data              String
 }
+
+model RastreioChatMetricas {
+    Id                    String @id @default(cuid())
+    CodigoVenda           String
+    DataVenda             String?
+    NotaFiscalEletronica  String?
+    TransportadoraNome    String?
+    MomentoConsulta       DateTime @default(now())
+    Ocorrencias           String?
+}
