@@ -2273,7 +2273,12 @@ app.get("/metricasPercTransportadora", async (request, reply) => {
   });
 
   if (vendasAgrupadas.length > 0) {
-    return reply.status(200).send(vendasAgrupadas);
+    const vendasFormatadas = vendasAgrupadas.map((venda) => ({
+      TotalVendas: venda._count.Codigo,
+      TransportadoraCodigo: venda.TransportadoraCodigo,
+      DataVenda: venda.DataVenda,
+    }));
+    return reply.status(200).send(vendasFormatadas);
   } else {
     return "Lista vazia.";
   }
