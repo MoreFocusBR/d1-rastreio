@@ -110,4 +110,5 @@ model RastreioChatMetricas {
     TransportadoraNome    String?
     MomentoConsulta       DateTime @default(now())
     Ocorrencias           String?
+    Canal                 String?       
 }

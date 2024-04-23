@@ -913,7 +913,9 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   const codigo = params.codigo;
   const cpfcnpj = params.cpfcnpj.replace(/[^\d]+/g, "").replace(/[^0-9]/g, "");
   let TransportadoraVenda = "";
-  let resUltimaVendaCpfCnpjJsonFinal = { venda: [{Codigo: "", DataVenda: ""}]  };
+  let resUltimaVendaCpfCnpjJsonFinal = {
+    venda: [{ Codigo: "", DataVenda: "" }],
+  };
   let NotaFiscalNumero;
   let NotaFiscalEletronica;
 
@@ -984,7 +986,8 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
               TransportadoraNome == "BAUER" ||
               TransportadoraNome == "ACEVILLE" ||
               TransportadoraNome == "GOBOR" ||
-              TransportadoraNome == "TPL"
+              TransportadoraNome == "TPL" ||
+              TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
             ) {
               return `Utilize o código DANFE ${NotaFiscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
             }
@@ -1357,6 +1360,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
         NotaFiscalEletronica: `${NotaFiscalEletronica}`,
         TransportadoraNome: `${TransportadoraVenda}`,
         Ocorrencias: `${resultadoFormatado}`,
+        Canal: "WhatsApp"
       },
     });
   } catch (error) {
@@ -1372,6 +1376,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
 
 app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   interface RouteParams {
+    canal: any;
     codigo: number;
     cpfcnpj: string;
   }
@@ -1380,6 +1385,11 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   const codigo = params.codigo;
   const cpfcnpj = params.cpfcnpj.replace(/[^\d]+/g, "").replace(/[^0-9]/g, "");
   let TransportadoraVenda = "";
+  let resUltimaVendaCpfCnpjJsonFinal = {
+    venda: [{ Codigo: "", DataVenda: "" }],
+  };
+  let NotaFiscalNumero;
+  let NotaFiscalEletronica;
 
   // consome cada item da Lista Vendas - inicio
 
@@ -1393,6 +1403,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
       const resUltimaVendaCpfCnpjJson = await JSON.parse(
         resUltimaVendaCpfCnpj.text
       );
+      resUltimaVendaCpfCnpjJsonFinal = resUltimaVendaCpfCnpjJson;
 
       try {
         if ((await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0) {
@@ -1426,19 +1437,19 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
             MotivoCancelamento: string;
           }
 
-          const NotaFIscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
+          NotaFiscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
           const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.trim();
           // Atualiza TransportadoraVenda para utilizar fora desse nó
           TransportadoraVenda = TransportadoraNome;
 
-          const NotaFiscalNumero = NfeJson.nfe[0].NotaFiscalNumero;
+          NotaFiscalNumero = NfeJson.nfe[0].NotaFiscalNumero;
           const NotaFiscalObjeto = NfeJson.nfe[0].NumeroObjeto;
 
           // Se não existir, insere o novo registro
-          if (NotaFIscalEletronica > 0) {
+          if (NotaFiscalEletronica > 0) {
             console.log(
               `Transportadora ${TransportadoraNome}. Buscando ocorrências da Nfe: ` +
-                NotaFIscalEletronica
+              NotaFiscalEletronica
             );
 
             // Busca Ocorrências Bauer, Aceville, Gobor, TPL
@@ -1447,9 +1458,10 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               TransportadoraNome == "BAUER" ||
               TransportadoraNome == "ACEVILLE" ||
               TransportadoraNome == "GOBOR" ||
-              TransportadoraNome == "TPL"
+              TransportadoraNome == "TPL" ||
+              TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
             ) {
-              return `Utilize o código DANFE ${NotaFIscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
+              return `Utilize o código DANFE ${NotaFiscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
             }
 
             // Busca Ocorrências MODULAR
@@ -1810,6 +1822,28 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
     resultadoFormatado += retornoEndpointString;
   }
 
+  let canal = "Site";
+
+  const canalReq = params.canal;
+
+  if(canalReq !== null) { canal = canalReq; }
+
+  // insere registro de metricas
+  try {
+    const createdMetric = await prisma.rastreioChatMetricas.create({
+      data: {
+        CodigoVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].Codigo}`,
+        DataVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].DataVenda}`,
+        NotaFiscalEletronica: `${NotaFiscalEletronica}`,
+        TransportadoraNome: `${TransportadoraVenda}`,
+        Ocorrencias: `${resultadoFormatado}`,
+        Canal: `${canal}`,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
   return reply.status(200).send(resultadoFormatado);
 });
 
@@ -2068,7 +2102,7 @@ app.post("/zapi", async (request, reply) => {
         // Busca ocorrências
         const resOcorrencias = await requestSA
           .get(
-            `https://d1-rastreio.onrender.com/retornaStatusEntregaBlip?cpfcnpj=${cpfcnpf}`
+            `https://d1-rastreio.onrender.com/retornaStatusEntregaBlip?cpfcnpj=${cpfcnpf}&canal=WhatsApp-2`
           )
           .set("Content-Type", "application/json");
 
