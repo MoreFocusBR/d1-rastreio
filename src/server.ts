@@ -2260,7 +2260,7 @@ app.get("/metricasPercTransportadora", async (request, reply) => {
   dataLimite.setDate(dataLimite.getDate() - 60); // Subtrai 60 dias da data atual
 
   const vendasAgrupadas = await prisma.venda.groupBy({
-    by: ["TransportadoraCodigo", "DataVenda"],
+    by: ["TransportadoraCodigo"],
     where: {
       Cancelada: false, // Exclui as vendas canceladas
       DataVenda: {
@@ -2276,7 +2276,6 @@ app.get("/metricasPercTransportadora", async (request, reply) => {
     const vendasFormatadas = vendasAgrupadas.map((venda) => ({
       TotalVendas: venda._count.Codigo,
       TransportadoraCodigo: venda.TransportadoraCodigo,
-      DataVenda: venda.DataVenda,
     }));
     return reply.status(200).send(vendasFormatadas);
   } else {
