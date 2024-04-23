@@ -2239,6 +2239,25 @@ app.post("/whatsrastreio", async (request, reply) => {
 
 // Busca  RastreioChat - fim
 
+// Endpoint: Retorna Metricas - inicio
+
+app.get("/metricas", async (request, reply) => {
+ 
+
+  const metricas = await prisma.rastreioChatMetricas.findMany({
+    
+  });
+
+  if (metricas.length > 0) {
+    return reply.status(200).send(metricas);
+  } else {
+    return "Lista vazia.";
+  }
+});
+
+// Endpoint: Retorna Metricas - fim
+
+
 // Exibe HTML - inicio
 
 app.get("/webchat", async (request, reply) => {
