@@ -2255,6 +2255,32 @@ app.get("/metricas", async (request, reply) => {
   }
 });
 
+
+// Percentual de consultas por Transportadora vs total de vendas com essa Transportadora
+
+app.get("/metricasPercTransportadora", async (request, reply) => {
+ 
+
+  const vendasAgrupadas = await prisma.venda.groupBy({
+    by: ['TransportadoraCodigo'],
+    where: {
+      Cancelada: false, // Exclui as vendas canceladas
+    },
+    _count: {
+      Codigo: true, // Conta o número de Codigo
+    },
+  });
+  
+  
+
+  if (vendasAgrupadas.length > 0) {
+    return reply.status(200).send(vendasAgrupadas);
+  } else {
+    return "Lista vazia.";
+  }
+});
+
+
 // Endpoint: Retorna Metricas - fim
 
 
