@@ -1360,7 +1360,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
         NotaFiscalEletronica: `${NotaFiscalEletronica}`,
         TransportadoraNome: `${TransportadoraVenda}`,
         Ocorrencias: `${resultadoFormatado}`,
-        Canal: "WhatsApp"
+        Canal: "WhatsApp",
       },
     });
   } catch (error) {
@@ -1449,7 +1449,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
           if (NotaFiscalEletronica > 0) {
             console.log(
               `Transportadora ${TransportadoraNome}. Buscando ocorrências da Nfe: ` +
-              NotaFiscalEletronica
+                NotaFiscalEletronica
             );
 
             // Busca Ocorrências Bauer, Aceville, Gobor, TPL
@@ -1826,7 +1826,9 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
   const canalReq = params.canal;
 
-  if(canalReq !== null) { canal = canalReq; }
+  if (canalReq !== null) {
+    canal = canalReq;
+  }
 
   // insere registro de metricas
   try {
@@ -2242,11 +2244,7 @@ app.post("/whatsrastreio", async (request, reply) => {
 // Endpoint: Retorna Metricas - inicio
 
 app.get("/metricas", async (request, reply) => {
- 
-
-  const metricas = await prisma.rastreioChatMetricas.findMany({
-    
-  });
+  const metricas = await prisma.rastreioChatMetricas.findMany({});
 
   if (metricas.length > 0) {
     return reply.status(200).send(metricas);
@@ -2255,23 +2253,24 @@ app.get("/metricas", async (request, reply) => {
   }
 });
 
-
 // Percentual de consultas por Transportadora vs total de vendas com essa Transportadora
 
 app.get("/metricasPercTransportadora", async (request, reply) => {
- 
+  const dataLimite = new Date();
+  dataLimite.setDate(dataLimite.getDate() - 60); // Subtrai 60 dias da data atual
 
   const vendasAgrupadas = await prisma.venda.groupBy({
-    by: ['TransportadoraCodigo'],
+    by: ["TransportadoraCodigo", "DataVenda"],
     where: {
       Cancelada: false, // Exclui as vendas canceladas
+      DataVenda: {
+        gte: dataLimite.toISOString(), // Data de venda maior ou igual à data limite
+      },
     },
     _count: {
       Codigo: true, // Conta o número de Codigo
     },
   });
-  
-  
 
   if (vendasAgrupadas.length > 0) {
     return reply.status(200).send(vendasAgrupadas);
@@ -2280,9 +2279,7 @@ app.get("/metricasPercTransportadora", async (request, reply) => {
   }
 });
 
-
 // Endpoint: Retorna Metricas - fim
-
 
 // Exibe HTML - inicio
 
