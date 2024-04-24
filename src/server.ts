@@ -1464,6 +1464,14 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               return `Utilize o código DANFE ${NotaFiscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
             }
 
+            // Busca Ocorrências TRANSLOVATO
+
+            if (
+              TransportadoraNome == "TRANSLOVATO"
+            ) {
+              return `Utilize a Nota Fiscal de número ${NotaFiscalNumero} para consultar a localização do seu pedido através do link: https://www.translovato.com.br/minha-carga/`;
+            }
+
             // Busca Ocorrências MODULAR
             else if (TransportadoraNome == "MODULAR") {
               // 1. Busca lista de notas na Modular pra pegar o CONTROLE para passo 2
