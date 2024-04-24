@@ -1826,7 +1826,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
   const canalReq = params.canal;
 
-  if (canalReq !== null) {
+  if (canalReq == "WhatsApp-2") {
     canal = canalReq;
   }
 
