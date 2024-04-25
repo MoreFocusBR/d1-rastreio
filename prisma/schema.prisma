@@ -30,28 +30,28 @@ model Venda {
    DataVenda String?
    Entrega Boolean
    EntregaNome String?
-   EntregaEmail String
-   NumeroObjeto String
-   EntregaTelefone String
-   EntregaLogradouro String
-   EntregaLogradouroNumero String
-   EntregaLogradouroComplemento String
-   EntregaBairro String
-   EntregaMunicipioNome String
-   EntregaUnidadeFederativa String
-   EntregaCEP String
+   EntregaEmail String?
+   NumeroObjeto String?
+   EntregaTelefone String?
+   EntregaLogradouro String?
+   EntregaLogradouroNumero String?
+   EntregaLogradouroComplemento String?
+   EntregaBairro String?
+   EntregaMunicipioNome String?
+   EntregaUnidadeFederativa String?
+   EntregaCEP String?
    Observacoes String?
    ObservacoesLoja String?
-   CodigoStatus Int
-   DescricaoStatus String
+   CodigoStatus Int?
+   DescricaoStatus String?
    DataHoraStatus String?
    PrevisaoEntrega String?
-   CodigoNotaFiscal Int
-   DataEntrega String
+   CodigoNotaFiscal Int?
+   DataEntrega String?
    Cancelada Boolean
-   DataEnvio String
-   NotaFiscalNumero Int
-   DataColeta String
+   DataEnvio String?
+   NotaFiscalNumero Int?
+   DataColeta String?
    Nfe Nfe[]
 
 }

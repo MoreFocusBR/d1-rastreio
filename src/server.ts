@@ -576,6 +576,195 @@ app.get("/cargaVendas", async (request, reply) => {
 
 // Endpoint: Carga inicial Vendas - fim
 
+// Endpoint: Update Vendas - início
+
+app.get("/updateVendas", async (request, reply) => {
+  const maxRegistros = request.headers.maxRegistros;
+
+  interface RouteParams {
+    codigoInicial: number;
+    codigoFinal: number;
+  }
+
+  const params = request.query as RouteParams;
+  const codigoInicial = params.codigoInicial;
+  const codigoFinal = params.codigoFinal;
+
+  // busca fila de integração Vendas - inicio
+
+  async function pegaVenda(Codigo: number) {
+    try {
+      const request = require("superagent");
+      const resVenda = await request
+        .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
+        .set("Accept", "application/json")
+        .set("accept-encoding", "gzip")
+        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+      //.set("Limit", "1");
+
+      //resVenda.body;
+
+      if (resVenda.status == 200) {
+        return JSON.stringify(resVenda.body);
+      } else {
+        throw new Error("Erro ao obter o lista integração.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // busca fila de integração Vendas - fim
+
+  // consome cada item da fila de integração Vendas - inicio
+
+  async function mainConsomeLista(codigoInicial: number, codigoFinal: number) {
+    for (let Codigo = codigoInicial; Codigo <= codigoFinal; Codigo++) {
+      const resVenda = await pegaVenda(Codigo);
+
+      if (resVenda) {
+        const resListaIntegracaoJson = await JSON.parse(resVenda);
+
+        if (resListaIntegracaoJson.venda != "") {
+          resListaIntegracaoJson.venda.forEach(async (venda: any) => {
+            try {
+              interface Venda {
+                Codigo: number;
+                ClienteCodigo: number;
+                ClienteTipoPessoa: string;
+                ClienteDocumento: string;
+                TransportadoraCodigo: number;
+                DataVenda: string;
+                Entrega: boolean;
+                EntregaNome: string;
+                EntregaEmail: string;
+                NumeroObjeto: string;
+                EntregaTelefone: string;
+                EntregaLogradouro: string;
+                EntregaLogradouroNumero: string;
+                EntregaLogradouroComplemento: string;
+                EntregaBairro: string;
+                EntregaMunicipioNome: string;
+                EntregaUnidadeFederativa: string;
+                EntregaCEP: string;
+                Observacoes: string;
+                ObservacoesLoja: string;
+                CodigoStatus: number;
+                DescricaoStatus: string;
+                DataHoraStatus: string;
+                PrevisaoEntrega: string;
+                CodigoNotaFiscal: number;
+                DataEntrega: string;
+                Cancelada: boolean;
+                DataEnvio: string;
+                NotaFiscalNumero: number;
+                DataColeta: string;
+              }
+
+              const {
+                Codigo,
+                ClienteCodigo,
+                ClienteTipoPessoa,
+                ClienteDocumento,
+                TransportadoraCodigo,
+                DataVenda,
+                Entrega,
+                EntregaNome,
+                EntregaEmail,
+                NumeroObjeto,
+                EntregaTelefone,
+                EntregaLogradouro,
+                EntregaLogradouroNumero,
+                EntregaLogradouroComplemento,
+                EntregaBairro,
+                EntregaMunicipioNome,
+                EntregaUnidadeFederativa,
+                EntregaCEP,
+                Observacoes,
+                ObservacoesLoja,
+                CodigoStatus,
+                DescricaoStatus,
+                DataHoraStatus,
+                PrevisaoEntrega,
+                CodigoNotaFiscal,
+                DataEntrega,
+                Cancelada,
+                DataEnvio,
+                NotaFiscalNumero,
+                DataColeta,
+              } = venda as Venda;
+
+              const existingRecord = await prisma.venda.findFirst({
+                where: {
+                  Codigo: Codigo,
+                },
+              });
+
+              // Se não existir, insere o novo registro
+              if (!existingRecord && Cancelada != true) {
+                console.log("Inserindo Venda: " + Codigo);
+
+                await prisma.venda.create({
+                  data: {
+                    Codigo,
+                    ClienteCodigo,
+                    ClienteTipoPessoa,
+                    ClienteDocumento,
+                    TransportadoraCodigo,
+                    DataVenda,
+                    Entrega,
+                    EntregaNome,
+                    EntregaEmail,
+                    NumeroObjeto,
+                    EntregaTelefone,
+                    EntregaLogradouro,
+                    EntregaLogradouroNumero,
+                    EntregaLogradouroComplemento,
+                    EntregaBairro,
+                    EntregaMunicipioNome,
+                    EntregaUnidadeFederativa,
+                    EntregaCEP,
+                    Observacoes,
+                    ObservacoesLoja,
+                    CodigoStatus,
+                    DescricaoStatus,
+                    DataHoraStatus,
+                    PrevisaoEntrega,
+                    CodigoNotaFiscal,
+                    DataEntrega,
+                    Cancelada,
+                    DataEnvio,
+                    NotaFiscalNumero,
+                    DataColeta,
+                  },
+                });
+
+                // insere o payload completo em VendaFilaIntegração como backup
+              } else {
+                console.log("Venda ja existente: " + Codigo);
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          });
+        }
+      } else {
+        console.error("Erro ao obter o lista integração.");
+        return;
+      }
+    }
+  }
+
+  // consome cada item da fila de integração Vendas - fim
+
+  mainConsomeLista(codigoInicial, codigoFinal);
+
+  const numeroDeVendas = await prisma.venda.count();
+  return { numeroDeVendas };
+});
+
+// Endpoint: Update Vendas - fim
+
 // Endpoint: Retorna Vendas - inicio
 
 app.get("/vendas", async (request, reply) => {
@@ -914,7 +1103,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   const cpfcnpj = params.cpfcnpj.replace(/[^\d]+/g, "").replace(/[^0-9]/g, "");
   let TransportadoraVenda = "";
   let resUltimaVendaCpfCnpjJsonFinal = {
-    venda: [{ Codigo: "", DataVenda: "" }],
+    venda: [{ Codigo: "", DataVenda: "", NumeroNotaFiscal: 0 }],
   };
   let NotaFiscalNumero;
   let NotaFiscalEletronica;
@@ -1280,12 +1469,12 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             // return resDataFreteJson.data;
           } else {
             // Realiza o UPDATE da venda já cadastrada
-            console.log("Aguardando emissão da Nota Fiscal.");
+            console.log(`Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`);
 
-            return "Aguardando emissão da Nota Fiscal.";
+            return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
           }
         } else {
-          return "Aguardando emissão da Nota Fiscal.";
+          return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
         }
       } catch (error) {
         console.error(error);
@@ -1352,11 +1541,27 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   }
 
   // insere registro de metricas
+  let MetricaCodigoVenda;
+  let MetricaDataVenda;
+  //  verififa se ainda não foi gerada NF
+  if (resUltimaVendaCpfCnpjJsonFinal.venda[0].NumeroNotaFiscal == 0) {
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}-${(now.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
+
+    MetricaCodigoVenda = 0;
+    MetricaDataVenda = formattedDate; // apenas para não dar erro no PowerBI
+  } else {
+    MetricaCodigoVenda = resUltimaVendaCpfCnpjJsonFinal.venda[0].Codigo;
+    MetricaDataVenda = resUltimaVendaCpfCnpjJsonFinal.venda[0].DataVenda;
+  }
+
   try {
     const createdMetric = await prisma.rastreioChatMetricas.create({
       data: {
-        CodigoVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].Codigo}`,
-        DataVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].DataVenda}`,
+        CodigoVenda: `${MetricaCodigoVenda}`,
+        DataVenda: `${MetricaDataVenda}`,
         NotaFiscalEletronica: `${NotaFiscalEletronica}`,
         TransportadoraNome: `${TransportadoraVenda}`,
         Ocorrencias: `${resultadoFormatado}`,
@@ -1386,7 +1591,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   const cpfcnpj = params.cpfcnpj.replace(/[^\d]+/g, "").replace(/[^0-9]/g, "");
   let TransportadoraVenda = "";
   let resUltimaVendaCpfCnpjJsonFinal = {
-    venda: [{ Codigo: "", DataVenda: "" }],
+    venda: [{ Codigo: "", DataVenda: "", NotaFiscalNumero: 0 }],
   };
   let NotaFiscalNumero;
   let NotaFiscalEletronica;
@@ -1466,9 +1671,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
             // Busca Ocorrências TRANSLOVATO
 
-            if (
-              TransportadoraNome == "TRANSLOVATO"
-            ) {
+            if (TransportadoraNome == "TRANSLOVATO") {
               return `Utilize a Nota Fiscal de número ${NotaFiscalNumero} para consultar a localização do seu pedido através do link: https://www.translovato.com.br/minha-carga/`;
             }
 
@@ -1758,13 +1961,13 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
             // return resDataFreteJson.data;
           } else {
-            // Realiza o UPDATE da venda já cadastrada
-            console.log("Aguardando emissão da Nota Fiscal.");
+            // Retorna Status sem NF
+            console.log(`Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`);
 
-            return "Aguardando emissão da Nota Fiscal.";
+            return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
           }
         } else {
-          return "Aguardando emissão da Nota Fiscal.";
+          return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
         }
       } catch (error) {
         console.error(error);
@@ -1839,11 +2042,27 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   }
 
   // insere registro de metricas
+  let MetricaCodigoVenda;
+  let MetricaDataVenda;
+  //  verififa se ainda não foi gerada NF
+  if (resUltimaVendaCpfCnpjJsonFinal.venda[0].NotaFiscalNumero == 0) {
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}-${(now.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
+
+    MetricaCodigoVenda = 0;
+    MetricaDataVenda = formattedDate; // apenas para não dar erro no PowerBI
+  } else {
+    MetricaCodigoVenda = resUltimaVendaCpfCnpjJsonFinal.venda[0].Codigo;
+    MetricaDataVenda = resUltimaVendaCpfCnpjJsonFinal.venda[0].DataVenda;
+  }
+
   try {
     const createdMetric = await prisma.rastreioChatMetricas.create({
       data: {
-        CodigoVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].Codigo}`,
-        DataVenda: `${resUltimaVendaCpfCnpjJsonFinal.venda[0].DataVenda}`,
+        CodigoVenda: `${MetricaCodigoVenda}`,
+        DataVenda: `${MetricaDataVenda}`,
         NotaFiscalEletronica: `${NotaFiscalEletronica}`,
         TransportadoraNome: `${TransportadoraVenda}`,
         Ocorrencias: `${resultadoFormatado}`,
