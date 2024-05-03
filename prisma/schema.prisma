@@ -53,7 +53,31 @@ model Venda {
    NotaFiscalNumero Int?
    DataColeta String?
    Nfe Nfe[]
+   ItensVenda ItensVenda[]
+}
 
+model ItensVenda {
+  Id String @id @default(cuid())
+  Codigo               Int
+  ProdutoReferencia    String?
+  ProdutoBarras        String?
+  ProdutoBundleCodigo  Int?
+  VendaCodigo          Int?
+  ProdutoCodigo        Int?
+  PrecoUnitarioVenda   String?
+  PrecoUnitarioCusto   String?
+  EmbaladoParaPresente Boolean?
+  ValorEmbalagemPresente String?
+  Quantidade           String?
+  AtributosEspeciais   String?
+  ItemNome             String?
+  ItemDescontoPercentual String?
+  ItemDescontoValor    String?
+  ItemValorBruto       String?
+  ItemValorLiquido     String?
+  Servico              Boolean?
+  Venda Venda @relation(fields: [CodigoVendaRel], references: [Codigo]) 
+  CodigoVendaRel Int
 }
 
 model Nfe {

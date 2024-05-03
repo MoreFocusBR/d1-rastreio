@@ -579,136 +579,137 @@ app.get("/cargaVendas", async (request, reply) => {
 // Endpoint: Update Vendas - início
 
 app.get("/updateVendas", async (request, reply) => {
-  const maxRegistros = request.headers.maxRegistros;
+  try {
+    async function pegaVenda(Codigo: number) {
+      try {
+        const request = require("superagent");
+        const resVenda = await request
+          .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
+          .set("Accept", "application/json")
+          .set("accept-encoding", "gzip")
+          .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+        //.set("Limit", "1");
 
-  interface RouteParams {
-    codigoInicial: number;
-    codigoFinal: number;
-  }
+        //resVenda.body;
 
-  const params = request.query as RouteParams;
-  const codigoInicial = params.codigoInicial;
-  const codigoFinal = params.codigoFinal;
-
-  // busca fila de integração Vendas - inicio
-
-  async function pegaVenda(Codigo: number) {
-    try {
-      const request = require("superagent");
-      const resVenda = await request
-        .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
-        .set("Accept", "application/json")
-        .set("accept-encoding", "gzip")
-        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
-      //.set("Limit", "1");
-
-      //resVenda.body;
-
-      if (resVenda.status == 200) {
-        return JSON.stringify(resVenda.body);
-      } else {
-        throw new Error("Erro ao obter o lista integração.");
+        if (resVenda.status == 200) {
+          return JSON.stringify(resVenda.body);
+        } else {
+          throw new Error("Erro ao obter o lista integração.");
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
     }
-  }
 
-  // busca fila de integração Vendas - fim
+    async function enviaWhatsStatus (novoStatus: string | null, nomeCliente: string | null, emailCliente: string | null, telefoneCliente: string | null) {
+      const requestSA = require("superagent");
+      let mensagem = "";
+      if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
+        let primeiroNome: string = nomeCliente.split(' ')[0];
+        mensagem = `Olá ${primeiroNome}!\n\nQueremos expressar nossa gratidão pelo seu pedido! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nFique atento às próximas atualizações sobre o status do seu pedido.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!\n\nAtenciosamente,\nD1Fitness`;
+        
+        const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+        
+        const resZAPI = await requestSA
+          .post(
+            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+          )
+          .set("Content-Type", "application/json")
+          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .send(bodyWhats);
 
-  // consome cada item da fila de integração Vendas - inicio
+      }
+      else if (novoStatus == "Enviado" && nomeCliente != null) {
+        let primeiroNome: string = nomeCliente.split(' ')[0];
+        mensagem = `Olá ${primeiroNome}!\n\nEstamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨\n\nSeu pedido está em transporte e logo estará em suas mãos.\n\nFique de olho aqui nas mensagens para ficar informado da sua posição de entrega.\n\nAgradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!\n\nAtenciosamente,\nD1Fitness`;
+        
+        const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+        
+        const resZAPI = await requestSA
+          .post(
+            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+          )
+          .set("Content-Type", "application/json")
+          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .send(bodyWhats);
+      }
+    }
 
-  async function mainConsomeLista(codigoInicial: number, codigoFinal: number) {
-    for (let Codigo = codigoInicial; Codigo <= codigoFinal; Codigo++) {
-      const resVenda = await pegaVenda(Codigo);
+    const dataLimite = new Date();
+    dataLimite.setDate(dataLimite.getDate() - 240); // Subtrai 60 dias da data atual
 
-      if (resVenda) {
-        const resListaIntegracaoJson = await JSON.parse(resVenda);
+    // Define o tamanho do lote para a paginação
+    const tamanhoLote = 30; // Pode ajustar conforme necessário
 
-        if (resListaIntegracaoJson.venda != "") {
-          resListaIntegracaoJson.venda.forEach(async (venda: any) => {
-            try {
-              interface Venda {
-                Codigo: number;
-                ClienteCodigo: number;
-                ClienteTipoPessoa: string;
-                ClienteDocumento: string;
-                TransportadoraCodigo: number;
-                DataVenda: string;
-                Entrega: boolean;
-                EntregaNome: string;
-                EntregaEmail: string;
-                NumeroObjeto: string;
-                EntregaTelefone: string;
-                EntregaLogradouro: string;
-                EntregaLogradouroNumero: string;
-                EntregaLogradouroComplemento: string;
-                EntregaBairro: string;
-                EntregaMunicipioNome: string;
-                EntregaUnidadeFederativa: string;
-                EntregaCEP: string;
-                Observacoes: string;
-                ObservacoesLoja: string;
-                CodigoStatus: number;
-                DescricaoStatus: string;
-                DataHoraStatus: string;
-                PrevisaoEntrega: string;
-                CodigoNotaFiscal: number;
-                DataEntrega: string;
-                Cancelada: boolean;
-                DataEnvio: string;
-                NotaFiscalNumero: number;
-                DataColeta: string;
-              }
+    let offset = 0;
+    let todasVendasProcessadas = false;
 
-              const {
-                Codigo,
-                ClienteCodigo,
-                ClienteTipoPessoa,
-                ClienteDocumento,
-                TransportadoraCodigo,
-                DataVenda,
-                Entrega,
-                EntregaNome,
-                EntregaEmail,
-                NumeroObjeto,
-                EntregaTelefone,
-                EntregaLogradouro,
-                EntregaLogradouroNumero,
-                EntregaLogradouroComplemento,
-                EntregaBairro,
-                EntregaMunicipioNome,
-                EntregaUnidadeFederativa,
-                EntregaCEP,
-                Observacoes,
-                ObservacoesLoja,
-                CodigoStatus,
-                DescricaoStatus,
-                DataHoraStatus,
-                PrevisaoEntrega,
-                CodigoNotaFiscal,
-                DataEntrega,
-                Cancelada,
-                DataEnvio,
-                NotaFiscalNumero,
-                DataColeta,
-              } = venda as Venda;
+    while (!todasVendasProcessadas) {
+      await prisma.$transaction(async (prismaClient) => {
+        const vendasFiltradas = await prismaClient.venda.findMany({
+          take: tamanhoLote,
+          skip: offset,
+          where: {
+            DataVenda: {
+              gt: dataLimite.toISOString(),
+            },
+            Cancelada: false,
+            NOT: {
+              DescricaoStatus: {
+                in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
+              },
+            },
+          },
+          orderBy: {
+            Codigo: "desc",
+          },
+        });
 
-              const existingRecord = await prisma.venda.findFirst({
-                where: {
-                  Codigo: Codigo,
-                },
-              });
+        interface VendaInterface {
+          Codigo: number;
+          ClienteCodigo: number;
+          ClienteDocumento: string;
+          TransportadoraCodigo: number | null;
+          DataVenda: string | null;
+          Entrega: boolean;
+          EntregaNome: string | null;
+          EntregaEmail: string | null;
+          NumeroObjeto: string | null;
+          EntregaTelefone: string | null;
+          EntregaLogradouro: string | null;
+          EntregaLogradouroNumero: string | null;
+          EntregaLogradouroComplemento: string | null;
+          EntregaBairro: string | null;
+          EntregaMunicipioNome: string | null;
+          EntregaUnidadeFederativa: string | null;
+          EntregaCEP: string | null;
+          Observacoes: string | null;
+          ObservacoesLoja: string | null;
+          CodigoStatus: number | null;
+          DescricaoStatus: string | null;
+          DataHoraStatus: string | null;
+          PrevisaoEntrega: string | null;
+          CodigoNotaFiscal: number | null;
+          DataEntrega: string | null;
+          Cancelada: boolean;
+          DataEnvio: string | null;
+          NotaFiscalNumero: number | null;
+          DataColeta: string | null;
+        }
 
-              // Se não existir, insere o novo registro
-              if (!existingRecord && Cancelada != true) {
-                console.log("Inserindo Venda: " + Codigo);
-
-                await prisma.venda.create({
-                  data: {
+        async function processaVenda(prismaClient: PrismaClient, venda: VendaInterface) {
+          try {
+            const resVenda = await pegaVenda(venda.Codigo);
+        
+            if (resVenda) {
+              const resListaIntegracaoJson = JSON.parse(resVenda);
+        
+              if (resListaIntegracaoJson.venda && resListaIntegracaoJson.venda.length > 0) {
+                for (const vendaJson of resListaIntegracaoJson.venda) {
+                  const {
                     Codigo,
                     ClienteCodigo,
-                    ClienteTipoPessoa,
                     ClienteDocumento,
                     TransportadoraCodigo,
                     DataVenda,
@@ -717,13 +718,6 @@ app.get("/updateVendas", async (request, reply) => {
                     EntregaEmail,
                     NumeroObjeto,
                     EntregaTelefone,
-                    EntregaLogradouro,
-                    EntregaLogradouroNumero,
-                    EntregaLogradouroComplemento,
-                    EntregaBairro,
-                    EntregaMunicipioNome,
-                    EntregaUnidadeFederativa,
-                    EntregaCEP,
                     Observacoes,
                     ObservacoesLoja,
                     CodigoStatus,
@@ -736,31 +730,74 @@ app.get("/updateVendas", async (request, reply) => {
                     DataEnvio,
                     NotaFiscalNumero,
                     DataColeta,
-                  },
-                });
+                  } = vendaJson as VendaInterface;
+        
+                  // Atualiza a venda apenas se o status for diferente
+                  if (venda.DescricaoStatus !== DescricaoStatus) {
+                    console.log(`Atualizando Venda: ${venda.Codigo}. Status: de ${venda.DescricaoStatus} para ${DescricaoStatus}`);
+        
+                    await prismaClient.venda.update({
+                      where: { Codigo: venda.Codigo },
+                      data: {
+                        Codigo,
+                        ClienteCodigo,
+                        ClienteDocumento,
+                        TransportadoraCodigo,
+                        DataVenda,
+                        Entrega,
+                        EntregaNome,
+                        EntregaEmail,
+                        NumeroObjeto,
+                        EntregaTelefone,
+                        Observacoes,
+                        ObservacoesLoja,
+                        CodigoStatus,
+                        DescricaoStatus,
+                        DataHoraStatus,
+                        PrevisaoEntrega,
+                        CodigoNotaFiscal,
+                        DataEntrega,
+                        Cancelada,
+                        DataEnvio,
+                        NotaFiscalNumero,
+                        DataColeta,
+                      },
+                    });
 
-                // insere o payload completo em VendaFilaIntegração como backup
-              } else {
-                console.log("Venda ja existente: " + Codigo);
+                    enviaWhatsStatus (DescricaoStatus, EntregaNome, EntregaEmail, EntregaTelefone);
+                  }
+                }
               }
-            } catch (error) {
-              console.error(error);
+            } else {
+              console.error(`Erro ao obter a venda: ${venda.Codigo}`);
             }
-          });
+          } catch (error) {
+            console.error(`Erro ao processar a venda ${venda.Codigo}:`, error);
+          }
         }
-      } else {
-        console.error("Erro ao obter o lista integração.");
-        return;
-      }
+        
+
+        // Processa as vendas do lote atual
+        for (const venda of vendasFiltradas) {
+          await processaVenda(prisma, venda);
+        }
+
+        // Verifica se todos os registros foram processados
+        if (vendasFiltradas.length < tamanhoLote) {
+          todasVendasProcessadas = true;
+        } else {
+          offset += tamanhoLote;
+        }
+      },
+      {timeout: 120000, });
     }
+    console.log("Vendas atualizadas com sucesso");
+    return reply.status(200).send("Vendas atualizadas com sucesso");
+    
+  } catch (error) {
+    console.error(error);
+    return reply.status(500).send("Erro interno no servidor.");
   }
-
-  // consome cada item da fila de integração Vendas - fim
-
-  mainConsomeLista(codigoInicial, codigoFinal);
-
-  const numeroDeVendas = await prisma.venda.count();
-  return { numeroDeVendas };
 });
 
 // Endpoint: Update Vendas - fim
@@ -1469,7 +1506,9 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
             // return resDataFreteJson.data;
           } else {
             // Realiza o UPDATE da venda já cadastrada
-            console.log(`Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`);
+            console.log(
+              `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`
+            );
 
             return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
           }
@@ -1962,7 +2001,9 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
             // return resDataFreteJson.data;
           } else {
             // Retorna Status sem NF
-            console.log(`Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`);
+            console.log(
+              `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`
+            );
 
             return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
           }
