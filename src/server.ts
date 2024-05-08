@@ -3,6 +3,7 @@ import fastifyStatic from "@fastify/static";
 import { PrismaClient, Venda } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import fastify from "fastify";
+import * as nodemailer from "nodemailer";
 import { v4 as uuid } from "uuid";
 import {
   JsonArray,
@@ -32,6 +33,27 @@ app.register(notaFiscalRoutes, {
 const authToken = "effca82a-7127-45de-9a53-b71fc01a9064";
 
 const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onrender.com   http://localhost:3334
+
+// Configurações de transporte para o servidor SMTP
+const transporter = nodemailer.createTransport({
+  host: "smtp.morefocus.com.br",
+  port: 587,
+  secure: false, // Se o servidor usar SSL/TLS
+  auth: {
+    user: "rodrigo@morefocus.com.br",
+    pass: "!Senha12",
+  },
+});
+
+// Função para enviar o e-mail
+async function enviarEmail(mailOptions) {
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("E-mail enviado:", info.messageId);
+  } catch (error) {
+    console.error("Erro ao enviar o e-mail:", error);
+  }
+}
 
 // Endpoint: Admin - inicio
 
@@ -602,15 +624,20 @@ app.get("/updateVendas", async (request, reply) => {
       }
     }
 
-    async function enviaWhatsStatus (novoStatus: string | null, nomeCliente: string | null, emailCliente: string | null, telefoneCliente: string | null) {
+    async function enviaWhatsStatus(
+      novoStatus: string | null,
+      nomeCliente: string | null,
+      emailCliente: string | null,
+      telefoneCliente: string | null
+    ) {
       const requestSA = require("superagent");
       let mensagem = "";
       if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
-        let primeiroNome: string = nomeCliente.split(' ')[0];
+        let primeiroNome: string = nomeCliente.split(" ")[0];
         mensagem = `Olá ${primeiroNome}!\n\nQueremos expressar nossa gratidão pelo seu pedido! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nFique atento às próximas atualizações sobre o status do seu pedido.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!\n\nAtenciosamente,\nD1Fitness`;
-        
+
         const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
-        
+
         const resZAPI = await requestSA
           .post(
             "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
@@ -619,13 +646,55 @@ app.get("/updateVendas", async (request, reply) => {
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
           .send(bodyWhats);
 
-      }
-      else if (novoStatus == "Enviado" && nomeCliente != null) {
-        let primeiroNome: string = nomeCliente.split(' ')[0];
+        const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+
+        const resZAPI2 = await requestSA
+          .post(
+            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+          )
+          .set("Content-Type", "application/json")
+          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .send(bodyWhats2);
+
+        // Conteúdo do e-mail
+        const emailContent = `
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estamos preparando o envio do seu pedido</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 20px;">
+
+<div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+    <h1 style="color: #333333;">Olá ${primeiroNome}!</h1>
+    <p style="font-size: 16px; color: #444444;">Queremos expressar nossa gratidão pelo seu pedido! 🙌💪</p>
+    <p style="font-size: 16px; color: #444444;">É com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.</p>
+    <p style="font-size: 16px; color: #444444;">Fique atento às próximas atualizações sobre o status do seu pedido.</p>
+    <p style="font-size: 16px; color: #444444;">Se surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.</p>
+    <p style="font-size: 16px; color: #444444;">Agradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!</p>
+    <p style="font-size: 16px; color: #444444;">Atenciosamente,<br>D1Fitness</p>
+</div>
+
+</body>
+</html>
+`;
+        // Opções do e-mail
+        const mailOptions = {
+          from: '"D1 Fitness" <nao-responda@morefocus.com.br>',
+          to: "rodrigo@morefocus.com.br", // E-mail do destinatário
+          subject: "Estamos preparando o envio do seu pedido",
+          text: emailContent,
+        };
+
+        enviarEmail(mailOptions);
+      } else if (novoStatus == "Enviado" && nomeCliente != null) {
+        let primeiroNome: string = nomeCliente.split(" ")[0];
         mensagem = `Olá ${primeiroNome}!\n\nEstamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨\n\nSeu pedido está em transporte e logo estará em suas mãos.\n\nFique de olho aqui nas mensagens para ficar informado da sua posição de entrega.\n\nAgradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!\n\nAtenciosamente,\nD1Fitness`;
-        
+
         const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
-        
+
         const resZAPI = await requestSA
           .post(
             "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
@@ -633,6 +702,49 @@ app.get("/updateVendas", async (request, reply) => {
           .set("Content-Type", "application/json")
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
           .send(bodyWhats);
+
+        const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+
+        const resZAPI2 = await requestSA
+          .post(
+            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+          )
+          .set("Content-Type", "application/json")
+          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .send(bodyWhats2);
+
+        // Conteúdo do e-mail
+        const emailContent = `
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-mail de Confirmação de Pedido</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 20px;">
+
+<div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+    <h1 style="color: #333333;">Olá ${primeiroNome}!</h1>
+    <p style="font-size: 16px; color: #444444;">Estamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨</p>
+    <p style="font-size: 16px; color: #444444;">Seu pedido está em transporte e logo estará em suas mãos.</p>
+    <p style="font-size: 16px; color: #444444;">Fique de olho aqui nas mensagens para ficar informado da sua posição de entrega.</p>
+    <p style="font-size: 16px; color: #444444;">Agradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!</p>
+    <p style="font-size: 16px; color: #444444;">Atenciosamente,<br>D1Fitness</p>
+</div>
+
+</body>
+</html>
+`;
+        // Opções do e-mail
+        const mailOptions = {
+          from: '"D1 Fitness" <nao-responda@morefocus.com.br>',
+          to: "rodrigo@morefocus.com.br", // E-mail do destinatário
+          subject: "Seu pedido está a caminho!",
+          text: emailContent,
+        };
+
+        enviarEmail(mailOptions);
       }
     }
 
@@ -646,154 +758,170 @@ app.get("/updateVendas", async (request, reply) => {
     let todasVendasProcessadas = false;
 
     while (!todasVendasProcessadas) {
-      await prisma.$transaction(async (prismaClient) => {
-        const vendasFiltradas = await prismaClient.venda.findMany({
-          take: tamanhoLote,
-          skip: offset,
-          where: {
-            DataVenda: {
-              gt: dataLimite.toISOString(),
-            },
-            Cancelada: false,
-            NOT: {
-              DescricaoStatus: {
-                in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
+      await prisma.$transaction(
+        async (prismaClient) => {
+          const vendasFiltradas = await prismaClient.venda.findMany({
+            take: tamanhoLote,
+            skip: offset,
+            where: {
+              DataVenda: {
+                gt: dataLimite.toISOString(),
+              },
+              Cancelada: false,
+              NOT: {
+                DescricaoStatus: {
+                  in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
+                },
               },
             },
-          },
-          orderBy: {
-            Codigo: "desc",
-          },
-        });
+            orderBy: {
+              Codigo: "desc",
+            },
+          });
 
-        interface VendaInterface {
-          Codigo: number;
-          ClienteCodigo: number;
-          ClienteDocumento: string;
-          TransportadoraCodigo: number | null;
-          DataVenda: string | null;
-          Entrega: boolean;
-          EntregaNome: string | null;
-          EntregaEmail: string | null;
-          NumeroObjeto: string | null;
-          EntregaTelefone: string | null;
-          EntregaLogradouro: string | null;
-          EntregaLogradouroNumero: string | null;
-          EntregaLogradouroComplemento: string | null;
-          EntregaBairro: string | null;
-          EntregaMunicipioNome: string | null;
-          EntregaUnidadeFederativa: string | null;
-          EntregaCEP: string | null;
-          Observacoes: string | null;
-          ObservacoesLoja: string | null;
-          CodigoStatus: number | null;
-          DescricaoStatus: string | null;
-          DataHoraStatus: string | null;
-          PrevisaoEntrega: string | null;
-          CodigoNotaFiscal: number | null;
-          DataEntrega: string | null;
-          Cancelada: boolean;
-          DataEnvio: string | null;
-          NotaFiscalNumero: number | null;
-          DataColeta: string | null;
-        }
+          interface VendaInterface {
+            Codigo: number;
+            ClienteCodigo: number;
+            ClienteDocumento: string;
+            TransportadoraCodigo: number | null;
+            DataVenda: string | null;
+            Entrega: boolean;
+            EntregaNome: string | null;
+            EntregaEmail: string | null;
+            NumeroObjeto: string | null;
+            EntregaTelefone: string | null;
+            EntregaLogradouro: string | null;
+            EntregaLogradouroNumero: string | null;
+            EntregaLogradouroComplemento: string | null;
+            EntregaBairro: string | null;
+            EntregaMunicipioNome: string | null;
+            EntregaUnidadeFederativa: string | null;
+            EntregaCEP: string | null;
+            Observacoes: string | null;
+            ObservacoesLoja: string | null;
+            CodigoStatus: number | null;
+            DescricaoStatus: string | null;
+            DataHoraStatus: string | null;
+            PrevisaoEntrega: string | null;
+            CodigoNotaFiscal: number | null;
+            DataEntrega: string | null;
+            Cancelada: boolean;
+            DataEnvio: string | null;
+            NotaFiscalNumero: number | null;
+            DataColeta: string | null;
+          }
 
-        async function processaVenda(prismaClient: PrismaClient, venda: VendaInterface) {
-          try {
-            const resVenda = await pegaVenda(venda.Codigo);
-        
-            if (resVenda) {
-              const resListaIntegracaoJson = JSON.parse(resVenda);
-        
-              if (resListaIntegracaoJson.venda && resListaIntegracaoJson.venda.length > 0) {
-                for (const vendaJson of resListaIntegracaoJson.venda) {
-                  const {
-                    Codigo,
-                    ClienteCodigo,
-                    ClienteDocumento,
-                    TransportadoraCodigo,
-                    DataVenda,
-                    Entrega,
-                    EntregaNome,
-                    EntregaEmail,
-                    NumeroObjeto,
-                    EntregaTelefone,
-                    Observacoes,
-                    ObservacoesLoja,
-                    CodigoStatus,
-                    DescricaoStatus,
-                    DataHoraStatus,
-                    PrevisaoEntrega,
-                    CodigoNotaFiscal,
-                    DataEntrega,
-                    Cancelada,
-                    DataEnvio,
-                    NotaFiscalNumero,
-                    DataColeta,
-                  } = vendaJson as VendaInterface;
-        
-                  // Atualiza a venda apenas se o status for diferente
-                  if (venda.DescricaoStatus !== DescricaoStatus) {
-                    console.log(`Atualizando Venda: ${venda.Codigo}. Status: de ${venda.DescricaoStatus} para ${DescricaoStatus}`);
-        
-                    await prismaClient.venda.update({
-                      where: { Codigo: venda.Codigo },
-                      data: {
-                        Codigo,
-                        ClienteCodigo,
-                        ClienteDocumento,
-                        TransportadoraCodigo,
-                        DataVenda,
-                        Entrega,
+          async function processaVenda(
+            prismaClient: PrismaClient,
+            venda: VendaInterface
+          ) {
+            try {
+              const resVenda = await pegaVenda(venda.Codigo);
+
+              if (resVenda) {
+                const resListaIntegracaoJson = JSON.parse(resVenda);
+
+                if (
+                  resListaIntegracaoJson.venda &&
+                  resListaIntegracaoJson.venda.length > 0
+                ) {
+                  for (const vendaJson of resListaIntegracaoJson.venda) {
+                    const {
+                      Codigo,
+                      ClienteCodigo,
+                      ClienteDocumento,
+                      TransportadoraCodigo,
+                      DataVenda,
+                      Entrega,
+                      EntregaNome,
+                      EntregaEmail,
+                      NumeroObjeto,
+                      EntregaTelefone,
+                      Observacoes,
+                      ObservacoesLoja,
+                      CodigoStatus,
+                      DescricaoStatus,
+                      DataHoraStatus,
+                      PrevisaoEntrega,
+                      CodigoNotaFiscal,
+                      DataEntrega,
+                      Cancelada,
+                      DataEnvio,
+                      NotaFiscalNumero,
+                      DataColeta,
+                    } = vendaJson as VendaInterface;
+
+                    // Atualiza a venda apenas se o status for diferente
+                    if (venda.DescricaoStatus !== DescricaoStatus) {
+                      console.log(
+                        `Atualizando Venda: ${venda.Codigo}. Status: de ${venda.DescricaoStatus} para ${DescricaoStatus}`
+                      );
+
+                      await prismaClient.venda.update({
+                        where: { Codigo: venda.Codigo },
+                        data: {
+                          Codigo,
+                          ClienteCodigo,
+                          ClienteDocumento,
+                          TransportadoraCodigo,
+                          DataVenda,
+                          Entrega,
+                          EntregaNome,
+                          EntregaEmail,
+                          NumeroObjeto,
+                          EntregaTelefone,
+                          Observacoes,
+                          ObservacoesLoja,
+                          CodigoStatus,
+                          DescricaoStatus,
+                          DataHoraStatus,
+                          PrevisaoEntrega,
+                          CodigoNotaFiscal,
+                          DataEntrega,
+                          Cancelada,
+                          DataEnvio,
+                          NotaFiscalNumero,
+                          DataColeta,
+                        },
+                      });
+
+                      enviaWhatsStatus(
+                        DescricaoStatus,
                         EntregaNome,
                         EntregaEmail,
-                        NumeroObjeto,
-                        EntregaTelefone,
-                        Observacoes,
-                        ObservacoesLoja,
-                        CodigoStatus,
-                        DescricaoStatus,
-                        DataHoraStatus,
-                        PrevisaoEntrega,
-                        CodigoNotaFiscal,
-                        DataEntrega,
-                        Cancelada,
-                        DataEnvio,
-                        NotaFiscalNumero,
-                        DataColeta,
-                      },
-                    });
-
-                    enviaWhatsStatus (DescricaoStatus, EntregaNome, EntregaEmail, EntregaTelefone);
+                        EntregaTelefone
+                      );
+                    }
                   }
                 }
+              } else {
+                console.error(`Erro ao obter a venda: ${venda.Codigo}`);
               }
-            } else {
-              console.error(`Erro ao obter a venda: ${venda.Codigo}`);
+            } catch (error) {
+              console.error(
+                `Erro ao processar a venda ${venda.Codigo}:`,
+                error
+              );
             }
-          } catch (error) {
-            console.error(`Erro ao processar a venda ${venda.Codigo}:`, error);
           }
-        }
-        
 
-        // Processa as vendas do lote atual
-        for (const venda of vendasFiltradas) {
-          await processaVenda(prisma, venda);
-        }
+          // Processa as vendas do lote atual
+          for (const venda of vendasFiltradas) {
+            await processaVenda(prisma, venda);
+          }
 
-        // Verifica se todos os registros foram processados
-        if (vendasFiltradas.length < tamanhoLote) {
-          todasVendasProcessadas = true;
-        } else {
-          offset += tamanhoLote;
-        }
-      },
-      {timeout: 120000, });
+          // Verifica se todos os registros foram processados
+          if (vendasFiltradas.length < tamanhoLote) {
+            todasVendasProcessadas = true;
+          } else {
+            offset += tamanhoLote;
+          }
+        },
+        { timeout: 120000 }
+      );
     }
     console.log("Vendas atualizadas com sucesso");
     return reply.status(200).send("Vendas atualizadas com sucesso");
-    
   } catch (error) {
     console.error(error);
     return reply.status(500).send("Erro interno no servidor.");
@@ -1215,7 +1343,62 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
               TransportadoraNome == "TPL" ||
               TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
             ) {
-              return `Utilize o código DANFE ${NotaFiscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
+              
+              
+              const resSSW = await request
+                .get("https://ssw.inf.br/api/trackingdanfe")
+                .set("Accept", "application/json")
+                .set("Content-Type", "application/json");
+
+              const SSWocorrenciasJson = JSON.parse(resSSW.text);
+
+              if (
+                SSWocorrenciasJson &&
+                SSWocorrenciasJson.documento.tracking
+              ) {
+                SSWocorrenciasJson.documento.tracking.forEach(
+                  (
+                    row: {
+                      data_hora: string;
+                      dominio: string;
+                      filial: string;
+                      cidade: string;
+                      ocorrencia: string;
+                      descricao: string;
+                      tipo: string;
+                      data_hora_efetiva: string;
+                    },
+                    index: number
+                  ) => {
+                    const {
+                      data_hora,
+                      dominio,
+                      filial,
+                      cidade,
+                      ocorrencia,
+                      descricao,
+                      tipo,
+                      data_hora_efetiva,
+                    } = row;
+
+                    resultadoFormatado += `Data/Hora da ocorrência: ${data_hora}\n`;
+                    resultadoFormatado += `Observação: ${ocorrencia}\n`;
+                    resultadoFormatado += `Descrição: ${descricao}\n`;
+
+                    if (
+                      index !==
+                      SSWocorrenciasJson.conhecimentos[0].historico.length - 1
+                    ) {
+                      resultadoFormatado += "------\n";
+                    }
+                  }
+                );
+              } else {
+                resultadoFormatado +=
+                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+              }
+
+              return JSON.stringify(resultadoFormatado);
             }
 
             // Busca Ocorrências MODULAR
@@ -1572,7 +1755,12 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   } else if (
     TransportadoraVenda == "MANNTRANSPORTES" ||
     TransportadoraVenda == "MOVVI" ||
-    TransportadoraVenda == "JAMEF"
+    TransportadoraVenda == "JAMEF" ||
+    TransportadoraVenda == "BAUER" ||
+    TransportadoraVenda == "ACEVILLE" ||
+    TransportadoraVenda == "GOBOR" ||
+    TransportadoraVenda == "TPL" ||
+    TransportadoraVenda == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
   ) {
     // Mantem formato já pronto
   } else {
@@ -1705,7 +1893,61 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               TransportadoraNome == "TPL" ||
               TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
             ) {
-              return `Utilize o código DANFE ${NotaFiscalEletronica} para consultar a localização do seu pedido através do link: https://ssw.inf.br/2/rastreamento_danfe`;
+              
+              const resSSW = await request
+                .post("https://ssw.inf.br/api/trackingdanfe")
+                .set("Accept", "application/json")
+                .set("Content-Type", "application/json")
+                .send(`{"chave_nfe": "${NotaFiscalEletronica}"}`);
+
+              const SSWocorrenciasJson = JSON.parse(resSSW.text);
+
+              if (
+                SSWocorrenciasJson.success
+              ) {
+                SSWocorrenciasJson.documento.tracking.forEach(
+                  (
+                    row: {
+                      data_hora: string;
+                      dominio: string;
+                      filial: string;
+                      cidade: string;
+                      ocorrencia: string;
+                      descricao: string;
+                      tipo: string;
+                      data_hora_efetiva: string;
+                    },
+                    index: number
+                  ) => {
+                    const {
+                      data_hora,
+                      dominio,
+                      filial,
+                      cidade,
+                      ocorrencia,
+                      descricao,
+                      tipo,
+                      data_hora_efetiva,
+                    } = row;
+
+                      resultadoFormatado += `Data/Hora da ocorrência: ${data_hora}\n`;
+                    resultadoFormatado += `Observação: ${ocorrencia}\n`;
+                    resultadoFormatado += `Descrição: ${descricao}\n`;
+
+                    if (
+                      index !==
+                      SSWocorrenciasJson.documento.tracking.length - 1
+                    ) {
+                      resultadoFormatado += "------\n";
+                    }
+                  }
+                );
+              } else {
+                resultadoFormatado +=
+                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+              }
+
+              return JSON.stringify(resultadoFormatado);
             }
 
             // Busca Ocorrências TRANSLOVATO
@@ -2067,7 +2309,12 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   } else if (
     TransportadoraVenda == "MANNTRANSPORTES" ||
     TransportadoraVenda == "MOVVI" ||
-    TransportadoraVenda == "JAMEF"
+    TransportadoraVenda == "JAMEF" ||
+    TransportadoraVenda == "BAUER" ||
+    TransportadoraVenda == "ACEVILLE" ||
+    TransportadoraVenda == "GOBOR" ||
+    TransportadoraVenda == "TPL" ||
+    TransportadoraVenda == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
   ) {
     // Mantem formato já pronto
   } else {

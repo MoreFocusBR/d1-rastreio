@@ -17,6 +17,7 @@
   "devDependencies": {
     "@tsconfig/node18": "^18.2.2",
     "@types/node": "^20.11.25",
+    "@types/nodemailer": "^6.4.15",
     "nodemon": "^3.1.0",
     "prisma": "^5.10.2",
     "sucrase": "^3.35.0",
@@ -32,6 +33,7 @@
     "fastify": "^4.26.2",
     "gh": "^1.13.9",
     "github": "^14.0.0",
+    "nodemailer": "^6.9.13",
     "nvm": "^0.0.4",
     "pg": "^8.11.3",
     "superagent": "^8.1.2"
