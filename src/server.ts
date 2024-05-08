@@ -13,6 +13,7 @@ import {
 } from "@prisma/client/runtime/library";
 import { notaFiscalRoutes } from "./routes/nota-fiscal.routes";
 import { error } from "console";
+import { Options } from "nodemailer/lib/mailer";
 
 const app = fastify();
 
@@ -46,7 +47,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Função para enviar o e-mail
-async function enviarEmail(mailOptions) {
+async function enviarEmail(mailOptions: Options) {
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("E-mail enviado:", info.messageId);
