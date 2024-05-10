@@ -37,7 +37,7 @@ const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onren
 
 // Configurações de transporte para o servidor SMTP
 const transporter = nodemailer.createTransport({
-  host: "smtp.morefocus.com.br",
+  service: "Gmail",
   port: 587,
   secure: false, // Se o servidor usar SSL/TLS
   auth: {
@@ -602,6 +602,43 @@ app.get("/cargaVendas", async (request, reply) => {
 // Endpoint: Update Vendas - início
 
 app.get("/updateVendas", async (request, reply) => {
+  // Teste envio do email
+  // Conteúdo do e-mail
+  const emailContent = `
+  <!DOCTYPE html>
+  <html lang="pt-br">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste - E-mail de Confirmação de Pedido</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 20px;">
+  
+  <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+      <h1 style="color: #333333;">Olá NomeTeste!</h1>
+      <p style="font-size: 16px; color: #444444;">Estamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨</p>
+      <p style="font-size: 16px; color: #444444;">Seu pedido está em transporte e logo estará em suas mãos.</p>
+      <p style="font-size: 16px; color: #444444;">Fique de olho aqui nas mensagens para ficar informado da sua posição de entrega.</p>
+      <p style="font-size: 16px; color: #444444;">Agradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!</p>
+      <p style="font-size: 16px; color: #444444;">Atenciosamente,<br>D1Fitness</p>
+  </div>
+  
+  </body>
+  </html>
+  `;
+  let mensagem = `Olá NomeTeste!\n\nQueremos expressar nossa gratidão pelo seu pedido! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nFique atento às próximas atualizações sobre o status do seu pedido.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!\n\nAtenciosamente,\nD1Fitness`;
+
+  // Opções do e-mail
+  const mailOptions = {
+    from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+    to: "rodrigo@morefocus.com.br", // E-mail do destinatário
+    subject: "Teste - Seu pedido está a caminho!",
+    text: mensagem,
+    html: emailContent,
+  };
+
+  enviarEmail(mailOptions);
+
   try {
     async function pegaVenda(Codigo: number) {
       try {
@@ -647,7 +684,7 @@ app.get("/updateVendas", async (request, reply) => {
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
           .send(bodyWhats);
 
-        const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+        /* const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
 
         const resZAPI2 = await requestSA
           .post(
@@ -655,7 +692,7 @@ app.get("/updateVendas", async (request, reply) => {
           )
           .set("Content-Type", "application/json")
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats2);
+          .send(bodyWhats2); */
 
         // Conteúdo do e-mail
         const emailContent = `
@@ -683,10 +720,11 @@ app.get("/updateVendas", async (request, reply) => {
 `;
         // Opções do e-mail
         const mailOptions = {
-          from: '"D1 Fitness" <nao-responda@morefocus.com.br>',
+          from: '"D1 Fitness" <rodrigo@morefocus.com.br>',
           to: "rodrigo@morefocus.com.br", // E-mail do destinatário
           subject: "Estamos preparando o envio do seu pedido",
-          text: emailContent,
+          text: mensagem,
+          html: emailContent,
         };
 
         enviarEmail(mailOptions);
@@ -704,7 +742,7 @@ app.get("/updateVendas", async (request, reply) => {
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
           .send(bodyWhats);
 
-        const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+        /* const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
 
         const resZAPI2 = await requestSA
           .post(
@@ -712,7 +750,7 @@ app.get("/updateVendas", async (request, reply) => {
           )
           .set("Content-Type", "application/json")
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats2);
+          .send(bodyWhats2); */
 
         // Conteúdo do e-mail
         const emailContent = `
@@ -739,10 +777,11 @@ app.get("/updateVendas", async (request, reply) => {
 `;
         // Opções do e-mail
         const mailOptions = {
-          from: '"D1 Fitness" <nao-responda@morefocus.com.br>',
+          from: '"D1 Fitness" <rodrigo@morefocus.com.br>',
           to: "rodrigo@morefocus.com.br", // E-mail do destinatário
           subject: "Seu pedido está a caminho!",
-          text: emailContent,
+          text: mensagem,
+          html: emailContent,
         };
 
         enviarEmail(mailOptions);
@@ -1274,499 +1313,20 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   let NotaFiscalNumero;
   let NotaFiscalEletronica;
 
-  // consome cada item da Lista Vendas - inicio
+  const requestREST = require("superagent");
 
-  async function mainBuscaOcorrencias(cpfcnpj: string) {
-    const request = require("superagent");
-    const resUltimaVendaCpfCnpj = await request
-      .get(`${API_URL}/ultimaVendaCPFCNPJ?cpfcnpj=${cpfcnpj}`)
-      .set("Accept", "application/json");
+  const resUltimaVendaCpfCnpj = await requestREST
+    .get(`${API_URL}/ultimaVendaCPFCNPJ?cpfcnpj=${cpfcnpj}`)
+    .set("Accept", "application/json");
 
-    if (await resUltimaVendaCpfCnpj) {
-      const resUltimaVendaCpfCnpjJson = await JSON.parse(
-        resUltimaVendaCpfCnpj.text
-      );
-      resUltimaVendaCpfCnpjJsonFinal = resUltimaVendaCpfCnpjJson;
-
-      try {
-        if ((await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0) {
-          const requestNF = require("superagent");
-          const resNfe = await requestNF
-            .get(
-              `http://cloud01.alternativa.net.br:2086/root/nfe/${resUltimaVendaCpfCnpjJson.venda[0].CodigoNotaFiscal}`
-            )
-            .set("Accept", "application/json")
-            .set("accept-encoding", "gzip")
-            .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
-
-          const NfeJson = JSON.parse(resNfe.text);
-
-          interface Nfe {
-            Codigo: number;
-            CodigoVenda: number;
-            CodigoCliente: number;
-            DataEmissao: string;
-            HoraEmissao: string;
-            HoraSaida: string;
-            Nfe: boolean;
-            Nfce: boolean;
-            NotaFiscalNumero: number;
-            TransportadoraCodigo: number;
-            TransportadoraNome: string;
-            MeioTransporte: string;
-            NumeroObjeto: string;
-            NotaFiscalEletronica: string;
-            Cancelada: boolean;
-            MotivoCancelamento: string;
-          }
-
-          NotaFiscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
-          const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.trim();
-          // Atualiza TransportadoraVenda para utilizar fora desse nó
-          TransportadoraVenda = TransportadoraNome;
-
-          NotaFiscalNumero = NfeJson.nfe[0].NotaFiscalNumero;
-          const NotaFiscalObjeto = NfeJson.nfe[0].NumeroObjeto;
-
-          // Se não existir, insere o novo registro
-          if (NotaFiscalEletronica > 0) {
-            console.log(
-              `Transportadora ${TransportadoraNome}. Buscando ocorrências da Nfe: ` +
-                NotaFiscalEletronica
-            );
-
-            // Busca Ocorrências Bauer, Aceville, Gobor, TPL
-
-            if (
-              TransportadoraNome == "BAUER" ||
-              TransportadoraNome == "ACEVILLE" ||
-              TransportadoraNome == "GOBOR" ||
-              TransportadoraNome == "TPL" ||
-              TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
-            ) {
-              
-              
-              const resSSW = await request
-                .get("https://ssw.inf.br/api/trackingdanfe")
-                .set("Accept", "application/json")
-                .set("Content-Type", "application/json");
-
-              const SSWocorrenciasJson = JSON.parse(resSSW.text);
-
-              if (
-                SSWocorrenciasJson &&
-                SSWocorrenciasJson.documento.tracking
-              ) {
-                SSWocorrenciasJson.documento.tracking.forEach(
-                  (
-                    row: {
-                      data_hora: string;
-                      dominio: string;
-                      filial: string;
-                      cidade: string;
-                      ocorrencia: string;
-                      descricao: string;
-                      tipo: string;
-                      data_hora_efetiva: string;
-                    },
-                    index: number
-                  ) => {
-                    const {
-                      data_hora,
-                      dominio,
-                      filial,
-                      cidade,
-                      ocorrencia,
-                      descricao,
-                      tipo,
-                      data_hora_efetiva,
-                    } = row;
-
-                    resultadoFormatado += `Data/Hora da ocorrência: ${data_hora}\n`;
-                    resultadoFormatado += `Observação: ${ocorrencia}\n`;
-                    resultadoFormatado += `Descrição: ${descricao}\n`;
-
-                    if (
-                      index !==
-                      SSWocorrenciasJson.conhecimentos[0].historico.length - 1
-                    ) {
-                      resultadoFormatado += "------\n";
-                    }
-                  }
-                );
-              } else {
-                resultadoFormatado +=
-                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
-              }
-
-              return JSON.stringify(resultadoFormatado);
-            }
-
-            // Busca Ocorrências MODULAR
-            else if (TransportadoraNome == "MODULAR") {
-              // 1. Busca lista de notas na Modular pra pegar o CONTROLE para passo 2
-              const requestMODULAR = require("superagent");
-              const resMODULAR = await requestMODULAR
-                .post(`https://www.modular.com.br/rastrear/listar`)
-                .set("Content-Type", "multipart/form-data")
-                .field("dados[nfs]", `${NotaFiscalNumero}`)
-                .field("dados[cnpjcpf]", `${cpfcnpj}`)
-                .set("Accept", "application/json");
-
-              const MODULARJson = JSON.parse(resMODULAR.text);
-
-              // 2. Pega lista ocorrências do da NF[0]
-
-              const requestMODULARocorrencias = require("superagent");
-              const resMODULARocorrencias = await requestMODULARocorrencias
-                .post(`https://www.modular.com.br/rastrear/listar/posicao`)
-                .set("Content-Type", "multipart/form-data")
-                .field(
-                  "dados[filialorigem]",
-                  `${MODULARJson.notas[0].Filial_Origem}`
-                )
-                .field("dados[controle]", `${MODULARJson.notas[0].Controle}`)
-                .set("Accept", "application/json");
-
-              const MODULARocorrenciasJson = JSON.parse(
-                resMODULARocorrencias.text
-              );
-
-              function formatarDados(dados: any[]) {
-                return dados.map((item) => ({
-                  dataHora: item.Data_Inicial,
-                  observacao: item.Localizacao,
-                  descricao: item.Descricao,
-                }));
-              }
-
-              // Aplicando a formatação aos dados originais
-              const dadosFormatados = formatarDados(
-                MODULARocorrenciasJson.posicao
-              );
-
-              return JSON.stringify(dadosFormatados);
-            }
-
-            // Busca Ocorrências MANN
-            else if (TransportadoraVenda == "MANNTRANSPORTES") {
-              const payloadMANN000000 = {
-                user: {
-                  name: "Chief",
-                  filial: "117",
-                  filialNum: 27,
-                  auth: {
-                    value:
-                      "SSM13wnMAzrqbri/I3z0B6cw82xSDT+iBQSvDOxK8IrEv58kZnLDoO13DWnmPZEP8q7QO6AqQ0XEDW+7noeS60yyjQQlvKGU",
-                    expire: "0001-01-01T00:00:00",
-                  },
-                },
-                app: {
-                  application: 2,
-                  version: "1.000.000",
-                },
-                parameters: [`${cpfcnpj}`, 0],
-              };
-              const payloadMANN0000 = JSON.stringify(payloadMANN000000);
-
-              const resMANN00 = await request
-                .post("https://api.transmann.com.br/old/site/track/Simple")
-                .set("Accept", "application/json")
-                .set("Content-Type", "application/json")
-                .send(payloadMANN0000);
-
-              interface Report {
-                columns: string[];
-                rows: string[][];
-              }
-
-              const MANNocorrenciasJson00 = JSON.parse(resMANN00.text);
-
-              const MANNocorrenciasJson001: Report =
-                MANNocorrenciasJson00.report;
-
-              const ChaveAcessoMANN = MANNocorrenciasJson001.rows[0][10];
-
-              const payloadMANN00 = {
-                user: {
-                  name: "Chief",
-                  filial: "117",
-                  filialNum: 27,
-                  auth: {
-                    value:
-                      "SSM13wnMAzrqbri/I3z0B6cw82xSDT+iBQSvDOxK8IrEv58kZnLDoO13DWnmPZEP8q7QO6AqQ0XEDW+7noeS60yyjQQlvKGU",
-                    expire: "0001-01-01T00:00:00",
-                  },
-                },
-                app: { application: 2, version: "1.000.000" },
-                parameters: [`${ChaveAcessoMANN}`],
-              };
-              const payloadMANN = JSON.stringify(payloadMANN00);
-
-              const resMANN = await request
-                .post("https://api.transmann.com.br/old/site/track/NFhistory")
-                .set("Accept", "application/json")
-                .set("Content-Type", "application/json")
-                .send(payloadMANN);
-
-              const MANNocorrenciasJson = JSON.parse(resMANN.text);
-
-              interface ReportRow {
-                columns: string[];
-                rows: [string[], string[]];
-              }
-
-              const report: ReportRow = MANNocorrenciasJson.report;
-
-              if (report && report.rows) {
-                report.rows.forEach((row, index) => {
-                  const [dataHora, descricao] = row;
-
-                  resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
-                  resultadoFormatado += `Observação: \n`;
-                  resultadoFormatado += `Descrição: ${descricao}\n`;
-
-                  if (index !== report.rows.length - 1) {
-                    resultadoFormatado += "------\n";
-                  }
-                });
-              } else {
-                resultadoFormatado +=
-                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
-              }
-
-              return JSON.stringify(resultadoFormatado);
-            }
-
-            // Busca Ocorrências MOVVI
-            else if (TransportadoraNome == "MOVVI") {
-              const resMOVVI = await request
-                .get(
-                  `https://apimovvi.meridionalcargas.com.br/api/rastrear-carga/${cpfcnpj}/${NotaFiscalNumero}`
-                )
-                .set("Accept", "application/json")
-                .set("Content-Type", "application/json");
-
-              const MOVVIocorrenciasJson = JSON.parse(resMOVVI.text);
-
-              if (MOVVIocorrenciasJson && MOVVIocorrenciasJson.ocorrencias) {
-                MOVVIocorrenciasJson.ocorrencias.forEach(
-                  (
-                    row: { descricao: string; unidade: string; data: string },
-                    index: number
-                  ) => {
-                    const { descricao, unidade, data } = row;
-
-                    resultadoFormatado += `Data/Hora da ocorrência: ${data}\n`;
-                    resultadoFormatado += `Observação: Unidade ${unidade}\n`;
-                    resultadoFormatado += `Descrição: ${descricao}\n`;
-
-                    if (index !== MOVVIocorrenciasJson.ocorrencias.length - 1) {
-                      resultadoFormatado += "------\n";
-                    }
-                  }
-                );
-              } else {
-                resultadoFormatado +=
-                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
-              }
-
-              return JSON.stringify(resultadoFormatado);
-            }
-
-            // Busca Ocorrências JAMEF
-            else if (TransportadoraNome == "JAMEF") {
-              const payloadJAMEF000000 = {
-                username: "d1fitness",
-                password: "d1fitness@188",
-              };
-              const payloadJAMEF0000 = JSON.stringify(payloadJAMEF000000);
-
-              const resJAMEF00 = await request
-                .post("https://api.jamef.com.br/login")
-                .set("Content-Type", "application/json")
-                .send(payloadJAMEF0000);
-
-              const JAMEFlogin = JSON.parse(resJAMEF00.text);
-
-              const ChaveAcessoJAMEF = JAMEFlogin.access_token;
-
-              const payloadJAMEF00 = {
-                documentoResponsavelPagamento: "52544047000110",
-                documentoDestinatario: `${cpfcnpj}`,
-                numeroNotaFiscal: `${NotaFiscalNumero}`,
-                numeroSerieNotaFiscal: "",
-                codigoFilialOrigem: "",
-              };
-              const payloadJAMEF = JSON.stringify(payloadJAMEF00);
-
-              const resJAMEF = await request
-                .post("https://api.jamef.com.br/rastreamento/ver")
-                .set("Accept", "application/json")
-                .set("Content-Type", "application/json")
-                .set("Authorization", `Bearer ${ChaveAcessoJAMEF}`)
-                .send(payloadJAMEF);
-
-              const JAMEFocorrenciasJson = JSON.parse(resJAMEF.text);
-
-              if (
-                JAMEFocorrenciasJson &&
-                JAMEFocorrenciasJson.conhecimentos[0].historico
-              ) {
-                JAMEFocorrenciasJson.conhecimentos[0].historico.forEach(
-                  (
-                    row: {
-                      statusRastreamento: string;
-                      dataAtualizacao: string;
-                      numeroManifesto: string;
-                      ufOrigem: string;
-                      municipioOrigem: string;
-                      ufDestino: string;
-                      municipioDestino: string;
-                      codigoOcorrencia: string;
-                    },
-                    index: number
-                  ) => {
-                    const {
-                      statusRastreamento,
-                      dataAtualizacao,
-                      numeroManifesto,
-                      ufOrigem,
-                      municipioOrigem,
-                      ufDestino,
-                      municipioDestino,
-                      codigoOcorrencia,
-                    } = row;
-
-                    resultadoFormatado += `Data/Hora da ocorrência: ${dataAtualizacao}\n`;
-                    resultadoFormatado += `Observação: \n`;
-                    resultadoFormatado += `Descrição: ${statusRastreamento}\n`;
-
-                    if (
-                      index !==
-                      JAMEFocorrenciasJson.conhecimentos[0].historico.length - 1
-                    ) {
-                      resultadoFormatado += "------\n";
-                    }
-                  }
-                );
-              } else {
-                resultadoFormatado +=
-                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
-              }
-
-              return JSON.stringify(resultadoFormatado);
-            }
-
-            // Busca Ocorrências BERTOLINI
-            else if (TransportadoraNome == "BERTOLINI") {
-              return `Ocorrências não localizadas.`;
-            }
-
-            // Busca Ocorrências Mercado Livre
-            else if (/EBAZAR/i.test(TransportadoraNome)) {
-              return `Consulte a localização do seu pedido diretamente no site ou aplicativo do Mercado Livre.`;
-            }
-
-            // Busca Ocorrências CORREIOS
-            else if (/PAC|SEDEX/i.test(TransportadoraNome)) {
-              return `Utilize o link abaixo para consultar a localização do seu pedido: https://www.linkcorreios.com.br/${NotaFiscalObjeto}`;
-            } else {
-              return `Ocorrências não localizadas.`;
-            }
-
-            /*const resDataFrete = await request
-              .get(
-                `https://services.v1.datafreteapi.com/ocorrencias/nota-fiscal?nota_fiscal[chave]=${NotaFIscalEletronica}`
-              )
-              .set("Accept", "application/json")
-              .set("accept-encoding", "gzip")
-              .set("x-api-key", "26a98a8a-b58b-45fb-bcdb-c8b96d0f7c38");
-
-            const resDataFreteJson = JSON.parse(resDataFrete.text); */
-
-            // console.log(resDataFreteJson.data);
-
-            // return resDataFreteJson.data;
-          } else {
-            // Realiza o UPDATE da venda já cadastrada
-            console.log(
-              `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`
-            );
-
-            return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
-          }
-        } else {
-          return `Pedido n. ${resUltimaVendaCpfCnpjJson.venda[0].Codigo}: Aguardando emissão da Nota Fiscal.`;
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    } else {
-      console.error("Aguardando emissão da Nota Fiscal.");
-      return;
-    }
-  }
+  resUltimaVendaCpfCnpjJsonFinal = await JSON.parse(resUltimaVendaCpfCnpj.text);
 
   let resultadoFormatado = "";
 
-  interface Ocorrencia {
-    dataHora: string;
-    observacao: string;
-    descricao: string;
-  }
-
-  const retornoEndpointString = await mainBuscaOcorrencias(cpfcnpj);
-
-  async function formatarOcorrencias() {
-    const retornoEndpoint: Ocorrencia[] = await JSON.parse(
-      "" + retornoEndpointString
-    ); // Suponha que obterRetornoEndpoint() é a função que retorna a promessa
-
-    let resultadoFormatado = "";
-
-    retornoEndpoint.forEach((item, index) => {
-      const { dataHora, observacao, descricao } = item;
-
-      resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
-      resultadoFormatado += `Observação: ${observacao}\n`;
-      resultadoFormatado += `Descrição: ${descricao}\n`;
-
-      if (index !== retornoEndpoint.length - 1) {
-        resultadoFormatado += "------\n";
-      }
-    });
-
-    return resultadoFormatado;
-  }
-
-  if (TransportadoraVenda == "MODULAR") {
-    // Chamada da função para formatar as ocorrências
-    const retornoEndpointFormatado = formatarOcorrencias();
-
-    if (
-      (await retornoEndpointFormatado) != "Aguardando emissão da Nota Fiscal."
-    ) {
-      // Função para formatar os dados conforme o desejado
-
-      resultadoFormatado += await retornoEndpointFormatado;
-    } else {
-      resultadoFormatado = "Aguardando emissão da Nota Fiscal.";
-    }
-  } else if (
-    TransportadoraVenda == "MANNTRANSPORTES" ||
-    TransportadoraVenda == "MOVVI" ||
-    TransportadoraVenda == "JAMEF" ||
-    TransportadoraVenda == "BAUER" ||
-    TransportadoraVenda == "ACEVILLE" ||
-    TransportadoraVenda == "GOBOR" ||
-    TransportadoraVenda == "TPL" ||
-    TransportadoraVenda == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
-  ) {
-    // Mantem formato já pronto
-  } else {
-    resultadoFormatado += retornoEndpointString;
-  }
+  
+  const resStatusEntregaBlip = await requestREST
+    .get(`${API_URL}/retornaStatusEntregaBlip?cpfcnpj=${cpfcnpj}`)
+    .set("Accept", "application/json");
 
   // insere registro de metricas
   let MetricaCodigoVenda;
@@ -1803,7 +1363,7 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   return reply
     .status(200)
     .send(
-      JSON.parse(JSON.stringify(`{ "ocorrencias": "${resultadoFormatado}" }`))
+      JSON.parse(JSON.stringify(`{ "ocorrencias": "${resStatusEntregaBlip.text}" }`))
     );
 });
 
@@ -1894,7 +1454,6 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               TransportadoraNome == "TPL" ||
               TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
             ) {
-              
               const resSSW = await request
                 .post("https://ssw.inf.br/api/trackingdanfe")
                 .set("Accept", "application/json")
@@ -1903,9 +1462,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
               const SSWocorrenciasJson = JSON.parse(resSSW.text);
 
-              if (
-                SSWocorrenciasJson.success
-              ) {
+              if (SSWocorrenciasJson.success) {
                 SSWocorrenciasJson.documento.tracking.forEach(
                   (
                     row: {
@@ -1931,7 +1488,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
                       data_hora_efetiva,
                     } = row;
 
-                      resultadoFormatado += `Data/Hora da ocorrência: ${data_hora}\n`;
+                    resultadoFormatado += `Data/Hora da ocorrência: ${data_hora}\n`;
                     resultadoFormatado += `Observação: ${ocorrencia}\n`;
                     resultadoFormatado += `Descrição: ${descricao}\n`;
 
