@@ -136,3 +136,19 @@ model RastreioChatMetricas {
     Ocorrencias           String?
     Canal                 String?       
 }
+
+model RastreioStatusWhats {
+    Id            String @id @default(cuid())
+    Titulo        String
+    Status        String
+    Mensagem      String
+    Ativo         Boolean
+}
+
+model RastreioStatusEmail {
+    Id            String @id @default(cuid())
+    Titulo        String
+    Status        String
+    Mensagem      String
+    Ativo         Boolean
+}

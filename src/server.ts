@@ -38,11 +38,9 @@ const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onren
 // Configurações de transporte para o servidor SMTP
 const transporter = nodemailer.createTransport({
   service: "Gmail",
-  port: 587,
-  secure: false, // Se o servidor usar SSL/TLS
   auth: {
-    user: "rodrigo@morefocus.com.br",
-    pass: "!Senha12",
+    user: "naoresponda@d1fitness.com.br",
+    pass: "fitness2020*",
   },
 });
 
@@ -602,43 +600,7 @@ app.get("/cargaVendas", async (request, reply) => {
 // Endpoint: Update Vendas - início
 
 app.get("/updateVendas", async (request, reply) => {
-  // Teste envio do email
-  // Conteúdo do e-mail
-  const emailContent = `
-  <!DOCTYPE html>
-  <html lang="pt-br">
-  <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teste - E-mail de Confirmação de Pedido</title>
-  </head>
-  <body style="font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 20px;">
   
-  <div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
-      <h1 style="color: #333333;">Olá NomeTeste!</h1>
-      <p style="font-size: 16px; color: #444444;">Estamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨</p>
-      <p style="font-size: 16px; color: #444444;">Seu pedido está em transporte e logo estará em suas mãos.</p>
-      <p style="font-size: 16px; color: #444444;">Fique de olho aqui nas mensagens para ficar informado da sua posição de entrega.</p>
-      <p style="font-size: 16px; color: #444444;">Agradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!</p>
-      <p style="font-size: 16px; color: #444444;">Atenciosamente,<br>D1Fitness</p>
-  </div>
-  
-  </body>
-  </html>
-  `;
-  let mensagem = `Olá NomeTeste!\n\nQueremos expressar nossa gratidão pelo seu pedido! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nFique atento às próximas atualizações sobre o status do seu pedido.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!\n\nAtenciosamente,\nD1Fitness`;
-
-  // Opções do e-mail
-  const mailOptions = {
-    from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-    to: "rodrigo@morefocus.com.br", // E-mail do destinatário
-    subject: "Teste - Seu pedido está a caminho!",
-    text: mensagem,
-    html: emailContent,
-  };
-
-  enviarEmail(mailOptions);
-
   try {
     async function pegaVenda(Codigo: number) {
       try {
@@ -662,6 +624,11 @@ app.get("/updateVendas", async (request, reply) => {
       }
     }
 
+    // Função para substituir o marcador pela variável
+function substituirMarcador(mensagem: string, marcador: string, conteudo: string) {
+  return mensagem.replace(new RegExp(`{{${marcador}}}`, 'g'), conteudo);
+}
+
     async function enviaWhatsStatus(
       novoStatus: string | null,
       nomeCliente: string | null,
@@ -670,6 +637,7 @@ app.get("/updateVendas", async (request, reply) => {
     ) {
       const requestSA = require("superagent");
       let mensagem = "";
+      let emailContent = "";
       if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
         let primeiroNome: string = nomeCliente.split(" ")[0];
         mensagem = `Olá ${primeiroNome}!\n\nQueremos expressar nossa gratidão pelo seu pedido! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nFique atento às próximas atualizações sobre o status do seu pedido.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!\n\nAtenciosamente,\nD1Fitness`;
@@ -684,7 +652,7 @@ app.get("/updateVendas", async (request, reply) => {
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
           .send(bodyWhats);
 
-        /* const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+        const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
 
         const resZAPI2 = await requestSA
           .post(
@@ -692,40 +660,28 @@ app.get("/updateVendas", async (request, reply) => {
           )
           .set("Content-Type", "application/json")
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats2); */
+          .send(bodyWhats2); 
 
         // Conteúdo do e-mail
-        const emailContent = `
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estamos preparando o envio do seu pedido</title>
-</head>
-<body style="font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 20px;">
+        const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
+          where: {
+            Status: "Nota Fiscal Emitida",
+          },
+        });
 
-<div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
-    <h1 style="color: #333333;">Olá ${primeiroNome}!</h1>
-    <p style="font-size: 16px; color: #444444;">Queremos expressar nossa gratidão pelo seu pedido! 🙌💪</p>
-    <p style="font-size: 16px; color: #444444;">É com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.</p>
-    <p style="font-size: 16px; color: #444444;">Fique atento às próximas atualizações sobre o status do seu pedido.</p>
-    <p style="font-size: 16px; color: #444444;">Se surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.</p>
-    <p style="font-size: 16px; color: #444444;">Agradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!</p>
-    <p style="font-size: 16px; color: #444444;">Atenciosamente,<br>D1Fitness</p>
-</div>
-
-</body>
-</html>
-`;
-        // Opções do e-mail
-        const mailOptions = {
-          from: '"D1 Fitness" <rodrigo@morefocus.com.br>',
-          to: "rodrigo@morefocus.com.br", // E-mail do destinatário
-          subject: "Estamos preparando o envio do seu pedido",
-          text: mensagem,
-          html: emailContent,
-        };
+        if(emailContentDB?.Mensagem) {
+          emailContent = substituirMarcador(emailContentDB?.Mensagem, "primeiroNome", primeiroNome);
+          
+        }
+// Opções do e-mail
+          const mailOptions = {
+            from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+            to: `${emailCliente}`, // E-mail do destinatário
+            subject: "Estamos preparando o envio do seu pedido",
+            text: mensagem,
+            html: emailContent,
+          };
+        
 
         enviarEmail(mailOptions);
       } else if (novoStatus == "Enviado" && nomeCliente != null) {
@@ -742,7 +698,7 @@ app.get("/updateVendas", async (request, reply) => {
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
           .send(bodyWhats);
 
-        /* const bodyWhats2 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+        const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
 
         const resZAPI2 = await requestSA
           .post(
@@ -750,35 +706,24 @@ app.get("/updateVendas", async (request, reply) => {
           )
           .set("Content-Type", "application/json")
           .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats2); */
-
+          .send(bodyWhats2);
+        
         // Conteúdo do e-mail
-        const emailContent = `
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>E-mail de Confirmação de Pedido</title>
-</head>
-<body style="font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 20px;">
+        const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
+          where: {
+            Status: "Enviado",
+          },
+        });
 
-<div style="background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
-    <h1 style="color: #333333;">Olá ${primeiroNome}!</h1>
-    <p style="font-size: 16px; color: #444444;">Estamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨</p>
-    <p style="font-size: 16px; color: #444444;">Seu pedido está em transporte e logo estará em suas mãos.</p>
-    <p style="font-size: 16px; color: #444444;">Fique de olho aqui nas mensagens para ficar informado da sua posição de entrega.</p>
-    <p style="font-size: 16px; color: #444444;">Agradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!</p>
-    <p style="font-size: 16px; color: #444444;">Atenciosamente,<br>D1Fitness</p>
-</div>
-
-</body>
-</html>
-`;
+        if(emailContentDB?.Mensagem) {
+          emailContent = substituirMarcador(emailContentDB?.Mensagem, "primeiroNome", primeiroNome);
+          
+        }
+        
         // Opções do e-mail
         const mailOptions = {
-          from: '"D1 Fitness" <rodrigo@morefocus.com.br>',
-          to: "rodrigo@morefocus.com.br", // E-mail do destinatário
+          from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+          to: `${emailCliente}`, // E-mail do destinatário
           subject: "Seu pedido está a caminho!",
           text: mensagem,
           html: emailContent,
