@@ -647,12 +647,25 @@ app.get("/updateVendas", async (request, reply) => {
     const requestSA = require("superagent");
     let mensagem = "";
     let emailContent = "";
+    let whatsContent = "";
     if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
-      mensagem = `Olá ${primeiroNome}!\n\nMuito obrigado obrigado por comprar na D1Fitness! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar pelo *Whatsapp 11 93037-3935* .\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para entregar seu pedido.\n\Salve esse número da sua agenda para quando receber links você possa clicar nos mesmos.\n\nAtenciosamente,\nD1Fitness
-      `;
+      // Conteúdo do mensagem whats
+      const whatsContentDB = await prisma.rastreioStatusEmail.findFirst({
+        where: {
+          Status: "Nota Fiscal Emitida",
+        },
+      });
 
-      const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+      if (whatsContentDB?.Mensagem) {
+        whatsContent = substituirMarcador(
+          whatsContentDB?.Mensagem,
+          "primeiroNome",
+          primeiroNome
+        );
+      }
+
+      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
       const resZAPI = await requestSA
         .post(
@@ -662,7 +675,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
         .send(bodyWhats);
 
-      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
         .post(
@@ -672,7 +685,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
         .send(bodyWhatsD1);
 
-      const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
+      const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${whatsContent}"}`;
 
       const resZAPI2 = await requestSA
         .post(
@@ -708,9 +721,21 @@ app.get("/updateVendas", async (request, reply) => {
       enviarEmail(mailOptions);
     } else if (novoStatus == "Enviado" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
-      mensagem = `Olá ${primeiroNome}!\n\nEstamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨\n\nSeu pedido está em transporte e logo estará em suas mãos. Agradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!\n\nAtenciosamente,\nD1Fitness`;
+      const whatsContentDB = await prisma.rastreioStatusEmail.findFirst({
+        where: {
+          Status: "Enviado",
+        },
+      });
 
-      const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+      if (whatsContentDB?.Mensagem) {
+        whatsContent = substituirMarcador(
+          whatsContentDB?.Mensagem,
+          "primeiroNome",
+          primeiroNome
+        );
+      }
+
+      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
       const resZAPI = await requestSA
         .post(
@@ -720,7 +745,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
         .send(bodyWhats);
 
-      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
         .post(
@@ -730,7 +755,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
         .send(bodyWhatsD1);
 
-      const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
+      const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${whatsContent}"}`;
 
       const resZAPI2 = await requestSA
         .post(
