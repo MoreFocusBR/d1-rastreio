@@ -651,7 +651,7 @@ app.get("/updateVendas", async (request, reply) => {
     if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
       // Conteúdo do mensagem whats
-      const whatsContentDB = await prisma.rastreioStatusEmail.findFirst({
+      const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
         where: {
           Status: "Nota Fiscal Emitida",
         },
@@ -721,7 +721,7 @@ app.get("/updateVendas", async (request, reply) => {
       enviarEmail(mailOptions);
     } else if (novoStatus == "Enviado" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
-      const whatsContentDB = await prisma.rastreioStatusEmail.findFirst({
+      const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
         where: {
           Status: "Enviado",
         },
