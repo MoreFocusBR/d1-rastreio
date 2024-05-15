@@ -600,317 +600,364 @@ app.get("/cargaVendas", async (request, reply) => {
 // Endpoint: Update Vendas - início
 
 app.get("/updateVendas", async (request, reply) => {
-  
-  try {
-    async function pegaVenda(Codigo: number) {
-      try {
-        const request = require("superagent");
-        const resVenda = await request
-          .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
-          .set("Accept", "application/json")
-          .set("accept-encoding", "gzip")
-          .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
-        //.set("Limit", "1");
+  interface RouteParams {
+    diasPeriodo: number;
+  }
 
-        //resVenda.body;
+  const params = request.query as RouteParams;
+  const codigoInicial = params.diasPeriodo;
 
-        if (resVenda.status == 200) {
-          return JSON.stringify(resVenda.body);
-        } else {
-          throw new Error("Erro ao obter o lista integração.");
-        }
-      } catch (err) {
-        console.error(err);
+  async function pegaVenda(Codigo: number) {
+    try {
+      const request = require("superagent");
+      const resVenda = await request
+        .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
+        .set("Accept", "application/json")
+        .set("accept-encoding", "gzip")
+        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+      //.set("Limit", "1");
+
+      //resVenda.body;
+
+      if (resVenda.status == 200) {
+        return JSON.stringify(resVenda.body);
+      } else {
+        throw new Error("Erro ao obter o lista integração.");
       }
+    } catch (err) {
+      console.error(err);
     }
+  }
 
-    // Função para substituir o marcador pela variável
-function substituirMarcador(mensagem: string, marcador: string, conteudo: string) {
-  return mensagem.replace(new RegExp(`{{${marcador}}}`, 'g'), conteudo);
-}
+  // Função para substituir o marcador pela variável
+  function substituirMarcador(
+    mensagem: string,
+    marcador: string,
+    conteudo: string
+  ) {
+    return mensagem.replace(new RegExp(`{{${marcador}}}`, "g"), conteudo);
+  }
 
-    async function enviaWhatsStatus(
-      novoStatus: string | null,
-      nomeCliente: string | null,
-      emailCliente: string | null,
-      telefoneCliente: string | null
-    ) {
-      const requestSA = require("superagent");
-      let mensagem = "";
-      let emailContent = "";
-      if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
-        let primeiroNome: string = nomeCliente.split(" ")[0];
-        mensagem = `Olá ${primeiroNome}!\n\nQueremos expressar nossa gratidão pelo seu pedido! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nFique atento às próximas atualizações sobre o status do seu pedido.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!\n\nAtenciosamente,\nD1Fitness`;
+  async function enviaWhatsStatus(
+    novoStatus: string | null,
+    nomeCliente: string | null,
+    emailCliente: string | null,
+    telefoneCliente: string | null
+  ) {
+    const requestSA = require("superagent");
+    let mensagem = "";
+    let emailContent = "";
+    if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
+      let primeiroNome: string = nomeCliente.split(" ")[0];
+      mensagem = `Olá ${primeiroNome}!\n\nQueremos expressar nossa gratidão pelo seu pedido! 🙌💪\n\nÉ com grande satisfação que informamos que seu pedido foi confirmado e está sendo preparado para envio. Estamos cuidando de tudo com muito carinho para que você receba seus produtos o mais rápido possível.\n\nFique atento às próximas atualizações sobre o status do seu pedido.\n\nSe surgir qualquer dúvida ou se precisar de assistência adicional, estamos sempre disponíveis para ajudar.\n\nAgradecemos pela confiança em nossa empresa e estamos ansiosos para fazer parte da sua jornada fitness!\n\nAtenciosamente,\nD1Fitness`;
 
-        const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+      const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
 
-        const resZAPI = await requestSA
-          .post(
-            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-          )
-          .set("Content-Type", "application/json")
-          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats);
+      const resZAPI = await requestSA
+        .post(
+          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+        )
+        .set("Content-Type", "application/json")
+        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .send(bodyWhats);
 
-        const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
+      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${mensagem}"}`;
 
-        const resZAPI2 = await requestSA
-          .post(
-            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-          )
-          .set("Content-Type", "application/json")
-          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats2); 
+      const resZAPID1 = await requestSA
+        .post(
+          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+        )
+        .set("Content-Type", "application/json")
+        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .send(bodyWhatsD1);
 
-        // Conteúdo do e-mail
-        const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
+      const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
+
+      const resZAPI2 = await requestSA
+        .post(
+          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+        )
+        .set("Content-Type", "application/json")
+        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .send(bodyWhats2);
+
+      // Conteúdo do e-mail
+      const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
+        where: {
+          Status: "Nota Fiscal Emitida",
+        },
+      });
+
+      if (emailContentDB?.Mensagem) {
+        emailContent = substituirMarcador(
+          emailContentDB?.Mensagem,
+          "primeiroNome",
+          primeiroNome
+        );
+      }
+      // Opções do e-mail
+      const mailOptions = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `${emailCliente}`, // E-mail do destinatário
+        subject: "Estamos preparando o envio do seu pedido",
+        text: mensagem,
+        html: emailContent,
+      };
+
+      enviarEmail(mailOptions);
+    } else if (novoStatus == "Enviado" && nomeCliente != null) {
+      let primeiroNome: string = nomeCliente.split(" ")[0];
+      mensagem = `Olá ${primeiroNome}!\n\nEstamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨\n\nSeu pedido está em transporte e logo estará em suas mãos.\n\nFique de olho aqui nas mensagens para ficar informado da sua posição de entrega.\n\nAgradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!\n\nAtenciosamente,\nD1Fitness`;
+
+      const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+
+      const resZAPI = await requestSA
+        .post(
+          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+        )
+        .set("Content-Type", "application/json")
+        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .send(bodyWhats);
+
+      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${mensagem}"}`;
+
+      const resZAPID1 = await requestSA
+        .post(
+          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+        )
+        .set("Content-Type", "application/json")
+        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .send(bodyWhatsD1);
+
+      const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
+
+      const resZAPI2 = await requestSA
+        .post(
+          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+        )
+        .set("Content-Type", "application/json")
+        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .send(bodyWhats2);
+
+      // Conteúdo do e-mail
+      const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
+        where: {
+          Status: "Enviado",
+        },
+      });
+
+      if (emailContentDB?.Mensagem) {
+        emailContent = substituirMarcador(
+          emailContentDB?.Mensagem,
+          "primeiroNome",
+          primeiroNome
+        );
+      }
+
+      // Opções do e-mail
+      const mailOptions = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `${emailCliente}`, // E-mail do destinatário
+        subject: "Seu pedido está a caminho!",
+        text: mensagem,
+        html: emailContent,
+      };
+
+      enviarEmail(mailOptions);
+    }
+  }
+
+  const dataLimite = new Date();
+  dataLimite.setDate(dataLimite.getDate() - params.diasPeriodo); // Subtrai X dias da data atual
+
+  // Define o tamanho do lote para a paginação
+  const tamanhoLote = 30; // Pode ajustar conforme necessário
+
+  let offset = 0;
+  let todasVendasProcessadas = false;
+
+  while (!todasVendasProcessadas) {
+    await prisma.$transaction(
+      async (prismaClient) => {
+        const vendasFiltradas = await prismaClient.venda.findMany({
+          take: tamanhoLote,
+          skip: offset,
           where: {
-            Status: "Nota Fiscal Emitida",
+            DataVenda: {
+              gt: dataLimite.toISOString(),
+            },
+            Cancelada: false,
+            NOT: {
+              DescricaoStatus: {
+                in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
+              },
+            },
+          },
+          orderBy: {
+            Codigo: "desc",
           },
         });
 
-        if(emailContentDB?.Mensagem) {
-          emailContent = substituirMarcador(emailContentDB?.Mensagem, "primeiroNome", primeiroNome);
-          
+        interface VendaInterface {
+          Codigo: number;
+          ClienteCodigo: number;
+          ClienteDocumento: string;
+          TransportadoraCodigo: number | null;
+          DataVenda: string | null;
+          Entrega: boolean;
+          EntregaNome: string | null;
+          EntregaEmail: string | null;
+          NumeroObjeto: string | null;
+          EntregaTelefone: string | null;
+          EntregaLogradouro: string | null;
+          EntregaLogradouroNumero: string | null;
+          EntregaLogradouroComplemento: string | null;
+          EntregaBairro: string | null;
+          EntregaMunicipioNome: string | null;
+          EntregaUnidadeFederativa: string | null;
+          EntregaCEP: string | null;
+          Observacoes: string | null;
+          ObservacoesLoja: string | null;
+          CodigoStatus: number | null;
+          DescricaoStatus: string | null;
+          DataHoraStatus: string | null;
+          PrevisaoEntrega: string | null;
+          CodigoNotaFiscal: number | null;
+          DataEntrega: string | null;
+          Cancelada: boolean;
+          DataEnvio: string | null;
+          NotaFiscalNumero: number | null;
+          DataColeta: string | null;
         }
-// Opções do e-mail
-          const mailOptions = {
-            from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-            to: `${emailCliente}`, // E-mail do destinatário
-            subject: "Estamos preparando o envio do seu pedido",
-            text: mensagem,
-            html: emailContent,
-          };
-        
 
-        enviarEmail(mailOptions);
-      } else if (novoStatus == "Enviado" && nomeCliente != null) {
-        let primeiroNome: string = nomeCliente.split(" ")[0];
-        mensagem = `Olá ${primeiroNome}!\n\nEstamos muito felizes em informar que seus produtos já estão a caminho! 🚚💨\n\nSeu pedido está em transporte e logo estará em suas mãos.\n\nFique de olho aqui nas mensagens para ficar informado da sua posição de entrega.\n\nAgradecemos pela sua confiança em nossa marca e esperamos que seus novos equipamentos ajudem você a alcançar seus objetivos!\n\nAtenciosamente,\nD1Fitness`;
+        async function processaVenda(
+          prismaClient: PrismaClient,
+          venda: VendaInterface
+        ) {
+          try {
+            const resVenda = await pegaVenda(venda.Codigo);
 
-        const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+            if (resVenda) {
+              const resListaIntegracaoJson = JSON.parse(resVenda);
 
-        const resZAPI = await requestSA
-          .post(
-            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-          )
-          .set("Content-Type", "application/json")
-          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats);
+              if (
+                resListaIntegracaoJson.venda &&
+                resListaIntegracaoJson.venda.length > 0
+              ) {
+                for (const vendaJson of resListaIntegracaoJson.venda) {
+                  const {
+                    Codigo,
+                    ClienteCodigo,
+                    ClienteDocumento,
+                    TransportadoraCodigo,
+                    DataVenda,
+                    Entrega,
+                    EntregaNome,
+                    EntregaEmail,
+                    NumeroObjeto,
+                    EntregaTelefone,
+                    Observacoes,
+                    ObservacoesLoja,
+                    CodigoStatus,
+                    DescricaoStatus,
+                    DataHoraStatus,
+                    PrevisaoEntrega,
+                    CodigoNotaFiscal,
+                    DataEntrega,
+                    Cancelada,
+                    DataEnvio,
+                    NotaFiscalNumero,
+                    DataColeta,
+                  } = vendaJson as VendaInterface;
 
-        const bodyWhats2 = `{"phone": "55${telefoneCliente}","message": "${mensagem}"}`;
+                  // Atualiza a venda apenas se o status for diferente
+                  if (venda.DescricaoStatus !== DescricaoStatus) {
+                    console.log(
+                      `Atualizando Venda: ${venda.Codigo}. Status: de ${venda.DescricaoStatus} para ${DescricaoStatus}`
+                    );
 
-        const resZAPI2 = await requestSA
-          .post(
-            "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-          )
-          .set("Content-Type", "application/json")
-          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-          .send(bodyWhats2);
-        
-        // Conteúdo do e-mail
-        const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
-          where: {
-            Status: "Enviado",
-          },
-        });
-
-        if(emailContentDB?.Mensagem) {
-          emailContent = substituirMarcador(emailContentDB?.Mensagem, "primeiroNome", primeiroNome);
-          
-        }
-        
-        // Opções do e-mail
-        const mailOptions = {
-          from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-          to: `${emailCliente}`, // E-mail do destinatário
-          subject: "Seu pedido está a caminho!",
-          text: mensagem,
-          html: emailContent,
-        };
-
-        enviarEmail(mailOptions);
-      }
-    }
-
-    const dataLimite = new Date();
-    dataLimite.setDate(dataLimite.getDate() - 240); // Subtrai 60 dias da data atual
-
-    // Define o tamanho do lote para a paginação
-    const tamanhoLote = 30; // Pode ajustar conforme necessário
-
-    let offset = 0;
-    let todasVendasProcessadas = false;
-
-    while (!todasVendasProcessadas) {
-      await prisma.$transaction(
-        async (prismaClient) => {
-          const vendasFiltradas = await prismaClient.venda.findMany({
-            take: tamanhoLote,
-            skip: offset,
-            where: {
-              DataVenda: {
-                gt: dataLimite.toISOString(),
-              },
-              Cancelada: false,
-              NOT: {
-                DescricaoStatus: {
-                  in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
-                },
-              },
-            },
-            orderBy: {
-              Codigo: "desc",
-            },
-          });
-
-          interface VendaInterface {
-            Codigo: number;
-            ClienteCodigo: number;
-            ClienteDocumento: string;
-            TransportadoraCodigo: number | null;
-            DataVenda: string | null;
-            Entrega: boolean;
-            EntregaNome: string | null;
-            EntregaEmail: string | null;
-            NumeroObjeto: string | null;
-            EntregaTelefone: string | null;
-            EntregaLogradouro: string | null;
-            EntregaLogradouroNumero: string | null;
-            EntregaLogradouroComplemento: string | null;
-            EntregaBairro: string | null;
-            EntregaMunicipioNome: string | null;
-            EntregaUnidadeFederativa: string | null;
-            EntregaCEP: string | null;
-            Observacoes: string | null;
-            ObservacoesLoja: string | null;
-            CodigoStatus: number | null;
-            DescricaoStatus: string | null;
-            DataHoraStatus: string | null;
-            PrevisaoEntrega: string | null;
-            CodigoNotaFiscal: number | null;
-            DataEntrega: string | null;
-            Cancelada: boolean;
-            DataEnvio: string | null;
-            NotaFiscalNumero: number | null;
-            DataColeta: string | null;
-          }
-
-          async function processaVenda(
-            prismaClient: PrismaClient,
-            venda: VendaInterface
-          ) {
-            try {
-              const resVenda = await pegaVenda(venda.Codigo);
-
-              if (resVenda) {
-                const resListaIntegracaoJson = JSON.parse(resVenda);
-
-                if (
-                  resListaIntegracaoJson.venda &&
-                  resListaIntegracaoJson.venda.length > 0
-                ) {
-                  for (const vendaJson of resListaIntegracaoJson.venda) {
-                    const {
-                      Codigo,
-                      ClienteCodigo,
-                      ClienteDocumento,
-                      TransportadoraCodigo,
-                      DataVenda,
-                      Entrega,
-                      EntregaNome,
-                      EntregaEmail,
-                      NumeroObjeto,
-                      EntregaTelefone,
-                      Observacoes,
-                      ObservacoesLoja,
-                      CodigoStatus,
-                      DescricaoStatus,
-                      DataHoraStatus,
-                      PrevisaoEntrega,
-                      CodigoNotaFiscal,
-                      DataEntrega,
-                      Cancelada,
-                      DataEnvio,
-                      NotaFiscalNumero,
-                      DataColeta,
-                    } = vendaJson as VendaInterface;
-
-                    // Atualiza a venda apenas se o status for diferente
-                    if (venda.DescricaoStatus !== DescricaoStatus) {
-                      console.log(
-                        `Atualizando Venda: ${venda.Codigo}. Status: de ${venda.DescricaoStatus} para ${DescricaoStatus}`
-                      );
-
-                      await prismaClient.venda.update({
-                        where: { Codigo: venda.Codigo },
-                        data: {
-                          Codigo,
-                          ClienteCodigo,
-                          ClienteDocumento,
-                          TransportadoraCodigo,
-                          DataVenda,
-                          Entrega,
-                          EntregaNome,
-                          EntregaEmail,
-                          NumeroObjeto,
-                          EntregaTelefone,
-                          Observacoes,
-                          ObservacoesLoja,
-                          CodigoStatus,
-                          DescricaoStatus,
-                          DataHoraStatus,
-                          PrevisaoEntrega,
-                          CodigoNotaFiscal,
-                          DataEntrega,
-                          Cancelada,
-                          DataEnvio,
-                          NotaFiscalNumero,
-                          DataColeta,
-                        },
-                      });
-
-                      enviaWhatsStatus(
-                        DescricaoStatus,
+                    await prismaClient.venda.update({
+                      where: { Codigo: venda.Codigo },
+                      data: {
+                        Codigo,
+                        ClienteCodigo,
+                        ClienteDocumento,
+                        TransportadoraCodigo,
+                        DataVenda,
+                        Entrega,
                         EntregaNome,
                         EntregaEmail,
-                        EntregaTelefone
-                      );
-                    }
+                        NumeroObjeto,
+                        EntregaTelefone,
+                        Observacoes,
+                        ObservacoesLoja,
+                        CodigoStatus,
+                        DescricaoStatus,
+                        DataHoraStatus,
+                        PrevisaoEntrega,
+                        CodigoNotaFiscal,
+                        DataEntrega,
+                        Cancelada,
+                        DataEnvio,
+                        NotaFiscalNumero,
+                        DataColeta,
+                      },
+                    });
+
+                    enviaWhatsStatus(
+                      DescricaoStatus,
+                      EntregaNome,
+                      EntregaEmail,
+                      EntregaTelefone
+                    );
                   }
                 }
-              } else {
-                console.error(`Erro ao obter a venda: ${venda.Codigo}`);
               }
-            } catch (error) {
-              console.error(
-                `Erro ao processar a venda ${venda.Codigo}:`,
-                error
-              );
+            } else {
+              console.error(`Erro ao obter a venda: ${venda.Codigo}`);
             }
+          } catch (error) {
+            console.error(`Erro ao processar a venda ${venda.Codigo}:`, error);
           }
+        }
 
-          // Processa as vendas do lote atual
-          for (const venda of vendasFiltradas) {
-            await processaVenda(prisma, venda);
-          }
+        // Processa as vendas do lote atual
+        for (const venda of vendasFiltradas) {
+          await processaVenda(prisma, venda);
+        }
 
-          // Verifica se todos os registros foram processados
-          if (vendasFiltradas.length < tamanhoLote) {
-            todasVendasProcessadas = true;
-          } else {
-            offset += tamanhoLote;
-          }
-        },
-        { timeout: 120000 }
-      );
-    }
-    console.log("Vendas atualizadas com sucesso");
-    return reply.status(200).send("Vendas atualizadas com sucesso");
-  } catch (error) {
-    console.error(error);
-    return reply.status(500).send("Erro interno no servidor.");
+        // Verifica se todos os registros foram processados
+        if (vendasFiltradas.length < tamanhoLote) {
+          todasVendasProcessadas = true;
+        } else {
+          offset += tamanhoLote;
+        }
+      },
+      { timeout: 120000 }
+    );
   }
+
+  const totalVendasParaUpdate = await prisma.venda.findMany({
+    select: {
+      Codigo: true,
+    },
+    where: {
+      DataVenda: {
+        gt: dataLimite.toISOString(),
+      },
+      Cancelada: false,
+      NOT: {
+        DescricaoStatus: {
+          in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
+        },
+      },
+    },
+  });
+
+  console.log(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
+  return reply
+    .status(200)
+    .send(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
 });
 
 // Endpoint: Update Vendas - fim
@@ -1268,7 +1315,6 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
 
   let resultadoFormatado = "";
 
-  
   const resStatusEntregaBlip = await requestREST
     .get(`${API_URL}/retornaStatusEntregaBlip?cpfcnpj=${cpfcnpj}`)
     .set("Accept", "application/json");
@@ -1308,7 +1354,9 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
   return reply
     .status(200)
     .send(
-      JSON.parse(JSON.stringify(`{ "ocorrencias": "${resStatusEntregaBlip.text}" }`))
+      JSON.parse(
+        JSON.stringify(`{ "ocorrencias": "${resStatusEntregaBlip.text}" }`)
+      )
     );
 });
 
