@@ -813,11 +813,11 @@ app.get("/updateVendas", async (request, reply) => {
               gt: dataLimite.toISOString(),
             },
             Cancelada: false,
-            NOT: {
-              DescricaoStatus: {
-                in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
-              },
-            },
+            NOT: [
+              { DescricaoStatus: { in: ["Enviado", "Finalizado", "Em Conflito/Disputa"] } },
+              { EntregaEmail: { contains: '@mercadolivre.com' } },
+              { EntregaEmail: { contains: '@marketplace.amazon.com.br' } },
+            ],
           },
           orderBy: {
             Codigo: "desc",
@@ -972,13 +972,14 @@ app.get("/updateVendas", async (request, reply) => {
         gt: dataLimite.toISOString(),
       },
       Cancelada: false,
-      NOT: {
-        DescricaoStatus: {
-          in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
-        },
-      },
+      NOT: [
+        { DescricaoStatus: { in: ["Enviado", "Finalizado", "Em Conflito/Disputa"] } },
+        { EntregaEmail: { contains: '@mercadolivre.com' } },
+        { EntregaEmail: { contains: '@marketplace.amazon.com.br' } },
+      ],
     },
   });
+  
 
   console.log(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
   return reply
