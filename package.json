@@ -30,6 +30,7 @@
     "@prisma/adapter-pg": "^5.10.2",
     "@prisma/client": "^5.10.2",
     "@types/uuid": "^9.0.8",
+    "cheerio": "^1.0.0-rc.12",
     "fastify": "^4.26.2",
     "gh": "^1.13.9",
     "github": "^14.0.0",

@@ -814,9 +814,13 @@ app.get("/updateVendas", async (request, reply) => {
             },
             Cancelada: false,
             NOT: [
-              { DescricaoStatus: { in: ["Enviado", "Finalizado", "Em Conflito/Disputa"] } },
-              { EntregaEmail: { contains: '@mercadolivre.com' } },
-              { EntregaEmail: { contains: '@marketplace.amazon.com.br' } },
+              {
+                DescricaoStatus: {
+                  in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
+                },
+              },
+              { EntregaEmail: { contains: "@mercadolivre.com" } },
+              { EntregaEmail: { contains: "@marketplace.amazon.com.br" } },
             ],
           },
           orderBy: {
@@ -973,13 +977,16 @@ app.get("/updateVendas", async (request, reply) => {
       },
       Cancelada: false,
       NOT: [
-        { DescricaoStatus: { in: ["Enviado", "Finalizado", "Em Conflito/Disputa"] } },
-        { EntregaEmail: { contains: '@mercadolivre.com' } },
-        { EntregaEmail: { contains: '@marketplace.amazon.com.br' } },
+        {
+          DescricaoStatus: {
+            in: ["Enviado", "Finalizado", "Em Conflito/Disputa"],
+          },
+        },
+        { EntregaEmail: { contains: "@mercadolivre.com" } },
+        { EntregaEmail: { contains: "@marketplace.amazon.com.br" } },
       ],
     },
   });
-  
 
   console.log(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
   return reply
@@ -1401,8 +1408,9 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   let resUltimaVendaCpfCnpjJsonFinal = {
     venda: [{ Codigo: "", DataVenda: "", NotaFiscalNumero: 0 }],
   };
-  let NotaFiscalNumero;
+  let NotaFiscalNumero: any;
   let NotaFiscalEletronica;
+  let ClienteDocumento: any;
 
   // consome cada item da Lista Vendas - inicio
 
@@ -1417,6 +1425,8 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
         resUltimaVendaCpfCnpj.text
       );
       resUltimaVendaCpfCnpjJsonFinal = resUltimaVendaCpfCnpjJson;
+
+      ClienteDocumento = resUltimaVendaCpfCnpjJson.venda[0].ClienteDocumento;
 
       try {
         if ((await resUltimaVendaCpfCnpjJson.venda[0].NotaFiscalNumero) > 0) {
@@ -1451,7 +1461,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
           }
 
           NotaFiscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
-          const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.trim();
+          const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.replace(/\s/g, '');
           // Atualiza TransportadoraVenda para utilizar fora desse nó
           TransportadoraVenda = TransportadoraNome;
 
@@ -1472,7 +1482,9 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               TransportadoraNome == "ACEVILLE" ||
               TransportadoraNome == "GOBOR" ||
               TransportadoraNome == "TPL" ||
-              TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
+              TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA" ||
+              TransportadoraNome == "TRANSFARRAPOSTRANSPORTESRODOVIARIOSDECARGASLTDA" ||
+              TransportadoraNome == "FLYVILLETRANSPORTESLTDA"
             ) {
               const resSSW = await request
                 .post("https://ssw.inf.br/api/trackingdanfe")
@@ -1791,8 +1803,8 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
             }
 
             // Busca Ocorrências BERTOLINI
-            else if (TransportadoraNome == "BERTOLINI") {
-              return `Ocorrências não localizadas.`;
+            else if (/BERTOLINI/i.test(TransportadoraNome)) {
+              return `Utilize a NF ${NotaFiscalNumero} e o link asseguir para consultar a localização do seu pedido: https://www.tbl.com.br/RastreamentoCarga `;
             }
 
             // Busca Ocorrências Mercado Livre
@@ -1892,7 +1904,9 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
     TransportadoraVenda == "ACEVILLE" ||
     TransportadoraVenda == "GOBOR" ||
     TransportadoraVenda == "TPL" ||
-    TransportadoraVenda == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA"
+    TransportadoraVenda == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA" ||
+    TransportadoraVenda == "TRANSFARRAPOSTRANSPORTESRODOVIARIOSDECARGASLTDA" ||
+    TransportadoraVenda == "FLYVILLETRANSPORTESLTDA"
   ) {
     // Mantem formato já pronto
   } else {
