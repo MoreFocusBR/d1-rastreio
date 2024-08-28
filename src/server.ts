@@ -722,12 +722,7 @@ app.get("/updateVendas", async (request, reply) => {
 
       enviarEmail(mailOptions);
 
-      await prisma.rastreioUpdateStatus.create({
-        data: {
-          CodigoVenda: codigo,
-          Status: novoStatus,
-        }
-      });
+      
 
     } else if (novoStatus == "Enviado" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
@@ -801,12 +796,7 @@ app.get("/updateVendas", async (request, reply) => {
 
       enviarEmail(mailOptions);
 
-      await prisma.rastreioUpdateStatus.create({
-        data: {
-          CodigoVenda: codigo,
-          Status: novoStatus,
-        }
-      });
+      
     }
   }
 
@@ -956,7 +946,7 @@ app.get("/updateVendas", async (request, reply) => {
                       EntregaNome,
                       EntregaEmail,
                       EntregaTelefone,
-                      Codigo,
+                      `${Codigo}`,
                     );
                   }
                 }
