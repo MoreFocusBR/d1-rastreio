@@ -54,6 +54,7 @@ model Venda {
    DataColeta String?
    Nfe Nfe[]
    ItensVenda ItensVenda[]
+   AvaliacaoGoogle String?
 }
 
 model ItensVenda {
@@ -151,4 +152,11 @@ model RastreioStatusEmail {
     Status        String
     Mensagem      String
     Ativo         Boolean
+}
+
+model RastreioUpdateStatus {
+    Id                    String @id @default(cuid())
+    Status                String
+    CodigoVenda           String
+    DataHora       DateTime @default(now())
 }

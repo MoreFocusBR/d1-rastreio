@@ -642,12 +642,14 @@ app.get("/updateVendas", async (request, reply) => {
     novoStatus: string | null,
     nomeCliente: string | null,
     emailCliente: string | null,
-    telefoneCliente: string | null
+    telefoneCliente: string | null,
+    codigo: string | null
   ) {
     const requestSA = require("superagent");
     let mensagem = "";
     let emailContent = "";
     let whatsContent = "";
+
     if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
       // Conteúdo do mensagem whats
@@ -719,6 +721,14 @@ app.get("/updateVendas", async (request, reply) => {
       };
 
       enviarEmail(mailOptions);
+
+      await prisma.rastreioUpdateStatus.create({
+        data: {
+          CodigoVenda: codigo,
+          Status: novoStatus,
+        }
+      });
+
     } else if (novoStatus == "Enviado" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
       const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
@@ -790,6 +800,13 @@ app.get("/updateVendas", async (request, reply) => {
       };
 
       enviarEmail(mailOptions);
+
+      await prisma.rastreioUpdateStatus.create({
+        data: {
+          CodigoVenda: codigo,
+          Status: novoStatus,
+        }
+      });
     }
   }
 
@@ -938,7 +955,8 @@ app.get("/updateVendas", async (request, reply) => {
                       DescricaoStatus,
                       EntregaNome,
                       EntregaEmail,
-                      EntregaTelefone
+                      EntregaTelefone,
+                      Codigo,
                     );
                   }
                 }
@@ -2163,7 +2181,7 @@ app.post("/zapi", async (request, reply) => {
 
     if (Etapa == 0) {
       mensagem =
-        "Olá!!\nEstou aqui pra te responder sobre status da entrega da sua compra 😉\nPara prosseguirmos, informe o seu CPF ou CNPJ";
+        "Olá!!\nEstou aqui pra te responder sobre status da entrega da sua compra 😉\n\nCaso queira falar sobre outros temas, por gentileza utilize nosso SAC no número 11930373935 \n\nPara verificar o Status da sua compra, informe o seu CPF ou CNPJ. ";
 
       try {
         const createdContexto = await prisma.contextoRastreio.create({
