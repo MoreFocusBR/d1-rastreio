@@ -2161,7 +2161,7 @@ app.post("/zapi", async (request, reply) => {
             Telefone: telefoneCliente,
             Data: formattedDate,
             MensagemCliente: mensagemCliente,
-            Etapa: 1,
+            Etapa: 0,
           },
         });
       } catch (error) {
@@ -2171,7 +2171,7 @@ app.post("/zapi", async (request, reply) => {
 
     if (Etapa == 0) {
       mensagem =
-        "Olá!!\nEstou aqui pra te responder sobre status da entrega da sua compra 😉\n\nCaso queira falar sobre outros temas, por gentileza utilize nosso SAC no número 11930373935 \n\nPara verificar o Status da sua compra, informe o seu CPF ou CNPJ. ";
+        "Olá!!\nPara retirar suas dúvidas, conte sempre com nosso time do SAC no número 11930373935 😉 \n\n ";
 
       try {
         const createdContexto = await prisma.contextoRastreio.create({
@@ -2179,13 +2179,13 @@ app.post("/zapi", async (request, reply) => {
             Telefone: telefoneCliente,
             Data: formattedDate,
             MensagemCliente: mensagemCliente,
-            Etapa: 1,
+            Etapa: 0,
           },
         });
       } catch (error) {
         console.error(error);
       }
-    } else if (Etapa == 1) {
+    } /* else if (Etapa == 1) {
       const cpfcnpf = mensagemCliente;
       const documentoValido = valida_cpfcnpj(cpfcnpf.trim());
 
@@ -2271,7 +2271,7 @@ app.post("/zapi", async (request, reply) => {
       } catch (error) {
         console.error(error);
       }
-    }
+    } */
 
     // const blipuuid: string = uuid();
     const bodyWhats = `{"phone": "${telefoneCliente}","message": "${mensagem}"}`;
