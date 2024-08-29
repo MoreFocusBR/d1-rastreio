@@ -2152,7 +2152,7 @@ app.post("/zapi", async (request, reply) => {
       },
     });
 
-    if (existingRecord) {
+    /* if (existingRecord) {
       Etapa = existingRecord.Etapa;
     } else {
       try {
@@ -2161,13 +2161,13 @@ app.post("/zapi", async (request, reply) => {
             Telefone: telefoneCliente,
             Data: formattedDate,
             MensagemCliente: mensagemCliente,
-            Etapa: 0,
+            Etapa: 1,
           },
         });
       } catch (error) {
         console.error(error);
       }
-    }
+    } */
 
     if (Etapa == 0) {
       mensagem =
