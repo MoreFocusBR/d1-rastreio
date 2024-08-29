@@ -2179,7 +2179,7 @@ app.post("/zapi", async (request, reply) => {
             Telefone: telefoneCliente,
             Data: formattedDate,
             MensagemCliente: mensagemCliente,
-            Etapa: 0,
+            Etapa: 1,
           },
         });
       } catch (error) {
