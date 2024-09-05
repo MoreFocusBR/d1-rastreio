@@ -721,9 +721,6 @@ app.get("/updateVendas", async (request, reply) => {
       };
 
       enviarEmail(mailOptions);
-
-      
-
     } else if (novoStatus == "Enviado" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
       const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
@@ -795,8 +792,6 @@ app.get("/updateVendas", async (request, reply) => {
       };
 
       enviarEmail(mailOptions);
-
-      
     }
   }
 
@@ -946,7 +941,7 @@ app.get("/updateVendas", async (request, reply) => {
                       EntregaNome,
                       EntregaEmail,
                       EntregaTelefone,
-                      `${Codigo}`,
+                      `${Codigo}`
                     );
                   }
                 }
@@ -1402,6 +1397,8 @@ app.get("/retornaStatusEntrega", async (request, reply) => {
     );
 });
 
+// Esse é tem regra de negócio valendo, pois retorna apenas texto. /retornoStatusEntrega ta chamando /retornoStatusEntregaBlip
+
 app.get("/retornaStatusEntregaBlip", async (request, reply) => {
   interface RouteParams {
     canal: any;
@@ -1469,7 +1466,10 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
           }
 
           NotaFiscalEletronica = NfeJson.nfe[0].NotaFiscalEletronica;
-          const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.replace(/\s/g, '');
+          const TransportadoraNome = NfeJson.nfe[0].TransportadoraNome.replace(
+            /\s/g,
+            ""
+          );
           // Atualiza TransportadoraVenda para utilizar fora desse nó
           TransportadoraVenda = TransportadoraNome;
 
@@ -1490,8 +1490,10 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               TransportadoraNome == "ACEVILLE" ||
               TransportadoraNome == "GOBOR" ||
               TransportadoraNome == "TPL" ||
-              TransportadoraNome == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA" ||
-              TransportadoraNome == "TRANSFARRAPOSTRANSPORTESRODOVIARIOSDECARGASLTDA" ||
+              TransportadoraNome ==
+                "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA" ||
+              TransportadoraNome ==
+                "TRANSFARRAPOSTRANSPORTESRODOVIARIOSDECARGASLTDA" ||
               TransportadoraNome == "FLYVILLETRANSPORTESLTDA"
             ) {
               const resSSW = await request
@@ -1637,51 +1639,56 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               const MANNocorrenciasJson001: Report =
                 MANNocorrenciasJson00.report;
 
-              const ChaveAcessoMANN = MANNocorrenciasJson001.rows[0][10];
+              if (MANNocorrenciasJson001 != null) {
+                const ChaveAcessoMANN = MANNocorrenciasJson001.rows[0][10];
 
-              const payloadMANN00 = {
-                user: {
-                  name: "Chief",
-                  filial: "117",
-                  filialNum: 27,
-                  auth: {
-                    value:
-                      "SSM13wnMAzrqbri/I3z0B6cw82xSDT+iBQSvDOxK8IrEv58kZnLDoO13DWnmPZEP8q7QO6AqQ0XEDW+7noeS60yyjQQlvKGU",
-                    expire: "0001-01-01T00:00:00",
+                const payloadMANN00 = {
+                  user: {
+                    name: "Chief",
+                    filial: "117",
+                    filialNum: 27,
+                    auth: {
+                      value:
+                        "SSM13wnMAzrqbri/I3z0B6cw82xSDT+iBQSvDOxK8IrEv58kZnLDoO13DWnmPZEP8q7QO6AqQ0XEDW+7noeS60yyjQQlvKGU",
+                      expire: "0001-01-01T00:00:00",
+                    },
                   },
-                },
-                app: { application: 2, version: "1.000.000" },
-                parameters: [`${ChaveAcessoMANN}`],
-              };
-              const payloadMANN = JSON.stringify(payloadMANN00);
+                  app: { application: 2, version: "1.000.000" },
+                  parameters: [`${ChaveAcessoMANN}`],
+                };
+                const payloadMANN = JSON.stringify(payloadMANN00);
 
-              const resMANN = await request
-                .post("https://api.transmann.com.br/old/site/track/NFhistory")
-                .set("Accept", "application/json")
-                .set("Content-Type", "application/json")
-                .send(payloadMANN);
+                const resMANN = await request
+                  .post("https://api.transmann.com.br/old/site/track/NFhistory")
+                  .set("Accept", "application/json")
+                  .set("Content-Type", "application/json")
+                  .send(payloadMANN);
 
-              const MANNocorrenciasJson = JSON.parse(resMANN.text);
+                const MANNocorrenciasJson = JSON.parse(resMANN.text);
 
-              interface ReportRow {
-                columns: string[];
-                rows: [string[], string[]];
-              }
+                interface ReportRow {
+                  columns: string[];
+                  rows: [string[], string[]];
+                }
 
-              const report: ReportRow = MANNocorrenciasJson.report;
+                const report: ReportRow = MANNocorrenciasJson.report;
 
-              if (report && report.rows) {
-                report.rows.forEach((row, index) => {
-                  const [dataHora, descricao] = row;
+                if (report && report.rows) {
+                  report.rows.forEach((row, index) => {
+                    const [dataHora, descricao] = row;
 
-                  resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
-                  resultadoFormatado += `Observação: \n`;
-                  resultadoFormatado += `Descrição: ${descricao}\n`;
+                    resultadoFormatado += `Data/Hora da ocorrência: ${dataHora}\n`;
+                    resultadoFormatado += `Observação: \n`;
+                    resultadoFormatado += `Descrição: ${descricao}\n`;
 
-                  if (index !== report.rows.length - 1) {
-                    resultadoFormatado += "------\n";
-                  }
-                });
+                    if (index !== report.rows.length - 1) {
+                      resultadoFormatado += "------\n";
+                    }
+                  });
+                } else {
+                  resultadoFormatado +=
+                    "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+                }
               } else {
                 resultadoFormatado +=
                   "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
