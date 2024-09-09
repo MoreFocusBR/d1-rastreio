@@ -452,6 +452,15 @@ app.get("/cargaVendas", async (request, reply) => {
 
   async function mainConsomeLista(codigoInicial: number, codigoFinal: number) {
     for (let Codigo = codigoInicial; Codigo <= codigoFinal; Codigo++) {
+
+      const existingRecord = await prisma.venda.findFirst({
+        where: {
+          Codigo: Codigo * 1,
+        },
+      });
+
+      if (!existingRecord) {
+
       const resVenda = await pegaVenda(Codigo);
 
       if (resVenda) {
@@ -526,14 +535,9 @@ app.get("/cargaVendas", async (request, reply) => {
                 DataColeta,
               } = venda as Venda;
 
-              const existingRecord = await prisma.venda.findFirst({
-                where: {
-                  Codigo: Codigo,
-                },
-              });
+              
 
-              // Se não existir, insere o novo registro
-              if (!existingRecord && Cancelada != true) {
+              
                 console.log("Inserindo Venda: " + Codigo);
 
                 await prisma.venda.create({
@@ -571,10 +575,8 @@ app.get("/cargaVendas", async (request, reply) => {
                   },
                 });
 
-                // insere o payload completo em VendaFilaIntegração como backup
-              } else {
-                console.log("Venda ja existente: " + Codigo);
-              }
+                
+              
             } catch (error) {
               console.error(error);
             }
@@ -584,7 +586,10 @@ app.get("/cargaVendas", async (request, reply) => {
         console.error("Erro ao obter o lista integração.");
         return;
       }
+    } else {
+      console.log(`Venda ${Codigo} já existe`);
     }
+  }
   }
 
   // consome cada item da fila de integração Vendas - fim
@@ -1750,21 +1755,34 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
 
               const ChaveAcessoJAMEF = JAMEFlogin.access_token;
 
+              // seleciona documento emitente
+              const Empresa = resUltimaVendaCpfCnpjJson.venda[0].Empresa;
+              let CNPJEmpresa = "18850116000185"
+              if(Empresa == 1) {
+                CNPJEmpresa = "18850116000185";
+              } else if (Empresa == 2) {
+                CNPJEmpresa = "33054991000144";
+              } else if (Empresa == 3) {
+                CNPJEmpresa = "44350484000174"; 
+              } else if (Empresa == 4) {
+                CNPJEmpresa = "33054991000144";
+              } else if (Empresa == 5) {
+                CNPJEmpresa = "52544047000110";
+              }
+
               const payloadJAMEF00 = {
-                documentoResponsavelPagamento: "52544047000110",
+                documentoResponsavelPagamento: CNPJEmpresa, // 18850116000185 52544047000110
                 documentoDestinatario: `${cpfcnpj}`,
-                numeroNotaFiscal: `${NotaFiscalNumero}`,
-                numeroSerieNotaFiscal: "",
-                codigoFilialOrigem: "",
+                numeroNotaFiscal: `${NotaFiscalNumero}`
               };
-              const payloadJAMEF = JSON.stringify(payloadJAMEF00);
+              const payloadJAMEFok = JSON.stringify(payloadJAMEF00);
 
               const resJAMEF = await request
                 .post("https://api.jamef.com.br/rastreamento/ver")
                 .set("Accept", "application/json")
                 .set("Content-Type", "application/json")
                 .set("Authorization", `Bearer ${ChaveAcessoJAMEF}`)
-                .send(payloadJAMEF);
+                .send(payloadJAMEFok);
 
               const JAMEFocorrenciasJson = JSON.parse(resJAMEF.text);
 
