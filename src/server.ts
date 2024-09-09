@@ -408,6 +408,31 @@ app.get("/consomeFilaIntegracaoVendas", async (request, reply) => {
 
 // Endpoint: Consome fila integração Vendas - fim
 
+
+// Endpoint: Redundancia Carga Vendas Rastreio - início
+
+app.get("/redundanciaCargaVendas", async (req, reply) => {
+  const ultimaVenda = await prisma.venda.findFirst({
+    orderBy: { Codigo: "desc" },
+  });
+
+  if(ultimaVenda?.Codigo !== undefined) {
+
+  const request = require("superagent");
+      const resVenda = await request
+        .get(`https://d1-rastreio.onrender.com/cargaVendas?codigoInicial=${ultimaVenda?.Codigo - 100}&codigoFinal=${ultimaVenda?.Codigo}`)
+        .set("Accept", "application/json");
+    
+
+    return reply.status(200).send(`codigoInicial ${ultimaVenda?.Codigo - 100}  codigoFinal ${ultimaVenda?.Codigo}`);
+
+  }
+   
+
+});
+
+// Endpoint: Redundancia Carga Vendas Rastreio - Fim
+
 // Endpoint: Carga inicial Vendas - início
 
 app.get("/cargaVendas", async (request, reply) => {
