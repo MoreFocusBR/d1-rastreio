@@ -27,6 +27,7 @@ model Venda {
    ClienteTipoPessoa  String?
    ClienteDocumento String
    TransportadoraCodigo Int?
+   TransportadoraNome String?
    DataVenda String?
    Entrega Boolean
    EntregaNome String?

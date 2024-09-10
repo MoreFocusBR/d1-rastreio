@@ -673,7 +673,9 @@ app.get("/updateVendas", async (request, reply) => {
     nomeCliente: string | null,
     emailCliente: string | null,
     telefoneCliente: string | null,
-    codigo: string | null
+    codigo: string | null,
+    transportadoraNome: string | null,
+    NotaFiscalNumero: number | null
   ) {
     const requestSA = require("superagent");
     let mensagem = "";
@@ -695,6 +697,7 @@ app.get("/updateVendas", async (request, reply) => {
           "primeiroNome",
           primeiroNome
         );
+
       }
 
       const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
@@ -765,9 +768,53 @@ app.get("/updateVendas", async (request, reply) => {
           "primeiroNome",
           primeiroNome
         );
+        
+        whatsContent = substituirMarcador(
+          whatsContentDB?.Mensagem,
+          "textoTransportadoraNome",
+          `Seu pedido está sendo transportado pela ${transportadoraNome}`
+        );
+
+        whatsContent = substituirMarcador(
+          whatsContentDB?.Mensagem,
+          "textoNumeroNF",
+          ` e o número da Nota Fiscal é ${NotaFiscalNumero}`
+        );
       }
 
-      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
+      const novoWhatsContentDB = `${whatsContentDB?.Mensagem} textoTransportadoraNome textoNumeroNF` ;
+
+      if(transportadoraNome && NotaFiscalNumero) {
+        
+        whatsContent = substituirMarcador(
+          novoWhatsContentDB,
+          "textoTransportadoraNome",
+          `Seu pedido está sendo transportado pela ${transportadoraNome}`
+        );
+
+        whatsContent = substituirMarcador(
+          novoWhatsContentDB,
+          "textoNumeroNF",
+          ` e o número da Nota Fiscal é ${NotaFiscalNumero}`
+        );
+      } else {
+        
+        whatsContent = substituirMarcador(
+          novoWhatsContentDB,
+          "textoTransportadoraNome",
+          ``
+        );
+
+        whatsContent = substituirMarcador(
+          novoWhatsContentDB,
+          "textoNumeroNF",
+          ``
+        );
+      }
+
+      
+
+      const bodyWhats = `{"phone": "5551991508579","message": "${novoWhatsContentDB}"}`;
 
       const resZAPI = await requestSA
         .post(
@@ -865,6 +912,7 @@ app.get("/updateVendas", async (request, reply) => {
           ClienteCodigo: number;
           ClienteDocumento: string;
           TransportadoraCodigo: number | null;
+          TransportadoraNome: string | null;
           DataVenda: string | null;
           Entrega: boolean;
           EntregaNome: string | null;
@@ -912,6 +960,7 @@ app.get("/updateVendas", async (request, reply) => {
                     ClienteCodigo,
                     ClienteDocumento,
                     TransportadoraCodigo,
+                    TransportadoraNome,
                     DataVenda,
                     Entrega,
                     EntregaNome,
@@ -945,6 +994,7 @@ app.get("/updateVendas", async (request, reply) => {
                         ClienteCodigo,
                         ClienteDocumento,
                         TransportadoraCodigo,
+                        TransportadoraNome,
                         DataVenda,
                         Entrega,
                         EntregaNome,
@@ -971,7 +1021,9 @@ app.get("/updateVendas", async (request, reply) => {
                       EntregaNome,
                       EntregaEmail,
                       EntregaTelefone,
-                      `${Codigo}`
+                      `${Codigo}`,
+                      TransportadoraNome,
+                      NotaFiscalNumero
                     );
                   }
                 }
