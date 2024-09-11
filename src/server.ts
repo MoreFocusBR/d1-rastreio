@@ -681,6 +681,7 @@ app.get("/updateVendas", async (request, reply) => {
     let mensagem = "";
     let emailContent = "";
     let whatsContent = "";
+    let whatsContentNovo = "";
 
     if (novoStatus == "Nota Fiscal Emitida" && nomeCliente != null) {
       let primeiroNome: string = nomeCliente.split(" ")[0];
@@ -769,44 +770,39 @@ app.get("/updateVendas", async (request, reply) => {
           primeiroNome
         );
         
-        whatsContent = substituirMarcador(
-          whatsContentDB?.Mensagem,
-          "textoTransportadoraNome",
-          `Seu pedido está sendo transportado pela ${transportadoraNome}`
-        );
-
-        whatsContent = substituirMarcador(
-          whatsContentDB?.Mensagem,
-          "textoNumeroNF",
-          ` e o número da Nota Fiscal é ${NotaFiscalNumero}`
-        );
       }
 
       const novoWhatsContentDB = `${whatsContentDB?.Mensagem} textoTransportadoraNome textoNumeroNF` ;
 
+      whatsContentNovo = substituirMarcador(
+        novoWhatsContentDB,
+        "primeiroNome",
+        primeiroNome
+      );
+
       if(transportadoraNome && NotaFiscalNumero) {
         
-        whatsContent = substituirMarcador(
-          novoWhatsContentDB,
+        whatsContentNovo = substituirMarcador(
+          whatsContentNovo,
           "textoTransportadoraNome",
           `Seu pedido está sendo transportado pela ${transportadoraNome}`
         );
 
-        whatsContent = substituirMarcador(
-          novoWhatsContentDB,
+        whatsContentNovo = substituirMarcador(
+          whatsContentNovo,
           "textoNumeroNF",
           ` e o número da Nota Fiscal é ${NotaFiscalNumero}`
         );
       } else {
         
-        whatsContent = substituirMarcador(
-          novoWhatsContentDB,
+        whatsContentNovo = substituirMarcador(
+          whatsContentNovo,
           "textoTransportadoraNome",
           ``
         );
 
-        whatsContent = substituirMarcador(
-          novoWhatsContentDB,
+        whatsContentNovo = substituirMarcador(
+          whatsContentNovo,
           "textoNumeroNF",
           ``
         );
@@ -814,7 +810,7 @@ app.get("/updateVendas", async (request, reply) => {
 
       
 
-      const bodyWhats = `{"phone": "5551991508579","message": "${novoWhatsContentDB}"}`;
+      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContentNovo}"}`;
 
       const resZAPI = await requestSA
         .post(
