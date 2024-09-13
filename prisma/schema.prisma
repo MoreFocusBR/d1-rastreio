@@ -56,6 +56,12 @@ model Venda {
    Nfe Nfe[]
    ItensVenda ItensVenda[]
    AvaliacaoGoogle String?
+   PrevisaoEntregaRastreio String?
+   LastMileRastreio String?
+   LastMileRastreioAviso String?
+   EntregueRastreio String?
+   EntregueRastreioAviso String?
+
 }
 
 model ItensVenda {
