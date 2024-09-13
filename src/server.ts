@@ -14,6 +14,7 @@ import {
 import { notaFiscalRoutes } from "./routes/nota-fiscal.routes";
 import { error } from "console";
 import { Options } from "nodemailer/lib/mailer";
+import { json } from "stream/consumers";
 
 const app = fastify();
 
@@ -1458,6 +1459,27 @@ app.get("/updateRastreio", async (request, reply) => {
           },
         });
 
+        interface ItensVenda {
+          Codigo: number;
+          ProdutoReferencia: string;
+          ProdutoBarras: string;
+          ProdutoBundleCodigo: number;
+          VendaCodigo: number;
+          ProdutoCodigo: number;
+          PrecoUnitarioVenda: string;
+          PrecoUnitarioCusto: string;
+          EmbaladoParaPresente: boolean;
+          ValorEmbalagemPresente: string;
+          Quantidade: string;
+          AtributosEspeciais: string;
+          ItemNome: string;
+          ItemDescontoPercentual: string;
+          ItemDescontoValor: string;
+          ItemValorBruto: string;
+          ItemValorLiquido: string;
+          Servico: boolean;
+          Movimentacao: object;
+        }
         interface VendaInterface {
           Codigo: number;
           ClienteCodigo: number;
@@ -1490,7 +1512,7 @@ app.get("/updateRastreio", async (request, reply) => {
           DataEnvio: string | null;
           NotaFiscalNumero: number | null;
           DataColeta: string | null;
-          Itens: object | null;
+          ItensVenda: ItensVenda[];
         }
 
         async function enviaWhatsTracking(
@@ -1723,8 +1745,11 @@ app.get("/updateRastreio", async (request, reply) => {
 
         async function processaVendaSSW(
           prismaClient: PrismaClient,
-          venda: VendaInterface
+          vendaString: string
         ) {
+
+          const venda = JSON.parse(vendaString);
+
           try {
             const resVenda = await pegaVenda(venda.Codigo);
 
@@ -1760,7 +1785,7 @@ app.get("/updateRastreio", async (request, reply) => {
                     DataEnvio,
                     NotaFiscalNumero,
                     DataColeta,
-                    Itens,
+                    ItensVenda,
                   } = vendaJson as VendaInterface;
 
                   // Pega ocorrencias rastreio
@@ -1930,7 +1955,8 @@ app.get("/updateRastreio", async (request, reply) => {
 
         // Processa as vendas do lote atual
         for (const venda of vendasFiltradasSSW) {
-          await processaVendaSSW(prisma, venda);
+          const vendaString = JSON.stringify(venda)
+          await processaVendaSSW(prisma, vendaString);
         }
 
         // Verifica se todos os registros foram processados
