@@ -1740,6 +1740,42 @@ app.get("/updateRastreio", async (request, reply) => {
               .send(bodyWhats1);
 
               
+          } else if (
+            momentoTracking == 3 &&
+            whatsContentDBwow?.Mensagem &&
+            Venda.EntregaNome &&
+            Venda.TransportadoraCodigo &&
+            Venda.Itens
+          ) {
+            
+            let whatsContentwow = substituirMarcador(
+              whatsContentDBwow?.Mensagem,
+              "primeiroNome",
+              Venda.EntregaNome.split(" ")[0]
+            );
+            // {{nomeTransportadoraNotaFiscal}}
+
+            // Substui dados da entrega
+            whatsContentwow = substituirMarcador(
+              whatsContentwow,
+              "numeroPedido",
+              `${
+                Venda.Codigo
+              }`
+            );
+
+            // Dispara msg whats
+            const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
+
+            const resZAPI = await request
+              .post(
+                "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+              )
+              .set("Content-Type", "application/json")
+              .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+              .send(bodyWhats1);
+
+              
           }
         }
 
@@ -1919,6 +1955,12 @@ app.get("/updateRastreio", async (request, reply) => {
                               2,
                               data_hora
                             );
+                            await enviaWhatsTracking(
+                              vendaJson.EntregaTelefone,
+                              JSON.stringify(vendaJson),
+                              2,
+                              data_hora
+                            );
                             // Registra envio LastMile
                             await prismaClient.venda.update({
                               where: { Codigo: venda.Codigo },
@@ -1935,6 +1977,42 @@ app.get("/updateRastreio", async (request, reply) => {
                               EntregueRastreio: data_hora,
                             },
                           });
+
+                          
+                          const jaAvisouEntregue = await prisma.venda.findFirst(
+                            {
+                              where: {
+                                Codigo: Codigo,
+                                NOT: [{ EntregueRastreioAviso: "NULL" }],
+                              },
+                            }
+                          );
+
+                          // #estouaqui2
+                          if (!jaAvisouEntregue) {
+                            // Envia ocorrencias pro Whats
+                            const telefoneRodrigo = "51991508579";
+                            const telefoneRenan = "48988038546";
+                            await enviaWhatsTracking(
+                              telefoneRodrigo,
+                              JSON.stringify(vendaJson),
+                              3,
+                              data_hora
+                            );
+                            await enviaWhatsTracking(
+                              telefoneRenan,
+                              JSON.stringify(vendaJson),
+                              3,
+                              data_hora
+                            );
+                            // Registra envio LastMile
+                            await prismaClient.venda.update({
+                              where: { Codigo: venda.Codigo },
+                              data: {
+                                EntregueRastreioAviso: data_hora,
+                              },
+                            }); 
+                          }
                         }
                       }
                     );
