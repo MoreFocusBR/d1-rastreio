@@ -675,9 +675,9 @@ app.get("/updateVendas", async (request, reply) => {
 
     if (
       vendaJson.DescricaoStatus == "Nota Fiscal Emitida" &&
-      vendaJson.nomeCliente != null
+      vendaJson.EntregaNome != null
     ) {
-      let primeiroNome: string = vendaJson.nomeCliente.split(" ")[0];
+      let primeiroNome: string = vendaJson.EntregaNome.split(" ")[0];
       // Conteúdo do mensagem whats
       const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
         where: {
@@ -692,7 +692,6 @@ app.get("/updateVendas", async (request, reply) => {
           primeiroNome
         );
       }
-
       const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
       const resZAPI = await requestSA
@@ -704,6 +703,7 @@ app.get("/updateVendas", async (request, reply) => {
         .send(bodyWhats);
 
         // Msg para Renan
+        
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
@@ -713,6 +713,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
         .send(bodyWhatsD1);
+        
 
       const bodyWhats2 = `{"phone": "55${vendaJson.EntregaTelefone}","message": "${whatsContent}"}`;
 
@@ -747,7 +748,16 @@ app.get("/updateVendas", async (request, reply) => {
         html: emailContent,
       };
 
+      const mailOptionsRodrigo = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+        subject: "Estamos preparando o envio do seu pedido",
+        text: mensagem,
+        html: emailContent,
+      };
+
       enviarEmail(mailOptions);
+      enviarEmail(mailOptionsRodrigo);
     } else if (
       vendaJson.DescricaoStatus == "Enviado" &&
       vendaJson.nomeCliente != null
@@ -867,6 +877,7 @@ app.get("/updateVendas", async (request, reply) => {
         }
       }
 
+      whatsContentwow = whatsContentwow.replace("\\n", "\n");
       const bodyWhats = `{"phone": "5551991508579","message": "${whatsContentwow}"}`;
 
       const resZAPI = await requestSA
@@ -877,6 +888,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
         .send(bodyWhats);
 
+        /*
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
@@ -886,6 +898,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
         .send(bodyWhatsD1);
+        */
 
       const bodyWhats2 = `{"phone": "55${vendaJson.EntregaTelefone}","message": "${whatsContent}"}`;
 
@@ -1070,7 +1083,7 @@ app.get("/updateVendas", async (request, reply) => {
                       },
                     });
 
-                    enviaWhatsStatus(JSON.stringify(venda));
+                    enviaWhatsStatus(JSON.stringify(vendaJson));
                   }
                 }
               }
@@ -1084,6 +1097,10 @@ app.get("/updateVendas", async (request, reply) => {
 
         // Processa as vendas do lote atual
         for (const venda of vendasFiltradas) {
+          if (venda.Codigo == 158153) {
+
+            const pararaqui = 1;
+          }
           await processaVenda(prisma, venda);
         }
 
@@ -1866,7 +1883,7 @@ app.get("/updateRastreio", async (request, reply) => {
                     NfeJson.nfe[0].NotaFiscalEletronica;
 
                   // Busca ocorrencias na SSW - início
-
+                  // estouaqui3
                   const resSSW = await request
                     .post("https://ssw.inf.br/api/trackingdanfe")
                     .set("Accept", "application/json")
