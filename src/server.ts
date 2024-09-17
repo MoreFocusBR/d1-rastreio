@@ -1462,7 +1462,7 @@ app.get("/updateRastreio", async (request, reply) => {
           take: tamanhoLote,
           skip: offset,
           where: {
-            DataVenda: {
+            DataHoraStatus: {
               gt: dataLimite.toISOString(),
             },
             DescricaoStatus: "Enviado",
@@ -2070,7 +2070,7 @@ app.get("/updateRastreio", async (request, reply) => {
       Codigo: true,
     },
     where: {
-      DataVenda: {
+      DataHoraStatus: {
         gt: dataLimite.toISOString(),
       },
       DescricaoStatus: "Enviado",
