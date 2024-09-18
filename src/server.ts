@@ -1536,13 +1536,14 @@ app.get("/updateRastreio", async (request, reply) => {
           Telefone: any,
           VendaString: any,
           momentoTracking: number,
-          data_hora: string
+          data_hora: string,
+          previsaoEntrega: string
         ) {
           const Venda = JSON.parse(VendaString);
           const request = require("superagent");
           let qualMensagem = "";
           if (momentoTracking == 1) {
-            qualMensagem = "EnviadoWow";
+            qualMensagem = "PrevisaoWow";
           } else if (momentoTracking == 2) {
             qualMensagem = "LastMileWow";
           } else if (momentoTracking == 3) {
@@ -1642,7 +1643,134 @@ app.get("/updateRastreio", async (request, reply) => {
               // Add the rest of the entries here...
             ];
 
-          if (
+            if (
+              momentoTracking == 1 &&
+              whatsContentDBwow?.Mensagem &&
+              Venda.EntregaNome &&
+              Venda.TransportadoraCodigo &&
+              Venda.Itens
+            ) {
+              
+  
+              function retornaNomeTransportadora(
+                TransportadoraCodigo: number
+              ): string | undefined {
+                const transportadora = transportadoras.find(
+                  (item) => item.TransportadoraCodigo === TransportadoraCodigo
+                );
+                return transportadora
+                  ? transportadora.TransportadoraNome
+                  : undefined;
+              }
+
+              let whatsContentwow = substituirMarcador(
+                whatsContentDBwow?.Mensagem,
+                "primeiroNome",
+                Venda.EntregaNome.split(" ")[0]
+              );
+
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "numeroPedido",
+                Venda.Codigo
+              );
+  
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "previsaoEntrega",
+                previsaoEntrega
+              );
+              // {{nomeTransportadoraNotaFiscal}}
+  
+              // Substui dados da entrega
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "dadosEntrega",
+                `Dados da entrega\n--------------------\nEndereço de entrega: ${
+                  Venda.EntregaLogradouro
+                }, ${Venda.EntregaLogradouroNumero}, ${
+                  Venda.EntregaLogradouroComplemento
+                }, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${
+                  Venda.EntregaUnidadeFederativa
+                }\nTransportadora: ${retornaNomeTransportadora(
+                  Venda.TransportadoraCodigo
+                )}\nNúmero Nota Fiscal: ${Venda.NotaFiscalNumero}`
+              );
+  
+              // Texto Itens
+              const itensVenda = JSON.parse(JSON.stringify(Venda.Itens));
+              let textoItens = "";
+              itensVenda.forEach(
+                async (
+                  row: {
+                    Codigo: number;
+                    ProdutoReferencia: string;
+                    ProdutoBarras: string;
+                    ProdutoBundleCodigo: number;
+                    VendaCodigo: number;
+                    ProdutoCodigo: number;
+                    PrecoUnitarioVenda: string;
+                    PrecoUnitarioCusto: string;
+                    EmbaladoParaPresente: boolean;
+                    ValorEmbalagemPresente: string;
+                    Quantidade: string;
+                    AtributosEspeciais: string;
+                    ItemNome: string;
+                    ItemDescontoPercentual: string;
+                    ItemDescontoValor: string;
+                    ItemValorBruto: string;
+                    ItemValorLiquido: string;
+                    Servico: boolean;
+                    Movimentacao: object;
+                  },
+                  index: number
+                ) => {
+                  const {
+                    Codigo,
+                    ProdutoReferencia,
+                    ProdutoBarras,
+                    ProdutoBundleCodigo,
+                    VendaCodigo,
+                    ProdutoCodigo,
+                    PrecoUnitarioVenda,
+                    PrecoUnitarioCusto,
+                    EmbaladoParaPresente,
+                    ValorEmbalagemPresente,
+                    Quantidade,
+                    AtributosEspeciais,
+                    ItemNome,
+                    ItemDescontoPercentual,
+                    ItemDescontoValor,
+                    ItemValorBruto,
+                    ItemValorLiquido,
+                    Servico,
+                    Movimentacao,
+                  } = row;
+  
+                  textoItens += `${Quantidade.split(".")[0]} X ${ItemNome}\n`;
+                }
+              );
+  
+              // Substitui dados itens
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "dadosPedido",
+                `\n\nItens do Pedido n. ${Venda.Codigo}\n--------------------\n${textoItens}`
+              );
+  
+              // Dispara msg whats
+              const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
+  
+              const resZAPI = await request
+                .post(
+                  "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+                )
+                .set("Content-Type", "application/json")
+                .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+                .send(bodyWhats1);
+  
+                
+            } else if (
             momentoTracking == 2 &&
             whatsContentDBwow?.Mensagem &&
             Venda.EntregaNome &&
@@ -1760,9 +1888,7 @@ app.get("/updateRastreio", async (request, reply) => {
           } else if (
             momentoTracking == 3 &&
             whatsContentDBwow?.Mensagem &&
-            Venda.EntregaNome &&
-            Venda.TransportadoraCodigo &&
-            Venda.Itens
+            Venda.EntregaNome
           ) {
             
             let whatsContentwow = substituirMarcador(
@@ -1937,6 +2063,52 @@ app.get("/updateRastreio", async (request, reply) => {
                               PrevisaoEntregaRastreio: previsaoEntrega,
                             },
                           });
+
+                          
+                          const jaAvisouPrevisaoEntrega = await prisma.venda.findFirst(
+                            {
+                              where: {
+                                Codigo: Codigo,
+                                NOT: [{ PrevisaoEntregaRastreioAviso: "NULL" }],
+                              },
+                            }
+                          );
+
+                          // #estouaqui
+                          if (!jaAvisouPrevisaoEntrega) {
+                            // Envia ocorrencias pro Whats
+                            const telefoneRodrigo = "51991508579";
+                            const telefoneRenan = "48988038546";
+                            await enviaWhatsTracking(
+                              telefoneRodrigo,
+                              JSON.stringify(vendaJson),
+                              1,
+                              data_hora,
+                              previsaoEntrega
+                            ); 
+                            await enviaWhatsTracking(
+                              telefoneRenan,
+                              JSON.stringify(vendaJson),
+                              1,
+                              data_hora,
+                              previsaoEntrega
+                            );
+                            await enviaWhatsTracking(
+                              vendaJson.EntregaTelefone,
+                              JSON.stringify(vendaJson),
+                              1,
+                              data_hora,
+                              previsaoEntrega
+                            ); 
+                            console.log(`Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Previsao Entrega`);
+                            // Registra envio Previsao Entrega
+                            await prismaClient.venda.update({
+                              where: { Codigo: venda.Codigo },
+                              data: {
+                                PrevisaoEntregaRastreioAviso: data_hora,
+                              },
+                            }); 
+                          }
                         } else if (/SAIDA PARA ENTREGA/i.test(ocorrencia)) {
                           console.log("Inserindo LastMileRastreio pelo SSW");
                           await prismaClient.venda.update({
@@ -1964,27 +2136,31 @@ app.get("/updateRastreio", async (request, reply) => {
                               telefoneRodrigo,
                               JSON.stringify(vendaJson),
                               2,
-                              data_hora
+                              data_hora,
+                              ""
                             );
                             await enviaWhatsTracking(
                               telefoneRenan,
                               JSON.stringify(vendaJson),
                               2,
-                              data_hora
+                              data_hora,
+                              ""
                             );
                             await enviaWhatsTracking(
                               vendaJson.EntregaTelefone,
                               JSON.stringify(vendaJson),
                               2,
-                              data_hora
+                              data_hora,
+                              ""
                             );
+                            console.log(`Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Last Mile`);
                             // Registra envio LastMile
                             await prismaClient.venda.update({
                               where: { Codigo: venda.Codigo },
                               data: {
                                 LastMileRastreioAviso: data_hora,
                               },
-                            }); 
+                            });
                           }
                         } else if (/MERCADORIA ENTREGUE/i.test(ocorrencia)) {
                           console.log("Inserindo EntregueRastreio pelo SSW");
@@ -2014,15 +2190,25 @@ app.get("/updateRastreio", async (request, reply) => {
                               telefoneRodrigo,
                               JSON.stringify(vendaJson),
                               3,
-                              data_hora
+                              data_hora,
+                              ""
                             );
                             await enviaWhatsTracking(
                               telefoneRenan,
                               JSON.stringify(vendaJson),
                               3,
-                              data_hora
+                              data_hora,
+                              ""
                             );
-                            // Registra envio LastMile
+                            await enviaWhatsTracking(
+                              vendaJson.EntregaTelefone,
+                              JSON.stringify(vendaJson),
+                              3,
+                              data_hora,
+                              ""
+                            );
+                            console.log(`Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Pedido Entregue`);
+                            // Registra envio Entregue
                             await prismaClient.venda.update({
                               where: { Codigo: venda.Codigo },
                               data: {

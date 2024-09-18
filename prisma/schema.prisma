@@ -57,6 +57,7 @@ model Venda {
    ItensVenda ItensVenda[]
    AvaliacaoGoogle String?
    PrevisaoEntregaRastreio String?
+   PrevisaoEntregaRastreioAviso String?
    LastMileRastreio String?
    LastMileRastreioAviso String?
    EntregueRastreio String?
