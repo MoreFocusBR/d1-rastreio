@@ -672,6 +672,7 @@ app.get("/updateVendas", async (request, reply) => {
     let emailContent = "";
     let whatsContent = "";
     let whatsContentwow = "";
+    const transportadorasComTrackin = [122, 151, 112, 110, 120, 210, 223, 224, 102, 119, 52, 118];
 
     if (
       vendaJson.DescricaoStatus == "Nota Fiscal Emitida" &&
@@ -760,7 +761,8 @@ app.get("/updateVendas", async (request, reply) => {
       enviarEmail(mailOptionsRodrigo);
     } else if (
       vendaJson.DescricaoStatus == "Enviado" &&
-      vendaJson.nomeCliente != null
+      vendaJson.nomeCliente != null &&
+      !transportadorasComTrackin.includes(vendaJson.TransportadoraCodigo)
     ) {
       let primeiroNome: string = vendaJson.nomeCliente.split(" ")[0];
       const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
