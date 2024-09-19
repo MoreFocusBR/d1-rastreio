@@ -44,7 +44,7 @@ const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
     user: "naoresponda@d1fitness.com.br",
-    pass: "tness2020*",
+    pass: "fitness2020*",
   },
 });
 
@@ -627,6 +627,115 @@ app.get("/cargaVendas", async (request, reply) => {
 
 // Endpoint: Carga inicial Vendas - fim
 
+// Teste envio e-mail - início
+
+app.get("/testeEmail", async (request, reply) => {
+  function substituirMarcador(
+    mensagem: string,
+    marcador: string,
+    conteudo: string
+  ) {
+    return mensagem.replace(new RegExp(`{{${marcador}}}`, "g"), conteudo);
+  }
+  // Envio e-mail - início
+  // Conteúdo do e-mail
+  // Caminho do arquivo HTML
+  const filePath = path.join(
+    __dirname,
+    "",
+    `template-email-EntregueWow.html`
+  );
+
+  // Leitura do conteúdo do arquivo
+  let emailContentWow = await fs.readFile(filePath, "utf-8");
+
+  const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
+    where: {
+      Status: "EntregueWow",
+    },
+  });
+
+  if (emailContentDB?.Mensagem) {
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "conteudoEmail",
+      emailContentDB.Mensagem
+    );
+    
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "conteudoEmail",
+      emailContentDB.Mensagem
+    );
+
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "primeiroNome",
+      "Rodrigo"
+    );
+
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "numeroPedido",
+      "1234"
+    );
+
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "dataVenda",
+      "10/09/2024"
+    );
+
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "enderecoEntrega",
+      `Rua Fernando Machado, 165, Centro, Porto Alegre / RS`
+    );
+
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "numeroNotaFiscal",
+      "456789"
+    );
+
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "transportadoraNome",
+      "BAUER"
+    );
+
+    emailContentWow = substituirMarcador(
+      emailContentWow,
+      "previsaoEntrega",
+      "19/09/2024"
+    );
+
+    // Opções do e-mail
+    /* Desligando email cliente
+      const mailOptions = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
+        subject: "Estamos preparando o envio do seu pedido",
+        text: mensagem,
+        html: emailContentWow,
+      };
+
+      enviarEmail(mailOptions);
+      */
+
+      const mailOptionsRodrigo = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+        subject: "Seu pedido foi entregue",
+        text: emailContentDB.Mensagem,
+        html: emailContentWow,
+      };
+      enviarEmail(mailOptionsRodrigo);
+  }
+});
+
+// Teste envio e-mail - fim
+
 // Endpoint: Update Vendas - início
 
 app.get("/updateVendas", async (request, reply) => {
@@ -698,6 +807,7 @@ app.get("/updateVendas", async (request, reply) => {
           primeiroNome
         );
       }
+
       const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
       const resZAPI = await requestSA
@@ -708,6 +818,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats);
 
+      
       // Msg para Renan
 
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
@@ -729,14 +840,15 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats2);
+        
 
-        // estouaqui6
-        // Envio e-mail - início
+      // estouaqui6
+      // Envio e-mail - início
       // Conteúdo do e-mail
       // Caminho do arquivo HTML
       const filePath = path.join(
         __dirname,
-        "src",
+        "",
         `template-email-NotaFiscalWow.html`
       );
 
@@ -761,26 +873,56 @@ app.get("/updateVendas", async (request, reply) => {
           "conteudoEmail",
           emailContentDB.Mensagem
         );
+
+        emailContentWow = substituirMarcador(
+          emailContentWow,
+          "numeroPedido",
+          vendaJson.numeroPedido
+        );
+
+        emailContentWow = substituirMarcador(
+          emailContentWow,
+          "dataVenda",
+          vendaJson.DataVenda
+        );
+
+        emailContentWow = substituirMarcador(
+          emailContentWow,
+          "enderecoEntrega",
+          `${vendaJson.EntregaLogradouro}, ${vendaJson.EntregaLogradouroNumero}, ${vendaJson.EntregaLogradouroComplemento}, ${vendaJson.EntregaBairro}, ${vendaJson.EntregaMunicipioNome} / ${vendaJson.EntregaUnidadeFederativa}`
+        );
       }
       // Opções do e-mail
+      
       const mailOptions = {
         from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
         to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
         subject: "Estamos preparando o envio do seu pedido",
         text: mensagem,
-        html: emailContent,
+        html: emailContentWow,
       };
+
+      enviarEmail(mailOptions);
+      
 
       const mailOptionsRodrigo = {
         from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
         to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
         subject: "Estamos preparando o envio do seu pedido",
         text: mensagem,
-        html: emailContent,
+        html: emailContentWow,
       };
-
-      enviarEmail(mailOptions);
       enviarEmail(mailOptionsRodrigo);
+      
+      const mailOptionsRenan = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `renan@d1fitness.com.br`, // E-mail do destinatário
+        subject: "Estamos preparando o envio do seu pedido",
+        text: mensagem,
+        html: emailContentWow,
+      };
+      enviarEmail(mailOptionsRenan);
+
     } else if (
       vendaJson.DescricaoStatus == "Enviado" &&
       vendaJson.nomeCliente != null &&
@@ -814,7 +956,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats);
 
-      /*
+      
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
@@ -824,8 +966,9 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhatsD1);
-        */
+        
 
+      
       const bodyWhats2 = `{"phone": "55${vendaJson.EntregaTelefone}","message": "${whatsContent}"}`;
 
       const resZAPI2 = await requestSA
@@ -835,41 +978,71 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats2);
+        
 
+      // Envio e-mail - início
       // Conteúdo do e-mail
+      // Caminho do arquivo HTML
+      const filePath = path.join(
+        __dirname,
+        "",
+        `template-email-EnviadoSemPrevisaoWow.html`
+      );
+
+      // Leitura do conteúdo do arquivo
+      let emailContentWow = await fs.readFile(filePath, "utf-8");
+
       const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
         where: {
-          Status: "Enviado",
+          Status: "EnviadoSemPrevisaoWow",
         },
       });
 
       if (emailContentDB?.Mensagem) {
-        emailContent = substituirMarcador(
-          emailContentDB?.Mensagem,
+        emailContentWow = substituirMarcador(
+          emailContentWow,
           "primeiroNome",
           primeiroNome
         );
+
+        emailContentWow = substituirMarcador(
+          emailContentWow,
+          "conteudoEmail",
+          emailContentDB.Mensagem
+        );
       }
 
+      
       // Opções do e-mail
       const mailOptions = {
         from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
         to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
         subject: "Seu pedido está a caminho!",
         text: mensagem,
-        html: emailContent,
+        html: emailContentWow,
       };
+      
+      enviarEmail(mailOptions);
+      
+
       // Opções do e-mail - Rodrigo
       const mailOptionsRodrigo = {
         from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
         to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
         subject: "Seu pedido está a caminho!",
         text: mensagem,
-        html: emailContent,
+        html: emailContentWow,
       };
-
-      enviarEmail(mailOptions);
       enviarEmail(mailOptionsRodrigo);
+      
+      const mailOptionsRenan = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `renan@d1fitness.com.br`, // E-mail do destinatário
+        subject: "Seu pedido está a caminho!",
+        text: mensagem,
+        html: emailContentWow,
+      };
+      enviarEmail(mailOptionsRenan);
     }
   }
 
@@ -1463,6 +1636,8 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
+              enviarEmail(mailOptions);
+
               // Opções do e-mail - Rodrigo
               const mailOptionsRodrigo = {
                 from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
@@ -1471,9 +1646,17 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
-
-              //enviarEmail(mailOptions);
               enviarEmail(mailOptionsRodrigo);
+              
+              // Opções do e-mail - Rodrigo
+              const mailOptionsRenan = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `renan@d1fitness.com.br`, // E-mail do destinatário
+                subject: "Seu pedido está a caminho!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+              enviarEmail(mailOptionsRenan);
             }
           } else if (
             momentoTracking == 2 &&
@@ -1507,8 +1690,8 @@ app.get("/updateRastreio", async (request, reply) => {
             // Texto Itens
             const itensVenda = JSON.parse(JSON.stringify(Venda.Itens));
             let textoItens = "";
-            itensVenda.forEach(
-              async (
+            for (const row of itensVenda) {
+              (
                 row: {
                   Codigo: number;
                   ProdutoReferencia: string;
@@ -1556,7 +1739,7 @@ app.get("/updateRastreio", async (request, reply) => {
 
                 textoItens += `${Quantidade.split(".")[0]} X ${ItemNome}\n`;
               }
-            );
+            }
 
             // Substitui dados itens
             whatsContentwow = substituirMarcador(
@@ -1649,6 +1832,8 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
+              enviarEmail(mailOptions);
+              
               // Opções do e-mail - Rodrigo
               const mailOptionsRodrigo = {
                 from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
@@ -1657,9 +1842,17 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
-
-              //enviarEmail(mailOptions);
               enviarEmail(mailOptionsRodrigo);
+
+              // Opções do e-mail - Renan
+              const mailOptionsRenan = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `renan@d1fitness.com.br`, // E-mail do destinatário
+                subject: "Seu pedido está chegando!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+              enviarEmail(mailOptionsRenan);
             }
           } else if (
             momentoTracking == 3 &&
@@ -1766,6 +1959,8 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
+              enviarEmail(mailOptions);
+              
               // Opções do e-mail - Rodrigo
               const mailOptionsRodrigo = {
                 from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
@@ -1774,9 +1969,17 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
-
-              //enviarEmail(mailOptions);
               enviarEmail(mailOptionsRodrigo);
+              
+              // Opções do e-mail - Renan
+              const mailOptionsRenan = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `renan@d1fitness.com.br`, // E-mail do destinatário
+                subject: "Seu foi entregue!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+              enviarEmail(mailOptionsRenan);
             }
           }
         }
@@ -1877,7 +2080,7 @@ app.get("/updateRastreio", async (request, reply) => {
                   const SSWocorrenciasJson = JSON.parse(resSSW.text);
 
                   if (SSWocorrenciasJson.success) {
-                    SSWocorrenciasJson.documento.tracking.forEach(
+                    for (const row of SSWocorrenciasJson.documento.tracking) {
                       async (
                         row: {
                           data_hora: string;
@@ -1926,7 +2129,7 @@ app.get("/updateRastreio", async (request, reply) => {
                             await prisma.venda.findFirst({
                               where: {
                                 Codigo: Codigo,
-                                NOT: [{ PrevisaoEntregaRastreioAviso: "NULL" }],
+                                NOT: [{ PrevisaoEntregaRastreioAviso: null }],
                               },
                             });
 
@@ -1942,6 +2145,7 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               previsaoEntrega
                             );
+                            
                             await enviaWhatsTracking(
                               telefoneRenan,
                               JSON.stringify(vendaJson),
@@ -1956,6 +2160,7 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               previsaoEntrega
                             );
+                            
                             console.log(
                               `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Previsao Entrega`
                             );
@@ -1997,6 +2202,7 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               ""
                             );
+                            
                             await enviaWhatsTracking(
                               telefoneRenan,
                               JSON.stringify(vendaJson),
@@ -2011,6 +2217,7 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               ""
                             );
+                            
                             console.log(
                               `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Last Mile`
                             );
@@ -2035,7 +2242,7 @@ app.get("/updateRastreio", async (request, reply) => {
                             {
                               where: {
                                 Codigo: Codigo,
-                                NOT: [{ EntregueRastreioAviso: "NULL" }],
+                                NOT: [{ EntregueRastreioAviso: null }],
                               },
                             }
                           );
@@ -2052,6 +2259,7 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               ""
                             );
+                            
                             await enviaWhatsTracking(
                               telefoneRenan,
                               JSON.stringify(vendaJson),
@@ -2066,6 +2274,7 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               ""
                             );
+                            
                             console.log(
                               `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Pedido Entregue`
                             );
@@ -2078,8 +2287,8 @@ app.get("/updateRastreio", async (request, reply) => {
                             });
                           }
                         }
-                      }
-                    );
+                      };
+                    }
                   } else {
                     console.log("Não retornou tracking SSW");
                   }
