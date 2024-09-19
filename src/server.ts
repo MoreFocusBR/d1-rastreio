@@ -15,6 +15,7 @@ import { notaFiscalRoutes } from "./routes/nota-fiscal.routes";
 import { error } from "console";
 import { Options } from "nodemailer/lib/mailer";
 import { json } from "stream/consumers";
+import { promises as fs } from "fs";
 
 const app = fastify();
 
@@ -34,6 +35,8 @@ app.register(notaFiscalRoutes, {
 
 const authToken = "effca82a-7127-45de-9a53-b71fc01a9064";
 
+const tokenZapi = "F622e76b1e3f64e2a9517d207fe923fa5S";
+
 const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onrender.com   http://localhost:3334
 
 // Configurações de transporte para o servidor SMTP
@@ -41,7 +44,7 @@ const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
     user: "naoresponda@d1fitness.com.br",
-    pass: "fitness2020*",
+    pass: "tness2020*",
   },
 });
 
@@ -672,7 +675,9 @@ app.get("/updateVendas", async (request, reply) => {
     let emailContent = "";
     let whatsContent = "";
     let whatsContentwow = "";
-    const transportadorasComTrackin = [122, 151, 112, 110, 120, 210, 223, 224, 102, 119, 52, 118];
+    const transportadorasComTrackin = [
+      122, 151, 112, 110, 120, 210, 223, 224, 102, 119, 52, 118,
+    ];
 
     if (
       vendaJson.DescricaoStatus == "Nota Fiscal Emitida" &&
@@ -700,11 +705,11 @@ app.get("/updateVendas", async (request, reply) => {
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
         .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats);
 
-        // Msg para Renan
-        
+      // Msg para Renan
+
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
@@ -712,9 +717,8 @@ app.get("/updateVendas", async (request, reply) => {
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
         .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhatsD1);
-        
 
       const bodyWhats2 = `{"phone": "55${vendaJson.EntregaTelefone}","message": "${whatsContent}"}`;
 
@@ -723,21 +727,39 @@ app.get("/updateVendas", async (request, reply) => {
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
         .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats2);
 
+        // estouaqui6
+        // Envio e-mail - início
       // Conteúdo do e-mail
+      // Caminho do arquivo HTML
+      const filePath = path.join(
+        __dirname,
+        "src",
+        `template-email-NotaFiscalWow.html`
+      );
+
+      // Leitura do conteúdo do arquivo
+      let emailContentWow = await fs.readFile(filePath, "utf-8");
+
       const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
         where: {
-          Status: "Nota Fiscal Emitida",
+          Status: "NotaFiscalWow",
         },
       });
 
       if (emailContentDB?.Mensagem) {
-        emailContent = substituirMarcador(
-          emailContentDB?.Mensagem,
+        emailContentWow = substituirMarcador(
+          emailContentWow,
           "primeiroNome",
           primeiroNome
+        );
+
+        emailContentWow = substituirMarcador(
+          emailContentWow,
+          "conteudoEmail",
+          emailContentDB.Mensagem
         );
       }
       // Opções do e-mail
@@ -780,117 +802,19 @@ app.get("/updateVendas", async (request, reply) => {
         );
       }
 
-      // Mensagem Wow
-      const whatsContentDBwow = await prisma.rastreioStatusWhats.findFirst({
-        where: {
-          Status: "EnviadoWow",
-        },
-      });
+      // Mensagem Wow - Envia via get /updateRastreio
 
-      if (whatsContentDBwow?.Mensagem) {
-        const transportadoras = [
-          { TransportadoraCodigo: 118, TransportadoraNome: "JAMEF " },
-          { TransportadoraCodigo: 92, TransportadoraNome: "RETIRADA NO CD" },
-          { TransportadoraCodigo: 120, TransportadoraNome: "TPL" },
-          { TransportadoraCodigo: 51, TransportadoraNome: "TRANSLOVATO" },
-          { TransportadoraCodigo: 174, TransportadoraNome: "MERCADO LIVRE" },
-          { TransportadoraCodigo: 199, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 210, TransportadoraNome: "PREMIUM LOG" },
-          { TransportadoraCodigo: 172, TransportadoraNome: "AMAZON" },
-          { TransportadoraCodigo: 0, TransportadoraNome: "" },
-          { TransportadoraCodigo: 103, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 190, TransportadoraNome: "AMAZON" },
-          { TransportadoraCodigo: 223, TransportadoraNome: "TRANSFARRAPOS" },
-          { TransportadoraCodigo: 215, TransportadoraNome: "R&D CARGO" },
-          { TransportadoraCodigo: 168, TransportadoraNome: "MAGALU ENTREGAS" },
-          { TransportadoraCodigo: 105, TransportadoraNome: "BERTOLINI" },
-          {
-            TransportadoraCodigo: 173,
-            TransportadoraNome: "EXPRESSO SAO MIGUEL",
-          },
-          { TransportadoraCodigo: 27, TransportadoraNome: "MODULAR" },
-          { TransportadoraCodigo: 104, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 177, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 151, TransportadoraNome: "ACEVILLE" },
-          { TransportadoraCodigo: 102, TransportadoraNome: "MODULAR" },
-          { TransportadoraCodigo: 122, TransportadoraNome: "BAUER" },
-          { TransportadoraCodigo: 198, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 224, TransportadoraNome: "FLYVILLE" },
-          { TransportadoraCodigo: 157, TransportadoraNome: "A COMBINAR" },
-          { TransportadoraCodigo: 7, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 175, TransportadoraNome: "Mercado Envios" },
-          { TransportadoraCodigo: 186, TransportadoraNome: "MERCADO LIVRE" },
-          { TransportadoraCodigo: 112, TransportadoraNome: "ACEVILLE" },
-          { TransportadoraCodigo: 145, TransportadoraNome: "MERCADO ENVIOS" },
-          { TransportadoraCodigo: 176, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 110, TransportadoraNome: "GOBOR" },
-          { TransportadoraCodigo: 122, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 103, TransportadoraNome: "" },
-          { TransportadoraCodigo: 212, TransportadoraNome: "TRANSCARAPIÁ" },
-          { TransportadoraCodigo: 156, TransportadoraNome: "NATIVA" },
-          { TransportadoraCodigo: 119, TransportadoraNome: "MANN" },
-          { TransportadoraCodigo: 220, TransportadoraNome: "PAJUCARA" },
-          { TransportadoraCodigo: 187, TransportadoraNome: "MERCADO LIVRE" },
-          { TransportadoraCodigo: 51, TransportadoraNome: "" },
-          { TransportadoraCodigo: 6, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 52, TransportadoraNome: "MOVVI" },
-          { TransportadoraCodigo: 52, TransportadoraNome: "" },
-          // Add the rest of the entries here...
-        ];
-
-        function retornaNomeTransportadora(
-          TransportadoraCodigo: number
-        ): string | undefined {
-          const transportadora = transportadoras.find(
-            (item) => item.TransportadoraCodigo === TransportadoraCodigo
-          );
-          return transportadora ? transportadora.TransportadoraNome : undefined;
-        }
-
-        whatsContentwow = substituirMarcador(
-          whatsContentDBwow?.Mensagem,
-          "primeiroNome",
-          primeiroNome
-        ); // {{nomeTransportadoraNotaFiscal}}
-
-        whatsContentwow = substituirMarcador(
-          whatsContentwow,
-          "dadosEntrega",
-          `\n\nDados da entrega\n--------------------\nEndereço de entrega: ${
-            vendaJson.EntregaLogradouro
-          }, ${vendaJson.EntregaLogradouroNumero}, ${
-            vendaJson.EntregaLogradouroComplemento
-          }, ${vendaJson.EntregaMunicipioNome} / ${
-            vendaJson.EntregaUnidadeFederativa
-          }\nTransportadora: ${retornaNomeTransportadora(
-            vendaJson.TransportadoraCodigo
-          )}\nNúmero Nota Fiscal: ${
-            vendaJson.EntregaUnidadeFederativa
-          }{{previsaoEntrega}}`
-        );
-
-        if (vendaJson.TransportadoraCodigo == 3) {
-          //Previsão de entrega: 23/09/2024
-          whatsContentwow = substituirMarcador(
-            whatsContentDBwow?.Mensagem,
-            "previsaoEntrega",
-            `\nPrevisão de entrega: ${vendaJson.previsaoEntregaRastreio}`
-          );
-        }
-      }
-
-      whatsContentwow = whatsContentwow.replace("\\n", "\n");
-      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContentwow}"}`;
+      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
       const resZAPI = await requestSA
         .post(
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
         .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats);
 
-        /*
+      /*
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
@@ -898,7 +822,7 @@ app.get("/updateVendas", async (request, reply) => {
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
         .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhatsD1);
         */
 
@@ -909,7 +833,7 @@ app.get("/updateVendas", async (request, reply) => {
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
         .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+        .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats2);
 
       // Conteúdo do e-mail
@@ -935,8 +859,17 @@ app.get("/updateVendas", async (request, reply) => {
         text: mensagem,
         html: emailContent,
       };
+      // Opções do e-mail - Rodrigo
+      const mailOptionsRodrigo = {
+        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+        subject: "Seu pedido está a caminho!",
+        text: mensagem,
+        html: emailContent,
+      };
 
       enviarEmail(mailOptions);
+      enviarEmail(mailOptionsRodrigo);
     }
   }
 
@@ -1100,7 +1033,6 @@ app.get("/updateVendas", async (request, reply) => {
         // Processa as vendas do lote atual
         for (const venda of vendasFiltradas) {
           if (venda.Codigo == 158153) {
-
             const pararaqui = 1;
           }
           await processaVenda(prisma, venda);
@@ -1185,267 +1117,6 @@ app.get("/updateRastreio", async (request, reply) => {
     conteudo: string
   ) {
     return mensagem.replace(new RegExp(`{{${marcador}}}`, "g"), conteudo);
-  }
-
-  async function enviaWhatsStatus(venda: string) {
-    const vendaJson = JSON.parse(venda);
-    const requestSA = require("superagent");
-    let mensagem = "";
-    let emailContent = "";
-    let whatsContent = "";
-    let whatsContentwow = "";
-
-    if (
-      vendaJson.DescricaoStatus == "Nota Fiscal Emitida" &&
-      vendaJson.nomeCliente != null
-    ) {
-      let primeiroNome: string = vendaJson.nomeCliente.split(" ")[0];
-      // Conteúdo do mensagem whats
-      const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
-        where: {
-          Status: "Nota Fiscal Emitida",
-        },
-      });
-
-      if (whatsContentDB?.Mensagem) {
-        whatsContent = substituirMarcador(
-          whatsContentDB?.Mensagem,
-          "primeiroNome",
-          primeiroNome
-        );
-      }
-
-      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
-
-      const resZAPI = await requestSA
-        .post(
-          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-        )
-        .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-        .send(bodyWhats);
-      /*
-      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
-
-      const resZAPID1 = await requestSA
-        .post(
-          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-        )
-        .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-        .send(bodyWhatsD1);
-
-      const bodyWhats2 = `{"phone": "55${vendaJson.EntregaTelefone}","message": "${whatsContent}"}`;
-
-      const resZAPI2 = await requestSA
-        .post(
-          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-        )
-        .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-        .send(bodyWhats2);
-
-      // Conteúdo do e-mail
-      const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
-        where: {
-          Status: "Nota Fiscal Emitida",
-        },
-      });
-
-      if (emailContentDB?.Mensagem) {
-        emailContent = substituirMarcador(
-          emailContentDB?.Mensagem,
-          "primeiroNome",
-          primeiroNome
-        );
-      }
-      // Opções do e-mail
-      const mailOptions = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-        to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
-        subject: "Estamos preparando o envio do seu pedido",
-        text: mensagem,
-        html: emailContent,
-      };
-
-      enviarEmail(mailOptions);
-      */
-    } else if (
-      vendaJson.DescricaoStatus == "Enviado" &&
-      vendaJson.nomeCliente != null
-    ) {
-      let primeiroNome: string = vendaJson.nomeCliente.split(" ")[0];
-      const whatsContentDB = await prisma.rastreioStatusWhats.findFirst({
-        where: {
-          Status: "Enviado",
-        },
-      });
-
-      // Mensagem simples
-      if (whatsContentDB?.Mensagem) {
-        whatsContent = substituirMarcador(
-          whatsContentDB?.Mensagem,
-          "primeiroNome",
-          primeiroNome
-        );
-      }
-
-      // Mensagem Wow
-      const whatsContentDBwow = await prisma.rastreioStatusWhats.findFirst({
-        where: {
-          Status: "EnviadoWow",
-        },
-      });
-
-      if (whatsContentDBwow?.Mensagem) {
-        const transportadoras = [
-          { TransportadoraCodigo: 118, TransportadoraNome: "JAMEF" },
-          { TransportadoraCodigo: 92, TransportadoraNome: "RETIRADA NO CD" },
-          { TransportadoraCodigo: 120, TransportadoraNome: "TPL" },
-          { TransportadoraCodigo: 51, TransportadoraNome: "TRANSLOVATO" },
-          { TransportadoraCodigo: 174, TransportadoraNome: "MERCADO LIVRE" },
-          { TransportadoraCodigo: 199, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 210, TransportadoraNome: "PREMIUM LOG" },
-          { TransportadoraCodigo: 172, TransportadoraNome: "AMAZON" },
-          { TransportadoraCodigo: 0, TransportadoraNome: "" },
-          { TransportadoraCodigo: 103, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 190, TransportadoraNome: "AMAZON" },
-          { TransportadoraCodigo: 223, TransportadoraNome: "TRANSFARRAPOS" },
-          { TransportadoraCodigo: 215, TransportadoraNome: "R&D CARGO" },
-          { TransportadoraCodigo: 168, TransportadoraNome: "MAGALU ENTREGAS" },
-          { TransportadoraCodigo: 105, TransportadoraNome: "BERTOLINI" },
-          {
-            TransportadoraCodigo: 173,
-            TransportadoraNome: "EXPRESSO SAO MIGUEL",
-          },
-          { TransportadoraCodigo: 27, TransportadoraNome: "MODULAR" },
-          { TransportadoraCodigo: 104, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 177, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 151, TransportadoraNome: "ACEVILLE" },
-          { TransportadoraCodigo: 102, TransportadoraNome: "MODULAR" },
-          { TransportadoraCodigo: 122, TransportadoraNome: "BAUER" },
-          { TransportadoraCodigo: 198, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 224, TransportadoraNome: "FLYVILLE" },
-          { TransportadoraCodigo: 157, TransportadoraNome: "A COMBINAR" },
-          { TransportadoraCodigo: 7, TransportadoraNome: "CORREIOS PAC" },
-          { TransportadoraCodigo: 175, TransportadoraNome: "Mercado Envios" },
-          { TransportadoraCodigo: 186, TransportadoraNome: "MERCADO LIVRE" },
-          { TransportadoraCodigo: 112, TransportadoraNome: "ACEVILLE" },
-          { TransportadoraCodigo: 145, TransportadoraNome: "MERCADO ENVIOS" },
-          { TransportadoraCodigo: 176, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 110, TransportadoraNome: "GOBOR" },
-          { TransportadoraCodigo: 122, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 103, TransportadoraNome: "" },
-          { TransportadoraCodigo: 212, TransportadoraNome: "TRANSCARAPIÁ" },
-          { TransportadoraCodigo: 156, TransportadoraNome: "NATIVA" },
-          { TransportadoraCodigo: 119, TransportadoraNome: "MANN" },
-          { TransportadoraCodigo: 220, TransportadoraNome: "PAJUCARA" },
-          { TransportadoraCodigo: 187, TransportadoraNome: "MERCADO LIVRE" },
-          { TransportadoraCodigo: 51, TransportadoraNome: "" },
-          { TransportadoraCodigo: 6, TransportadoraNome: "CORREIOS SEDEX" },
-          { TransportadoraCodigo: 52, TransportadoraNome: "MOVVI" },
-          { TransportadoraCodigo: 52, TransportadoraNome: "" },
-          // Add the rest of the entries here...
-        ];
-
-        function retornaNomeTransportadora(
-          TransportadoraCodigo: number
-        ): string | undefined {
-          const transportadora = transportadoras.find(
-            (item) => item.TransportadoraCodigo === TransportadoraCodigo
-          );
-          return transportadora ? transportadora.TransportadoraNome : undefined;
-        }
-
-        whatsContentwow = substituirMarcador(
-          whatsContentDBwow?.Mensagem,
-          "primeiroNome",
-          primeiroNome
-        ); // {{nomeTransportadoraNotaFiscal}}
-
-        whatsContentwow = substituirMarcador(
-          whatsContentwow,
-          "dadosEntrega",
-          `\n\nDados da entrega\n--------------------\nEndereço de entrega: ${
-            vendaJson.EntregaLogradouro
-          }, ${vendaJson.EntregaLogradouroNumero}, ${
-            vendaJson.EntregaLogradouroComplemento
-          }, ${vendaJson.EntregaMunicipioNome} / ${
-            vendaJson.EntregaUnidadeFederativa
-          }\nTransportadora: ${retornaNomeTransportadora(
-            vendaJson.TransportadoraCodigo
-          )}\nNúmero Nota Fiscal: ${
-            vendaJson.EntregaUnidadeFederativa
-          }{{previsaoEntrega}}`
-        );
-
-        if (vendaJson.TransportadoraCodigo == 3) {
-          //Previsão de entrega: 23/09/2024
-          whatsContentwow = substituirMarcador(
-            whatsContentDBwow?.Mensagem,
-            "previsaoEntrega",
-            `\nPrevisão de entrega: ${vendaJson.previsaoEntregaRastreio}`
-          );
-        }
-      }
-
-      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContentwow}"}`;
-
-      const resZAPI = await requestSA
-        .post(
-          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-        )
-        .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-        .send(bodyWhats);
-      /*
-      const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
-
-      const resZAPID1 = await requestSA
-        .post(
-          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-        )
-        .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-        .send(bodyWhatsD1);
-
-      const bodyWhats2 = `{"phone": "55${vendaJson.EntregaTelefone}","message": "${whatsContent}"}`;
-
-      const resZAPI2 = await requestSA
-        .post(
-          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-        )
-        .set("Content-Type", "application/json")
-        .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-        .send(bodyWhats2);
-
-      // Conteúdo do e-mail
-      const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
-        where: {
-          Status: "Enviado",
-        },
-      });
-
-      if (emailContentDB?.Mensagem) {
-        emailContent = substituirMarcador(
-          emailContentDB?.Mensagem,
-          "primeiroNome",
-          primeiroNome
-        );
-      }
-
-      // Opções do e-mail
-      const mailOptions = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-        to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
-        subject: "Seu pedido está a caminho!",
-        text: mensagem,
-        html: emailContent,
-      };
-
-      enviarEmail(mailOptions);
-      */
-    }
   }
 
   const dataLimite = new Date();
@@ -1559,239 +1230,258 @@ app.get("/updateRastreio", async (request, reply) => {
             },
           });
 
-              const transportadoras = [
-              { TransportadoraCodigo: 118, TransportadoraNome: "JAMEF " },
-              {
-                TransportadoraCodigo: 92,
-                TransportadoraNome: "RETIRADA NO CD",
-              },
-              { TransportadoraCodigo: 120, TransportadoraNome: "TPL" },
-              { TransportadoraCodigo: 51, TransportadoraNome: "TRANSLOVATO" },
-              {
-                TransportadoraCodigo: 174,
-                TransportadoraNome: "MERCADO LIVRE",
-              },
-              {
-                TransportadoraCodigo: 199,
-                TransportadoraNome: "CORREIOS SEDEX",
-              },
-              { TransportadoraCodigo: 210, TransportadoraNome: "PREMIUM LOG" },
-              { TransportadoraCodigo: 172, TransportadoraNome: "AMAZON" },
-              { TransportadoraCodigo: 0, TransportadoraNome: "" },
-              { TransportadoraCodigo: 103, TransportadoraNome: "CORREIOS PAC" },
-              { TransportadoraCodigo: 190, TransportadoraNome: "AMAZON" },
-              {
-                TransportadoraCodigo: 223,
-                TransportadoraNome: "TRANSFARRAPOS",
-              },
-              { TransportadoraCodigo: 215, TransportadoraNome: "R&D CARGO" },
-              {
-                TransportadoraCodigo: 168,
-                TransportadoraNome: "MAGALU ENTREGAS",
-              },
-              { TransportadoraCodigo: 105, TransportadoraNome: "BERTOLINI" },
-              {
-                TransportadoraCodigo: 173,
-                TransportadoraNome: "EXPRESSO SAO MIGUEL",
-              },
-              { TransportadoraCodigo: 27, TransportadoraNome: "MODULAR" },
-              {
-                TransportadoraCodigo: 104,
-                TransportadoraNome: "CORREIOS SEDEX",
-              },
-              { TransportadoraCodigo: 177, TransportadoraNome: "CORREIOS PAC" },
-              { TransportadoraCodigo: 151, TransportadoraNome: "ACEVILLE" },
-              { TransportadoraCodigo: 102, TransportadoraNome: "MODULAR" },
-              { TransportadoraCodigo: 122, TransportadoraNome: "BAUER" },
-              { TransportadoraCodigo: 198, TransportadoraNome: "CORREIOS PAC" },
-              { TransportadoraCodigo: 224, TransportadoraNome: "FLYVILLE" },
-              { TransportadoraCodigo: 157, TransportadoraNome: "A COMBINAR" },
-              { TransportadoraCodigo: 7, TransportadoraNome: "CORREIOS PAC" },
-              {
-                TransportadoraCodigo: 175,
-                TransportadoraNome: "Mercado Envios",
-              },
-              {
-                TransportadoraCodigo: 186,
-                TransportadoraNome: "MERCADO LIVRE",
-              },
-              { TransportadoraCodigo: 112, TransportadoraNome: "ACEVILLE" },
-              {
-                TransportadoraCodigo: 145,
-                TransportadoraNome: "MERCADO ENVIOS",
-              },
-              {
-                TransportadoraCodigo: 176,
-                TransportadoraNome: "CORREIOS SEDEX",
-              },
-              { TransportadoraCodigo: 110, TransportadoraNome: "GOBOR" },
-              {
-                TransportadoraCodigo: 122,
-                TransportadoraNome: "CORREIOS SEDEX",
-              },
-              { TransportadoraCodigo: 103, TransportadoraNome: "" },
-              { TransportadoraCodigo: 212, TransportadoraNome: "TRANSCARAPIÁ" },
-              { TransportadoraCodigo: 156, TransportadoraNome: "NATIVA" },
-              { TransportadoraCodigo: 119, TransportadoraNome: "MANN" },
-              { TransportadoraCodigo: 220, TransportadoraNome: "PAJUCARA" },
-              {
-                TransportadoraCodigo: 187,
-                TransportadoraNome: "MERCADO LIVRE",
-              },
-              { TransportadoraCodigo: 51, TransportadoraNome: "" },
-              { TransportadoraCodigo: 6, TransportadoraNome: "CORREIOS SEDEX" },
-              { TransportadoraCodigo: 52, TransportadoraNome: "MOVVI" },
-              { TransportadoraCodigo: 52, TransportadoraNome: "" },
-              // Add the rest of the entries here...
-            ];
+          const transportadoras = [
+            { TransportadoraCodigo: 118, TransportadoraNome: "JAMEF " },
+            {
+              TransportadoraCodigo: 92,
+              TransportadoraNome: "RETIRADA NO CD",
+            },
+            { TransportadoraCodigo: 120, TransportadoraNome: "TPL" },
+            { TransportadoraCodigo: 51, TransportadoraNome: "TRANSLOVATO" },
+            {
+              TransportadoraCodigo: 174,
+              TransportadoraNome: "MERCADO LIVRE",
+            },
+            {
+              TransportadoraCodigo: 199,
+              TransportadoraNome: "CORREIOS SEDEX",
+            },
+            { TransportadoraCodigo: 210, TransportadoraNome: "PREMIUM LOG" },
+            { TransportadoraCodigo: 172, TransportadoraNome: "AMAZON" },
+            { TransportadoraCodigo: 0, TransportadoraNome: "" },
+            { TransportadoraCodigo: 103, TransportadoraNome: "CORREIOS PAC" },
+            { TransportadoraCodigo: 190, TransportadoraNome: "AMAZON" },
+            {
+              TransportadoraCodigo: 223,
+              TransportadoraNome: "TRANSFARRAPOS",
+            },
+            { TransportadoraCodigo: 215, TransportadoraNome: "R&D CARGO" },
+            {
+              TransportadoraCodigo: 168,
+              TransportadoraNome: "MAGALU ENTREGAS",
+            },
+            { TransportadoraCodigo: 105, TransportadoraNome: "BERTOLINI" },
+            {
+              TransportadoraCodigo: 173,
+              TransportadoraNome: "EXPRESSO SAO MIGUEL",
+            },
+            { TransportadoraCodigo: 27, TransportadoraNome: "MODULAR" },
+            {
+              TransportadoraCodigo: 104,
+              TransportadoraNome: "CORREIOS SEDEX",
+            },
+            { TransportadoraCodigo: 177, TransportadoraNome: "CORREIOS PAC" },
+            { TransportadoraCodigo: 151, TransportadoraNome: "ACEVILLE" },
+            { TransportadoraCodigo: 102, TransportadoraNome: "MODULAR" },
+            { TransportadoraCodigo: 122, TransportadoraNome: "BAUER" },
+            { TransportadoraCodigo: 198, TransportadoraNome: "CORREIOS PAC" },
+            { TransportadoraCodigo: 224, TransportadoraNome: "FLYVILLE" },
+            { TransportadoraCodigo: 157, TransportadoraNome: "A COMBINAR" },
+            { TransportadoraCodigo: 7, TransportadoraNome: "CORREIOS PAC" },
+            {
+              TransportadoraCodigo: 175,
+              TransportadoraNome: "Mercado Envios",
+            },
+            {
+              TransportadoraCodigo: 186,
+              TransportadoraNome: "MERCADO LIVRE",
+            },
+            { TransportadoraCodigo: 112, TransportadoraNome: "ACEVILLE" },
+            {
+              TransportadoraCodigo: 145,
+              TransportadoraNome: "MERCADO ENVIOS",
+            },
+            {
+              TransportadoraCodigo: 176,
+              TransportadoraNome: "CORREIOS SEDEX",
+            },
+            { TransportadoraCodigo: 110, TransportadoraNome: "GOBOR" },
+            {
+              TransportadoraCodigo: 122,
+              TransportadoraNome: "CORREIOS SEDEX",
+            },
+            { TransportadoraCodigo: 103, TransportadoraNome: "" },
+            { TransportadoraCodigo: 212, TransportadoraNome: "TRANSCARAPIÁ" },
+            { TransportadoraCodigo: 156, TransportadoraNome: "NATIVA" },
+            { TransportadoraCodigo: 119, TransportadoraNome: "MANN" },
+            { TransportadoraCodigo: 220, TransportadoraNome: "PAJUCARA" },
+            {
+              TransportadoraCodigo: 187,
+              TransportadoraNome: "MERCADO LIVRE",
+            },
+            { TransportadoraCodigo: 51, TransportadoraNome: "" },
+            { TransportadoraCodigo: 6, TransportadoraNome: "CORREIOS SEDEX" },
+            { TransportadoraCodigo: 52, TransportadoraNome: "MOVVI" },
+            { TransportadoraCodigo: 52, TransportadoraNome: "" },
+            // Add the rest of the entries here...
+          ];
+          function retornaNomeTransportadora(
+            TransportadoraCodigo: number
+          ): string | undefined {
+            const transportadora = transportadoras.find(
+              (item) => item.TransportadoraCodigo === TransportadoraCodigo
+            );
+            return transportadora
+              ? transportadora.TransportadoraNome
+              : undefined;
+          }
 
-            if (
-              momentoTracking == 1 &&
-              whatsContentDBwow?.Mensagem &&
-              Venda.EntregaNome &&
-              Venda.TransportadoraCodigo &&
-              Venda.Itens
-            ) {
-              
-  
-              function retornaNomeTransportadora(
-                TransportadoraCodigo: number
-              ): string | undefined {
-                const transportadora = transportadoras.find(
-                  (item) => item.TransportadoraCodigo === TransportadoraCodigo
-                );
-                return transportadora
-                  ? transportadora.TransportadoraNome
-                  : undefined;
-              }
+          if (
+            momentoTracking == 1 &&
+            whatsContentDBwow?.Mensagem &&
+            Venda.EntregaNome &&
+            Venda.TransportadoraCodigo &&
+            Venda.Itens
+          ) {
+            let whatsContentwow = substituirMarcador(
+              whatsContentDBwow?.Mensagem,
+              "primeiroNome",
+              Venda.EntregaNome.split(" ")[0]
+            );
 
-              let whatsContentwow = substituirMarcador(
-                whatsContentDBwow?.Mensagem,
+            whatsContentwow = substituirMarcador(
+              whatsContentwow,
+              "numeroPedido",
+              Venda.Codigo
+            );
+
+            whatsContentwow = substituirMarcador(
+              whatsContentwow,
+              "dataVenva",
+              Venda.DataVenda
+            );
+            // {{nomeTransportadoraNotaFiscal}}transportadoraNome
+
+            // Substui dados da entrega
+            whatsContentwow = substituirMarcador(
+              whatsContentwow,
+              "enderecoEntrega",
+              `${Venda.EntregaLogradouro}, ${Venda.EntregaLogradouroNumero}, ${Venda.EntregaLogradouroComplemento}, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${Venda.EntregaUnidadeFederativa}`
+            );
+
+            whatsContentwow = substituirMarcador(
+              whatsContentwow,
+              "transportadoraNome",
+              `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
+            );
+
+            whatsContentwow = substituirMarcador(
+              whatsContentwow,
+              "numeroNotaFiscal",
+              `${Venda.NumeroNotaFiscal}`
+            );
+
+            whatsContentwow = substituirMarcador(
+              whatsContentwow,
+              "previsaoEntrega",
+              previsaoEntrega
+            );
+
+            // Dispara msg whats
+            const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
+
+            const resZAPI = await request
+              .post(
+                "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+              )
+              .set("Content-Type", "application/json")
+              .set("Client-Token", `${tokenZapi}`)
+              .send(bodyWhats1);
+
+            // Disparo e-mail - inicio
+            // estouaqui4
+            // Conteúdo do e-mail
+            // Caminho do arquivo HTML
+            const filePath = path.join(
+              __dirname,
+              "src",
+              `template-email-${qualMensagem}.html`
+            );
+
+            // Leitura do conteúdo do arquivo
+            let emailContentWow = await fs.readFile(filePath, "utf-8");
+
+            const emailContentDBWow =
+              await prisma.rastreioStatusEmail.findFirst({
+                where: {
+                  Status: qualMensagem,
+                },
+              });
+
+            if (emailContentDBWow?.Mensagem) {
+              emailContentWow = substituirMarcador(
+                emailContentWow,
                 "primeiroNome",
                 Venda.EntregaNome.split(" ")[0]
               );
 
-              whatsContentwow = substituirMarcador(
-                whatsContentwow,
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "conteudoEmail",
+                emailContentDBWow.Mensagem
+              );
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
                 "numeroPedido",
                 Venda.Codigo
               );
-  
-              whatsContentwow = substituirMarcador(
-                whatsContentwow,
-                "previsaoEntrega",
-                previsaoEntrega
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "dataVenda",
+                Venda.DataVenda
               );
               // {{nomeTransportadoraNotaFiscal}}
-  
+
               // Substui dados da entrega
-              whatsContentwow = substituirMarcador(
-                whatsContentwow,
-                "dadosEntrega",
-                `Dados da entrega\n--------------------\nEndereço de entrega: ${
-                  Venda.EntregaLogradouro
-                }, ${Venda.EntregaLogradouroNumero}, ${
-                  Venda.EntregaLogradouroComplemento
-                }, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "enderecoEntrega",
+                `${Venda.EntregaLogradouro}, ${
+                  Venda.EntregaLogradouroNumero
+                }, ${Venda.EntregaLogradouroComplemento}, ${
+                  Venda.EntregaBairro
+                }, ${Venda.EntregaMunicipioNome} / ${
                   Venda.EntregaUnidadeFederativa
                 }\nTransportadora: ${retornaNomeTransportadora(
                   Venda.TransportadoraCodigo
                 )}\nNúmero Nota Fiscal: ${Venda.NotaFiscalNumero}`
               );
-  
-              // Texto Itens
-              const itensVenda = JSON.parse(JSON.stringify(Venda.Itens));
-              let textoItens = "";
-              itensVenda.forEach(
-                async (
-                  row: {
-                    Codigo: number;
-                    ProdutoReferencia: string;
-                    ProdutoBarras: string;
-                    ProdutoBundleCodigo: number;
-                    VendaCodigo: number;
-                    ProdutoCodigo: number;
-                    PrecoUnitarioVenda: string;
-                    PrecoUnitarioCusto: string;
-                    EmbaladoParaPresente: boolean;
-                    ValorEmbalagemPresente: string;
-                    Quantidade: string;
-                    AtributosEspeciais: string;
-                    ItemNome: string;
-                    ItemDescontoPercentual: string;
-                    ItemDescontoValor: string;
-                    ItemValorBruto: string;
-                    ItemValorLiquido: string;
-                    Servico: boolean;
-                    Movimentacao: object;
-                  },
-                  index: number
-                ) => {
-                  const {
-                    Codigo,
-                    ProdutoReferencia,
-                    ProdutoBarras,
-                    ProdutoBundleCodigo,
-                    VendaCodigo,
-                    ProdutoCodigo,
-                    PrecoUnitarioVenda,
-                    PrecoUnitarioCusto,
-                    EmbaladoParaPresente,
-                    ValorEmbalagemPresente,
-                    Quantidade,
-                    AtributosEspeciais,
-                    ItemNome,
-                    ItemDescontoPercentual,
-                    ItemDescontoValor,
-                    ItemValorBruto,
-                    ItemValorLiquido,
-                    Servico,
-                    Movimentacao,
-                  } = row;
-  
-                  textoItens += `${Quantidade.split(".")[0]} X ${ItemNome}\n`;
-                }
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "previsaoEntrega",
+                previsaoEntrega
               );
-  
-              // Substitui dados itens
-              whatsContentwow = substituirMarcador(
-                whatsContentwow,
-                "dadosPedido",
-                `\n\nItens do Pedido n. ${Venda.Codigo}\n--------------------\n${textoItens}`
-              );
-  
-              // Dispara msg whats
-              const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
-  
-              const resZAPI = await request
-                .post(
-                  "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-                )
-                .set("Content-Type", "application/json")
-                .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
-                .send(bodyWhats1);
-  
-                
-            } else if (
+
+              // Opções do e-mail
+              const mailOptions = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `${Venda.EntregaEmail}`, // E-mail do destinatário
+                subject: "Seu pedido está a caminho!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+              // Opções do e-mail - Rodrigo
+              const mailOptionsRodrigo = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+                subject: "Seu pedido está a caminho!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+
+              //enviarEmail(mailOptions);
+              enviarEmail(mailOptionsRodrigo);
+            }
+          } else if (
             momentoTracking == 2 &&
             whatsContentDBwow?.Mensagem &&
             Venda.EntregaNome &&
             Venda.TransportadoraCodigo &&
             Venda.Itens
           ) {
-            
-
-            function retornaNomeTransportadora(
-              TransportadoraCodigo: number
-            ): string | undefined {
-              const transportadora = transportadoras.find(
-                (item) => item.TransportadoraCodigo === TransportadoraCodigo
-              );
-              return transportadora
-                ? transportadora.TransportadoraNome
-                : undefined;
-            }
-
             let whatsContentwow = substituirMarcador(
               whatsContentDBwow?.Mensagem,
               "primeiroNome",
@@ -1883,16 +1573,101 @@ app.get("/updateRastreio", async (request, reply) => {
                 "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
               )
               .set("Content-Type", "application/json")
-              .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+              .set("Client-Token", `${tokenZapi}`)
               .send(bodyWhats1);
 
-              
+            // Disparo e-mail - inicio
+            // estouaqui5
+            // Conteúdo do e-mail
+            // Caminho do arquivo HTML
+            const filePath = path.join(
+              __dirname,
+              "src",
+              `template-email-${qualMensagem}.html`
+            );
+
+            // Leitura do conteúdo do arquivo
+            let emailContentWow = await fs.readFile(filePath, "utf-8");
+
+            const emailContentDBWow =
+              await prisma.rastreioStatusEmail.findFirst({
+                where: {
+                  Status: qualMensagem,
+                },
+              });
+
+            if (emailContentDBWow?.Mensagem) {
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "primeiroNome",
+                Venda.EntregaNome.split(" ")[0]
+              );
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "conteudoEmail",
+                emailContentDBWow.Mensagem
+              );
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "numeroPedido",
+                Venda.Codigo
+              );
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "dataVenda",
+                Venda.DataVenda
+              );
+              // {{nomeTransportadoraNotaFiscal}}
+
+              // Substui dados da entrega
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "enderecoEntrega",
+                `${Venda.EntregaLogradouro}, ${Venda.EntregaLogradouroNumero}, ${Venda.EntregaLogradouroComplemento}, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${Venda.EntregaUnidadeFederativa}`
+              );
+
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "transportadoraNome",
+                `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
+              );
+
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "numeroNotaFiscal",
+                `${Venda.NumeroNotaFiscal}`
+              );
+
+              // Opções do e-mail
+              const mailOptions = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `${Venda.EntregaEmail}`, // E-mail do destinatário
+                subject: "Seu pedido está chegando!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+              // Opções do e-mail - Rodrigo
+              const mailOptionsRodrigo = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+                subject: "Seu pedido está chegando!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+
+              //enviarEmail(mailOptions);
+              enviarEmail(mailOptionsRodrigo);
+            }
           } else if (
             momentoTracking == 3 &&
             whatsContentDBwow?.Mensagem &&
             Venda.EntregaNome
           ) {
-            
+            // Cenário 3 - início
+
             let whatsContentwow = substituirMarcador(
               whatsContentDBwow?.Mensagem,
               "primeiroNome",
@@ -1904,9 +1679,7 @@ app.get("/updateRastreio", async (request, reply) => {
             whatsContentwow = substituirMarcador(
               whatsContentwow,
               "numeroPedido",
-              `${
-                Venda.Codigo
-              }`
+              `${Venda.Codigo}`
             );
 
             // Dispara msg whats
@@ -1917,10 +1690,94 @@ app.get("/updateRastreio", async (request, reply) => {
                 "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
               )
               .set("Content-Type", "application/json")
-              .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+              .set("Client-Token", `${tokenZapi}`)
               .send(bodyWhats1);
 
-              
+            // Disparo e-mail - inicio
+            // estouaqui5
+            // Conteúdo do e-mail
+            // Caminho do arquivo HTML
+            const filePath = path.join(
+              __dirname,
+              "src",
+              `template-email-${qualMensagem}.html`
+            );
+
+            // Leitura do conteúdo do arquivo
+            let emailContentWow = await fs.readFile(filePath, "utf-8");
+
+            const emailContentDBWow =
+              await prisma.rastreioStatusEmail.findFirst({
+                where: {
+                  Status: qualMensagem,
+                },
+              });
+
+            if (emailContentDBWow?.Mensagem) {
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "primeiroNome",
+                Venda.EntregaNome.split(" ")[0]
+              );
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "conteudoEmail",
+                emailContentDBWow.Mensagem
+              );
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "numeroPedido",
+                Venda.Codigo
+              );
+
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "dataVenda",
+                Venda.DataVenda
+              );
+              // {{nomeTransportadoraNotaFiscal}}
+
+              // Substui dados da entrega
+              emailContentWow = substituirMarcador(
+                emailContentWow,
+                "enderecoEntrega",
+                `${Venda.EntregaLogradouro}, ${Venda.EntregaLogradouroNumero}, ${Venda.EntregaLogradouroComplemento}, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${Venda.EntregaUnidadeFederativa}`
+              );
+
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "transportadoraNome",
+                `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
+              );
+
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "numeroNotaFiscal",
+                `${Venda.NumeroNotaFiscal}`
+              );
+
+              // Opções do e-mail
+              const mailOptions = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `${Venda.EntregaEmail}`, // E-mail do destinatário
+                subject: "Seu pedido foi entregue!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+              // Opções do e-mail - Rodrigo
+              const mailOptionsRodrigo = {
+                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+                to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+                subject: "Seu foi entregue!",
+                text: whatsContentwow,
+                html: emailContentWow,
+              };
+
+              //enviarEmail(mailOptions);
+              enviarEmail(mailOptionsRodrigo);
+            }
           }
         }
 
@@ -1928,7 +1785,6 @@ app.get("/updateRastreio", async (request, reply) => {
           prismaClient: PrismaClient,
           vendaString: string
         ) {
-
           const venda = JSON.parse(vendaString);
 
           try {
@@ -2066,15 +1922,13 @@ app.get("/updateRastreio", async (request, reply) => {
                             },
                           });
 
-                          
-                          const jaAvisouPrevisaoEntrega = await prisma.venda.findFirst(
-                            {
+                          const jaAvisouPrevisaoEntrega =
+                            await prisma.venda.findFirst({
                               where: {
                                 Codigo: Codigo,
                                 NOT: [{ PrevisaoEntregaRastreioAviso: "NULL" }],
                               },
-                            }
-                          );
+                            });
 
                           // #estouaqui
                           if (!jaAvisouPrevisaoEntrega) {
@@ -2087,7 +1941,7 @@ app.get("/updateRastreio", async (request, reply) => {
                               1,
                               data_hora,
                               previsaoEntrega
-                            ); 
+                            );
                             await enviaWhatsTracking(
                               telefoneRenan,
                               JSON.stringify(vendaJson),
@@ -2101,15 +1955,17 @@ app.get("/updateRastreio", async (request, reply) => {
                               1,
                               data_hora,
                               previsaoEntrega
-                            ); 
-                            console.log(`Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Previsao Entrega`);
+                            );
+                            console.log(
+                              `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Previsao Entrega`
+                            );
                             // Registra envio Previsao Entrega
                             await prismaClient.venda.update({
                               where: { Codigo: venda.Codigo },
                               data: {
                                 PrevisaoEntregaRastreioAviso: data_hora,
                               },
-                            }); 
+                            });
                           }
                         } else if (/SAIDA PARA ENTREGA/i.test(ocorrencia)) {
                           console.log("Inserindo LastMileRastreio pelo SSW");
@@ -2155,7 +2011,9 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               ""
                             );
-                            console.log(`Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Last Mile`);
+                            console.log(
+                              `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Last Mile`
+                            );
                             // Registra envio LastMile
                             await prismaClient.venda.update({
                               where: { Codigo: venda.Codigo },
@@ -2173,7 +2031,6 @@ app.get("/updateRastreio", async (request, reply) => {
                             },
                           });
 
-                          
                           const jaAvisouEntregue = await prisma.venda.findFirst(
                             {
                               where: {
@@ -2209,14 +2066,16 @@ app.get("/updateRastreio", async (request, reply) => {
                               data_hora,
                               ""
                             );
-                            console.log(`Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Pedido Entregue`);
+                            console.log(
+                              `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Pedido Entregue`
+                            );
                             // Registra envio Entregue
                             await prismaClient.venda.update({
                               where: { Codigo: venda.Codigo },
                               data: {
                                 EntregueRastreioAviso: data_hora,
                               },
-                            }); 
+                            });
                           }
                         }
                       }
@@ -2224,8 +2083,6 @@ app.get("/updateRastreio", async (request, reply) => {
                   } else {
                     console.log("Não retornou tracking SSW");
                   }
-
-                  enviaWhatsStatus(JSON.stringify(venda));
                 }
               }
             } else {
@@ -2238,7 +2095,7 @@ app.get("/updateRastreio", async (request, reply) => {
 
         // Processa as vendas do lote atual
         for (const venda of vendasFiltradasSSW) {
-          const vendaString = JSON.stringify(venda)
+          const vendaString = JSON.stringify(venda);
           await processaVendaSSW(prisma, vendaString);
         }
 
@@ -3511,7 +3368,7 @@ app.post("/zapi", async (request, reply) => {
             "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
           )
           .set("Content-Type", "application/json")
-          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .set("Client-Token", `${tokenZapi}`)
           .send(bodyWhats0);
 
         // Busca ocorrências
@@ -3529,7 +3386,7 @@ app.post("/zapi", async (request, reply) => {
             "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
           )
           .set("Content-Type", "application/json")
-          .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+          .set("Client-Token", `${tokenZapi}`)
           .send(bodyWhats1);
 
         // FInaliza com mensagem para buscar mais informações no Whats oficial
@@ -3579,7 +3436,7 @@ app.post("/zapi", async (request, reply) => {
         "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
       )
       .set("Content-Type", "application/json")
-      .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+      .set("Client-Token", `${tokenZapi}`)
       .send(bodyWhats);
 
     return reply
@@ -3631,7 +3488,7 @@ app.post("/whatsrastreio", async (request, reply) => {
         "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
       )
       .set("Content-Type", "application/json")
-      .set("Client-Token", `F622e76b1e3f64e2a9517d207fe923fa5S`)
+      .set("Client-Token", `${tokenZapi}`)
       .send(bodyWhats);
 
     /* const res3 = await fetch(sendWhats.url, {
