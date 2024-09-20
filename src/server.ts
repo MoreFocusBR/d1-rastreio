@@ -643,7 +643,7 @@ app.get("/testeEmail", async (request, reply) => {
   const filePath = path.join(
     __dirname,
     "",
-    `template-email-EntregueWow.html`
+    `template-email-LastMileWow.html`
   );
 
   // Leitura do conteúdo do arquivo
@@ -651,7 +651,7 @@ app.get("/testeEmail", async (request, reply) => {
 
   const emailContentDB = await prisma.rastreioStatusEmail.findFirst({
     where: {
-      Status: "EntregueWow",
+      Status: "LastMileWow",
     },
   });
 
