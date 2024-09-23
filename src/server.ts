@@ -877,7 +877,7 @@ app.get("/updateVendas", async (request, reply) => {
         emailContentWow = substituirMarcador(
           emailContentWow,
           "numeroPedido",
-          vendaJson.numeroPedido
+          String(vendaJson.numeroPedido)
         );
 
         emailContentWow = substituirMarcador(
@@ -890,7 +890,14 @@ app.get("/updateVendas", async (request, reply) => {
           emailContentWow,
           "enderecoEntrega",
           `${vendaJson.EntregaLogradouro}, ${vendaJson.EntregaLogradouroNumero}, ${vendaJson.EntregaLogradouroComplemento}, ${vendaJson.EntregaBairro}, ${vendaJson.EntregaMunicipioNome} / ${vendaJson.EntregaUnidadeFederativa}`
+        ); 
+        
+        emailContentWow = substituirMarcador(
+          emailContentWow,
+          "numeroNotaFiscal",
+          vendaJson.NotaFiscalNumero
         );
+
       }
       // Opções do e-mail
       
@@ -1515,7 +1522,7 @@ app.get("/updateRastreio", async (request, reply) => {
             whatsContentwow = substituirMarcador(
               whatsContentwow,
               "numeroPedido",
-              Venda.Codigo
+              `${Venda.Codigo}`
             );
 
             whatsContentwow = substituirMarcador(
@@ -1541,7 +1548,7 @@ app.get("/updateRastreio", async (request, reply) => {
             whatsContentwow = substituirMarcador(
               whatsContentwow,
               "numeroNotaFiscal",
-              `${Venda.NumeroNotaFiscal}`
+              `${Venda.NotaFiscalNumero}`
             );
 
             whatsContentwow = substituirMarcador(
@@ -1597,7 +1604,7 @@ app.get("/updateRastreio", async (request, reply) => {
               emailContentWow = substituirMarcador(
                 emailContentWow,
                 "numeroPedido",
-                Venda.Codigo
+                `${Venda.Codigo}`
               );
 
               emailContentWow = substituirMarcador(
@@ -1795,7 +1802,7 @@ app.get("/updateRastreio", async (request, reply) => {
               emailContentWow = substituirMarcador(
                 emailContentWow,
                 "numeroPedido",
-                Venda.Codigo
+                `${Venda.Codigo}`
               );
 
               emailContentWow = substituirMarcador(
@@ -1821,7 +1828,7 @@ app.get("/updateRastreio", async (request, reply) => {
               whatsContentwow = substituirMarcador(
                 whatsContentwow,
                 "numeroNotaFiscal",
-                `${Venda.NumeroNotaFiscal}`
+                `${Venda.NotaFiscalNumero}`
               );
 
               // Opções do e-mail
@@ -1922,7 +1929,7 @@ app.get("/updateRastreio", async (request, reply) => {
               emailContentWow = substituirMarcador(
                 emailContentWow,
                 "numeroPedido",
-                Venda.Codigo
+                `${Venda.Codigo}`
               );
 
               emailContentWow = substituirMarcador(
@@ -1948,7 +1955,7 @@ app.get("/updateRastreio", async (request, reply) => {
               whatsContentwow = substituirMarcador(
                 whatsContentwow,
                 "numeroNotaFiscal",
-                `${Venda.NumeroNotaFiscal}`
+                `${Venda.NotaFiscalNumero}`
               );
 
               // Opções do e-mail
