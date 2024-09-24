@@ -640,11 +640,7 @@ app.get("/testeEmail", async (request, reply) => {
   // Envio e-mail - início
   // Conteúdo do e-mail
   // Caminho do arquivo HTML
-  const filePath = path.join(
-    __dirname,
-    "",
-    `template-email-LastMileWow.html`
-  );
+  const filePath = path.join(__dirname, "", `template-email-resp-LastMileWow.html`);
 
   // Leitura do conteúdo do arquivo
   let emailContentWow = await fs.readFile(filePath, "utf-8");
@@ -661,7 +657,7 @@ app.get("/testeEmail", async (request, reply) => {
       "conteudoEmail",
       emailContentDB.Mensagem
     );
-    
+
     emailContentWow = substituirMarcador(
       emailContentWow,
       "conteudoEmail",
@@ -711,26 +707,15 @@ app.get("/testeEmail", async (request, reply) => {
     );
 
     // Opções do e-mail
-    /* Desligando email cliente
-      const mailOptions = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-        to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
-        subject: "Estamos preparando o envio do seu pedido",
-        text: mensagem,
-        html: emailContentWow,
-      };
-
-      enviarEmail(mailOptions);
-      */
-
-      const mailOptionsRodrigo = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-        to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
-        subject: "Seu pedido foi entregue",
-        text: emailContentDB.Mensagem,
-        html: emailContentWow,
-      };
-      enviarEmail(mailOptionsRodrigo);
+    
+    const mailOptionsRodrigo = {
+      from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
+      to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+      subject: "Seu pedido foi entregue",
+      text: emailContentDB.Mensagem,
+      html: emailContentWow,
+    };
+    enviarEmail(mailOptionsRodrigo);
   }
 });
 
@@ -818,9 +803,8 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats);
 
-      
       // Msg para Renan
-
+        
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
@@ -840,7 +824,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats2);
-        
+        /* Desligando Whats para Renan e cliente */
 
       // estouaqui6
       // Envio e-mail - início
@@ -849,7 +833,7 @@ app.get("/updateVendas", async (request, reply) => {
       const filePath = path.join(
         __dirname,
         "",
-        `template-email-NotaFiscalWow.html`
+        `template-email-resp-NotaFiscalWow.html`
       );
 
       // Leitura do conteúdo do arquivo
@@ -877,58 +861,74 @@ app.get("/updateVendas", async (request, reply) => {
         emailContentWow = substituirMarcador(
           emailContentWow,
           "numeroPedido",
-          String(vendaJson.numeroPedido)
+          `${vendaJson.Codigo}`
         );
+
+        const dataVendaFormatada = vendaJson.DataVenda.split("-")
+          .reverse()
+          .join("/");
 
         emailContentWow = substituirMarcador(
           emailContentWow,
           "dataVenda",
-          vendaJson.DataVenda
+          dataVendaFormatada
         );
 
         emailContentWow = substituirMarcador(
           emailContentWow,
           "enderecoEntrega",
-          `${vendaJson.EntregaLogradouro}, ${vendaJson.EntregaLogradouroNumero}, ${vendaJson.EntregaLogradouroComplemento}, ${vendaJson.EntregaBairro}, ${vendaJson.EntregaMunicipioNome} / ${vendaJson.EntregaUnidadeFederativa}`
-        ); 
-        
+          `${vendaJson.EntregaLogradouro.split(",")[0]}, ${
+            vendaJson.EntregaLogradouroNumero
+          }, ${vendaJson.EntregaLogradouroComplemento}, ${
+            vendaJson.EntregaBairro
+          }, ${vendaJson.EntregaMunicipioNome} / ${
+            vendaJson.EntregaUnidadeFederativa
+          }`
+        );
+
         emailContentWow = substituirMarcador(
           emailContentWow,
           "numeroNotaFiscal",
           vendaJson.NotaFiscalNumero
         );
-
       }
       // Opções do e-mail
-      
+
+      const mailOptionsRodrigo = {
+        from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
+        to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
+        subject: `${
+          vendaJson.EntregaNome.split(" ")[0]
+        }, estamos preparando o envio do seu pedido n. ${vendaJson.Codigo}`,
+        text: mensagem,
+        html: emailContentWow,
+      };
+      enviarEmail(mailOptionsRodrigo);
+
       const mailOptions = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
-        subject: "Estamos preparando o envio do seu pedido",
+        subject: `${
+          vendaJson.EntregaNome.split(" ")[0]
+        }, estamos preparando o envio do seu pedido n. ${vendaJson.Codigo}`,
         text: mensagem,
         html: emailContentWow,
       };
 
       enviarEmail(mailOptions);
-      
 
-      const mailOptionsRodrigo = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-        to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
-        subject: "Estamos preparando o envio do seu pedido",
-        text: mensagem,
-        html: emailContentWow,
-      };
-      enviarEmail(mailOptionsRodrigo);
-      
       const mailOptionsRenan = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `renan@d1fitness.com.br`, // E-mail do destinatário
-        subject: "Estamos preparando o envio do seu pedido",
+        subject: `${
+          vendaJson.EntregaNome.split(" ")[0]
+        }, estamos preparando o envio do seu pedido n. ${vendaJson.Codigo}`,
         text: mensagem,
         html: emailContentWow,
       };
       enviarEmail(mailOptionsRenan);
+      
+      /* Desligando email Renan e Cliente */
 
     } else if (
       vendaJson.DescricaoStatus == "Enviado" &&
@@ -963,7 +963,6 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats);
 
-      
       const bodyWhatsD1 = `{"phone": "5548988038546","message": "${whatsContent}"}`;
 
       const resZAPID1 = await requestSA
@@ -973,9 +972,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhatsD1);
-        
 
-      
       const bodyWhats2 = `{"phone": "55${vendaJson.EntregaTelefone}","message": "${whatsContent}"}`;
 
       const resZAPI2 = await requestSA
@@ -986,6 +983,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats2);
         
+        /* Desligando whats Renan e cliente */
 
       // Envio e-mail - início
       // Conteúdo do e-mail
@@ -993,7 +991,7 @@ app.get("/updateVendas", async (request, reply) => {
       const filePath = path.join(
         __dirname,
         "",
-        `template-email-EnviadoSemPrevisaoWow.html`
+        `template-email-resp-EnviadoSemPrevisaoWow.html`
       );
 
       // Leitura do conteúdo do arquivo
@@ -1020,36 +1018,43 @@ app.get("/updateVendas", async (request, reply) => {
       }
 
       
-      // Opções do e-mail
-      const mailOptions = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-        to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
-        subject: "Seu pedido está a caminho!",
-        text: mensagem,
-        html: emailContentWow,
-      };
-      
-      enviarEmail(mailOptions);
-      
-
       // Opções do e-mail - Rodrigo
       const mailOptionsRodrigo = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
-        subject: "Seu pedido está a caminho!",
+        subject: `${vendaJson.EntregaNome.split(" ")[0]}, seu pedido n. ${
+          vendaJson.Codigo
+        } está a caminho!`,
         text: mensagem,
         html: emailContentWow,
       };
       enviarEmail(mailOptionsRodrigo);
-      
+
+      // Opções do e-mail
+      const mailOptions = {
+        from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
+        to: `${vendaJson.EntregaEmail}`, // E-mail do destinatário
+        subject: `${vendaJson.EntregaNome.split(" ")[0]}, seu pedido n. ${
+          vendaJson.Codigo
+        } está a caminho!`,
+        text: mensagem,
+        html: emailContentWow,
+      };
+
+      enviarEmail(mailOptions);
+
       const mailOptionsRenan = {
-        from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
+        from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `renan@d1fitness.com.br`, // E-mail do destinatário
-        subject: "Seu pedido está a caminho!",
+        subject: `${vendaJson.EntregaNome.split(" ")[0]}, seu pedido n. ${
+          vendaJson.Codigo
+        } está a caminho!`,
         text: mensagem,
         html: emailContentWow,
       };
       enviarEmail(mailOptionsRenan);
+      
+      /* Desligando e-mail Renan e Cliente */
     }
   }
 
@@ -1260,468 +1265,440 @@ app.get("/updateVendas", async (request, reply) => {
 
 // Endpoint: Update Tracking Rastreio - início
 
-app.get("/updateRastreio", async (request, reply) => {
-  interface RouteParams {
-    diasPeriodo: number;
-  }
-
-  const params = request.query as RouteParams;
-  const codigoInicial = params.diasPeriodo;
-
-  async function pegaVenda(Codigo: number) {
-    try {
-      const request = require("superagent");
-      const resVenda = await request
-        .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
-        .set("Accept", "application/json")
-        .set("accept-encoding", "gzip")
-        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
-      //.set("Limit", "1");
-
-      //resVenda.body;
-
-      if (resVenda.status == 200) {
-        return JSON.stringify(resVenda.body);
-      } else {
-        throw new Error("Erro ao obter o lista integração.");
-      }
-    } catch (err) {
-      console.error(err);
+  app.get("/updateRastreio", async (request, reply) => {
+    interface RouteParams {
+      diasPeriodo: number;
     }
-  }
 
-  // Função para substituir o marcador pela variável
-  function substituirMarcador(
-    mensagem: string,
-    marcador: string,
-    conteudo: string
-  ) {
-    return mensagem.replace(new RegExp(`{{${marcador}}}`, "g"), conteudo);
-  }
+    const params = request.query as RouteParams;
+    const codigoInicial = params.diasPeriodo;
 
-  const dataLimite = new Date();
-  dataLimite.setDate(dataLimite.getDate() - params.diasPeriodo); // Subtrai X dias da data atual
+    async function pegaVenda(Codigo: number) {
+      try {
+        const request = require("superagent");
+        const resVenda = await request
+          .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
+          .set("Accept", "application/json")
+          .set("accept-encoding", "gzip")
+          .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+        //.set("Limit", "1");
 
-  // Define o tamanho do lote para a paginação
-  const tamanhoLote = 30; // Pode ajustar conforme necessário
+        //resVenda.body;
 
-  let offset = 0;
-  let todasVendasProcessadas = false;
-
-  while (!todasVendasProcessadas) {
-    await prisma.$transaction(
-      async (prismaClient) => {
-        const vendasFiltradasSSW = await prismaClient.venda.findMany({
-          take: tamanhoLote,
-          skip: offset,
-          where: {
-            DataHoraStatus: {
-              gt: dataLimite.toISOString(),
-            },
-            DescricaoStatus: "Enviado",
-            Cancelada: false,
-            TransportadoraCodigo: {
-              in: [122, 151, 112, 110, 120, 210, 223, 224],
-            },
-          },
-          orderBy: {
-            Codigo: "desc",
-          },
-        });
-
-        interface ItensVenda {
-          Codigo: number;
-          ProdutoReferencia: string;
-          ProdutoBarras: string;
-          ProdutoBundleCodigo: number;
-          VendaCodigo: number;
-          ProdutoCodigo: number;
-          PrecoUnitarioVenda: string;
-          PrecoUnitarioCusto: string;
-          EmbaladoParaPresente: boolean;
-          ValorEmbalagemPresente: string;
-          Quantidade: string;
-          AtributosEspeciais: string;
-          ItemNome: string;
-          ItemDescontoPercentual: string;
-          ItemDescontoValor: string;
-          ItemValorBruto: string;
-          ItemValorLiquido: string;
-          Servico: boolean;
-          Movimentacao: object;
+        if (resVenda.status == 200) {
+          return JSON.stringify(resVenda.body);
+        } else {
+          throw new Error("Erro ao obter o lista integração.");
         }
-        interface VendaInterface {
-          Codigo: number;
-          ClienteCodigo: number;
-          ClienteDocumento: string;
-          TransportadoraCodigo: number | null;
-          TransportadoraNome: string | null;
-          DataVenda: string | null;
-          Entrega: boolean;
-          EntregaNome: string | null;
-          EntregaEmail: string | null;
-          NumeroObjeto: string | null;
-          EntregaTelefone: string | null;
-          EntregaLogradouro: string | null;
-          EntregaLogradouroNumero: string | null;
-          EntregaLogradouroComplemento: string | null;
-          EntregaBairro: string | null;
-          EntregaMunicipioNome: string | null;
-          EntregaUnidadeFederativa: string | null;
-          EntregaCEP: string | null;
-          Observacoes: string | null;
-          ObservacoesLoja: string | null;
-          CodigoStatus: number | null;
-          DescricaoStatus: string | null;
-          DataHoraStatus: string | null;
-          PrevisaoEntrega: string | null;
-          PrevisaoEntregaRastreio: string | null;
-          CodigoNotaFiscal: number | null;
-          DataEntrega: string | null;
-          Cancelada: boolean;
-          DataEnvio: string | null;
-          NotaFiscalNumero: number | null;
-          DataColeta: string | null;
-          ItensVenda: ItensVenda[];
-        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
-        async function enviaWhatsTracking(
-          Telefone: any,
-          VendaString: any,
-          momentoTracking: number,
-          data_hora: string,
-          previsaoEntrega: string
-        ) {
-          const Venda = JSON.parse(VendaString);
-          const request = require("superagent");
-          let qualMensagem = "";
-          if (momentoTracking == 1) {
-            qualMensagem = "PrevisaoWow";
-          } else if (momentoTracking == 2) {
-            qualMensagem = "LastMileWow";
-          } else if (momentoTracking == 3) {
-            qualMensagem = "EntregueWow";
-          }
+    // Função para substituir o marcador pela variável
+    function substituirMarcador(
+      mensagem: string,
+      marcador: string,
+      conteudo: string
+    ) {
+      return mensagem.replace(new RegExp(`{{${marcador}}}`, "g"), conteudo);
+    }
 
-          // Mensagem Wow
-          const whatsContentDBwow = await prisma.rastreioStatusWhats.findFirst({
+    const dataLimite = new Date();
+    dataLimite.setDate(dataLimite.getDate() - params.diasPeriodo); // Subtrai X dias da data atual
+
+    // Define o tamanho do lote para a paginação
+    const tamanhoLote = 30; // Pode ajustar conforme necessário
+
+    let offset = 0;
+    let todasVendasProcessadas = false;
+
+    while (!todasVendasProcessadas) {
+      await prisma.$transaction(
+        async (prismaClient) => {
+          const vendasFiltradasSSW = await prismaClient.venda.findMany({
+            take: tamanhoLote,
+            skip: offset,
             where: {
-              Status: qualMensagem,
+              DataHoraStatus: {
+                gt: dataLimite.toISOString(),
+              },
+              DescricaoStatus: "Enviado",
+              Cancelada: false,
+              TransportadoraCodigo: {
+                in: [122, 151, 112, 110, 120, 210, 223, 224],
+              },
+            },
+            orderBy: {
+              Codigo: "desc",
             },
           });
 
-          const transportadoras = [
-            { TransportadoraCodigo: 118, TransportadoraNome: "JAMEF " },
-            {
-              TransportadoraCodigo: 92,
-              TransportadoraNome: "RETIRADA NO CD",
-            },
-            { TransportadoraCodigo: 120, TransportadoraNome: "TPL" },
-            { TransportadoraCodigo: 51, TransportadoraNome: "TRANSLOVATO" },
-            {
-              TransportadoraCodigo: 174,
-              TransportadoraNome: "MERCADO LIVRE",
-            },
-            {
-              TransportadoraCodigo: 199,
-              TransportadoraNome: "CORREIOS SEDEX",
-            },
-            { TransportadoraCodigo: 210, TransportadoraNome: "PREMIUM LOG" },
-            { TransportadoraCodigo: 172, TransportadoraNome: "AMAZON" },
-            { TransportadoraCodigo: 0, TransportadoraNome: "" },
-            { TransportadoraCodigo: 103, TransportadoraNome: "CORREIOS PAC" },
-            { TransportadoraCodigo: 190, TransportadoraNome: "AMAZON" },
-            {
-              TransportadoraCodigo: 223,
-              TransportadoraNome: "TRANSFARRAPOS",
-            },
-            { TransportadoraCodigo: 215, TransportadoraNome: "R&D CARGO" },
-            {
-              TransportadoraCodigo: 168,
-              TransportadoraNome: "MAGALU ENTREGAS",
-            },
-            { TransportadoraCodigo: 105, TransportadoraNome: "BERTOLINI" },
-            {
-              TransportadoraCodigo: 173,
-              TransportadoraNome: "EXPRESSO SAO MIGUEL",
-            },
-            { TransportadoraCodigo: 27, TransportadoraNome: "MODULAR" },
-            {
-              TransportadoraCodigo: 104,
-              TransportadoraNome: "CORREIOS SEDEX",
-            },
-            { TransportadoraCodigo: 177, TransportadoraNome: "CORREIOS PAC" },
-            { TransportadoraCodigo: 151, TransportadoraNome: "ACEVILLE" },
-            { TransportadoraCodigo: 102, TransportadoraNome: "MODULAR" },
-            { TransportadoraCodigo: 122, TransportadoraNome: "BAUER" },
-            { TransportadoraCodigo: 198, TransportadoraNome: "CORREIOS PAC" },
-            { TransportadoraCodigo: 224, TransportadoraNome: "FLYVILLE" },
-            { TransportadoraCodigo: 157, TransportadoraNome: "A COMBINAR" },
-            { TransportadoraCodigo: 7, TransportadoraNome: "CORREIOS PAC" },
-            {
-              TransportadoraCodigo: 175,
-              TransportadoraNome: "Mercado Envios",
-            },
-            {
-              TransportadoraCodigo: 186,
-              TransportadoraNome: "MERCADO LIVRE",
-            },
-            { TransportadoraCodigo: 112, TransportadoraNome: "ACEVILLE" },
-            {
-              TransportadoraCodigo: 145,
-              TransportadoraNome: "MERCADO ENVIOS",
-            },
-            {
-              TransportadoraCodigo: 176,
-              TransportadoraNome: "CORREIOS SEDEX",
-            },
-            { TransportadoraCodigo: 110, TransportadoraNome: "GOBOR" },
-            {
-              TransportadoraCodigo: 122,
-              TransportadoraNome: "CORREIOS SEDEX",
-            },
-            { TransportadoraCodigo: 103, TransportadoraNome: "" },
-            { TransportadoraCodigo: 212, TransportadoraNome: "TRANSCARAPIÁ" },
-            { TransportadoraCodigo: 156, TransportadoraNome: "NATIVA" },
-            { TransportadoraCodigo: 119, TransportadoraNome: "MANN" },
-            { TransportadoraCodigo: 220, TransportadoraNome: "PAJUCARA" },
-            {
-              TransportadoraCodigo: 187,
-              TransportadoraNome: "MERCADO LIVRE",
-            },
-            { TransportadoraCodigo: 51, TransportadoraNome: "" },
-            { TransportadoraCodigo: 6, TransportadoraNome: "CORREIOS SEDEX" },
-            { TransportadoraCodigo: 52, TransportadoraNome: "MOVVI" },
-            { TransportadoraCodigo: 52, TransportadoraNome: "" },
-            // Add the rest of the entries here...
-          ];
-          function retornaNomeTransportadora(
-            TransportadoraCodigo: number
-          ): string | undefined {
-            const transportadora = transportadoras.find(
-              (item) => item.TransportadoraCodigo === TransportadoraCodigo
-            );
-            return transportadora
-              ? transportadora.TransportadoraNome
-              : undefined;
+          interface ItensVenda {
+            Codigo: number;
+            ProdutoReferencia: string;
+            ProdutoBarras: string;
+            ProdutoBundleCodigo: number;
+            VendaCodigo: number;
+            ProdutoCodigo: number;
+            PrecoUnitarioVenda: string;
+            PrecoUnitarioCusto: string;
+            EmbaladoParaPresente: boolean;
+            ValorEmbalagemPresente: string;
+            Quantidade: string;
+            AtributosEspeciais: string;
+            ItemNome: string;
+            ItemDescontoPercentual: string;
+            ItemDescontoValor: string;
+            ItemValorBruto: string;
+            ItemValorLiquido: string;
+            Servico: boolean;
+            Movimentacao: object;
+          }
+          interface VendaInterface {
+            Codigo: number;
+            ClienteCodigo: number;
+            ClienteDocumento: string;
+            TransportadoraCodigo: number | null;
+            TransportadoraNome: string | null;
+            DataVenda: string | null;
+            Entrega: boolean;
+            EntregaNome: string | null;
+            EntregaEmail: string | null;
+            NumeroObjeto: string | null;
+            EntregaTelefone: string | null;
+            EntregaLogradouro: string | null;
+            EntregaLogradouroNumero: string | null;
+            EntregaLogradouroComplemento: string | null;
+            EntregaBairro: string | null;
+            EntregaMunicipioNome: string | null;
+            EntregaUnidadeFederativa: string | null;
+            EntregaCEP: string | null;
+            Observacoes: string | null;
+            ObservacoesLoja: string | null;
+            CodigoStatus: number | null;
+            DescricaoStatus: string | null;
+            DataHoraStatus: string | null;
+            PrevisaoEntrega: string | null;
+            PrevisaoEntregaRastreio: string | null;
+            CodigoNotaFiscal: number | null;
+            DataEntrega: string | null;
+            Cancelada: boolean;
+            DataEnvio: string | null;
+            NotaFiscalNumero: number | null;
+            DataColeta: string | null;
+            ItensVenda: ItensVenda[];
           }
 
-          if (
-            momentoTracking == 1 &&
-            whatsContentDBwow?.Mensagem &&
-            Venda.EntregaNome &&
-            Venda.TransportadoraCodigo &&
-            Venda.Itens
+          async function enviaWhatsTracking(
+            Telefone: any,
+            Email: any,
+            VendaString: any,
+            momentoTracking: number,
+            data_hora: string,
+            previsaoEntrega: string
           ) {
-            let whatsContentwow = substituirMarcador(
-              whatsContentDBwow?.Mensagem,
-              "primeiroNome",
-              Venda.EntregaNome.split(" ")[0]
-            );
+            const Venda = JSON.parse(VendaString);
+            const request = require("superagent");
+            let qualMensagem = "";
+            if (momentoTracking == 1) {
+              qualMensagem = "PrevisaoWow";
+            } else if (momentoTracking == 2) {
+              qualMensagem = "LastMileWow";
+            } else if (momentoTracking == 3) {
+              qualMensagem = "EntregueWow";
+            }
 
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "numeroPedido",
-              `${Venda.Codigo}`
-            );
+            // Mensagem Wow
+            const whatsContentDBwow = await prisma.rastreioStatusWhats.findFirst({
+              where: {
+                Status: qualMensagem,
+              },
+            });
 
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "dataVenva",
-              Venda.DataVenda
-            );
-            // {{nomeTransportadoraNotaFiscal}}transportadoraNome
+            const transportadoras = [
+              { TransportadoraCodigo: 118, TransportadoraNome: "JAMEF " },
+              {
+                TransportadoraCodigo: 92,
+                TransportadoraNome: "RETIRADA NO CD",
+              },
+              { TransportadoraCodigo: 120, TransportadoraNome: "TPL" },
+              { TransportadoraCodigo: 51, TransportadoraNome: "TRANSLOVATO" },
+              {
+                TransportadoraCodigo: 174,
+                TransportadoraNome: "MERCADO LIVRE",
+              },
+              {
+                TransportadoraCodigo: 199,
+                TransportadoraNome: "CORREIOS SEDEX",
+              },
+              { TransportadoraCodigo: 210, TransportadoraNome: "PREMIUM LOG" },
+              { TransportadoraCodigo: 172, TransportadoraNome: "AMAZON" },
+              { TransportadoraCodigo: 0, TransportadoraNome: "" },
+              { TransportadoraCodigo: 103, TransportadoraNome: "CORREIOS PAC" },
+              { TransportadoraCodigo: 190, TransportadoraNome: "AMAZON" },
+              {
+                TransportadoraCodigo: 223,
+                TransportadoraNome: "TRANSFARRAPOS",
+              },
+              { TransportadoraCodigo: 215, TransportadoraNome: "R&D CARGO" },
+              {
+                TransportadoraCodigo: 168,
+                TransportadoraNome: "MAGALU ENTREGAS",
+              },
+              { TransportadoraCodigo: 105, TransportadoraNome: "BERTOLINI" },
+              {
+                TransportadoraCodigo: 173,
+                TransportadoraNome: "EXPRESSO SAO MIGUEL",
+              },
+              { TransportadoraCodigo: 27, TransportadoraNome: "MODULAR" },
+              {
+                TransportadoraCodigo: 104,
+                TransportadoraNome: "CORREIOS SEDEX",
+              },
+              { TransportadoraCodigo: 177, TransportadoraNome: "CORREIOS PAC" },
+              { TransportadoraCodigo: 151, TransportadoraNome: "ACEVILLE" },
+              { TransportadoraCodigo: 102, TransportadoraNome: "MODULAR" },
+              { TransportadoraCodigo: 122, TransportadoraNome: "BAUER" },
+              { TransportadoraCodigo: 198, TransportadoraNome: "CORREIOS PAC" },
+              { TransportadoraCodigo: 224, TransportadoraNome: "FLYVILLE" },
+              { TransportadoraCodigo: 157, TransportadoraNome: "A COMBINAR" },
+              { TransportadoraCodigo: 7, TransportadoraNome: "CORREIOS PAC" },
+              {
+                TransportadoraCodigo: 175,
+                TransportadoraNome: "Mercado Envios",
+              },
+              {
+                TransportadoraCodigo: 186,
+                TransportadoraNome: "MERCADO LIVRE",
+              },
+              { TransportadoraCodigo: 112, TransportadoraNome: "ACEVILLE" },
+              {
+                TransportadoraCodigo: 145,
+                TransportadoraNome: "MERCADO ENVIOS",
+              },
+              {
+                TransportadoraCodigo: 176,
+                TransportadoraNome: "CORREIOS SEDEX",
+              },
+              { TransportadoraCodigo: 110, TransportadoraNome: "GOBOR" },
+              {
+                TransportadoraCodigo: 122,
+                TransportadoraNome: "CORREIOS SEDEX",
+              },
+              { TransportadoraCodigo: 103, TransportadoraNome: "" },
+              { TransportadoraCodigo: 212, TransportadoraNome: "TRANSCARAPIÁ" },
+              { TransportadoraCodigo: 156, TransportadoraNome: "NATIVA" },
+              { TransportadoraCodigo: 119, TransportadoraNome: "MANN" },
+              { TransportadoraCodigo: 220, TransportadoraNome: "PAJUCARA" },
+              {
+                TransportadoraCodigo: 187,
+                TransportadoraNome: "MERCADO LIVRE",
+              },
+              { TransportadoraCodigo: 51, TransportadoraNome: "" },
+              { TransportadoraCodigo: 6, TransportadoraNome: "CORREIOS SEDEX" },
+              { TransportadoraCodigo: 52, TransportadoraNome: "MOVVI" },
+              { TransportadoraCodigo: 52, TransportadoraNome: "" },
+              // Add the rest of the entries here...
+            ];
+            function retornaNomeTransportadora(
+              TransportadoraCodigo: number
+            ): string | undefined {
+              const transportadora = transportadoras.find(
+                (item) => item.TransportadoraCodigo === TransportadoraCodigo
+              );
+              return transportadora
+                ? transportadora.TransportadoraNome
+                : undefined;
+            }
 
-            // Substui dados da entrega
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "enderecoEntrega",
-              `${Venda.EntregaLogradouro}, ${Venda.EntregaLogradouroNumero}, ${Venda.EntregaLogradouroComplemento}, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${Venda.EntregaUnidadeFederativa}`
-            );
-
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "transportadoraNome",
-              `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
-            );
-
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "numeroNotaFiscal",
-              `${Venda.NotaFiscalNumero}`
-            );
-
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "previsaoEntrega",
-              previsaoEntrega
-            );
-
-            // Dispara msg whats
-            const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
-
-            const resZAPI = await request
-              .post(
-                "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-              )
-              .set("Content-Type", "application/json")
-              .set("Client-Token", `${tokenZapi}`)
-              .send(bodyWhats1);
-
-            // Disparo e-mail - inicio
-            // estouaqui4
-            // Conteúdo do e-mail
-            // Caminho do arquivo HTML
-            const filePath = path.join(
-              __dirname,
-              "src",
-              `template-email-${qualMensagem}.html`
-            );
-
-            // Leitura do conteúdo do arquivo
-            let emailContentWow = await fs.readFile(filePath, "utf-8");
-
-            const emailContentDBWow =
-              await prisma.rastreioStatusEmail.findFirst({
-                where: {
-                  Status: qualMensagem,
-                },
-              });
-
-            if (emailContentDBWow?.Mensagem) {
-              emailContentWow = substituirMarcador(
-                emailContentWow,
+            if (
+              momentoTracking == 1 &&
+              whatsContentDBwow?.Mensagem &&
+              Venda.EntregaNome &&
+              Venda.TransportadoraCodigo &&
+              Venda.Itens
+            ) {
+              let whatsContentwow = substituirMarcador(
+                whatsContentDBwow?.Mensagem,
                 "primeiroNome",
                 Venda.EntregaNome.split(" ")[0]
               );
 
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "conteudoEmail",
-                emailContentDBWow.Mensagem
-              );
-
-              emailContentWow = substituirMarcador(
-                emailContentWow,
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
                 "numeroPedido",
                 `${Venda.Codigo}`
               );
 
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "dataVenda",
-                Venda.DataVenda
+              const dataVendaFormatada = Venda.DataVenda.split("-")
+                .reverse()
+                .join("/");
+
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "dataVenva",
+                dataVendaFormatada
               );
-              // {{nomeTransportadoraNotaFiscal}}
+              // {{nomeTransportadoraNotaFiscal}}transportadoraNome
 
               // Substui dados da entrega
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "enderecoEntrega",
-                `${Venda.EntregaLogradouro}, ${
-                  Venda.EntregaLogradouroNumero
-                }, ${Venda.EntregaLogradouroComplemento}, ${
-                  Venda.EntregaBairro
-                }, ${Venda.EntregaMunicipioNome} / ${
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "dadosEntrega",
+                `Dados da entrega\n--------------------\nEndereço de entrega: ${
+                  Venda.EntregaLogradouro.split(",")[0]
+                }, ${Venda.EntregaLogradouroNumero}, ${
+                  Venda.EntregaLogradouroComplemento
+                }, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${
                   Venda.EntregaUnidadeFederativa
                 }\nTransportadora: ${retornaNomeTransportadora(
                   Venda.TransportadoraCodigo
                 )}\nNúmero Nota Fiscal: ${Venda.NotaFiscalNumero}`
               );
 
-              emailContentWow = substituirMarcador(
-                emailContentWow,
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
                 "previsaoEntrega",
                 previsaoEntrega
               );
 
-              // Opções do e-mail
-              const mailOptions = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `${Venda.EntregaEmail}`, // E-mail do destinatário
-                subject: "Seu pedido está a caminho!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptions);
+              // Dispara msg whats
+              const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
 
-              // Opções do e-mail - Rodrigo
-              const mailOptionsRodrigo = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
-                subject: "Seu pedido está a caminho!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptionsRodrigo);
-              
-              // Opções do e-mail - Rodrigo
-              const mailOptionsRenan = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `renan@d1fitness.com.br`, // E-mail do destinatário
-                subject: "Seu pedido está a caminho!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptionsRenan);
-            }
-          } else if (
-            momentoTracking == 2 &&
-            whatsContentDBwow?.Mensagem &&
-            Venda.EntregaNome &&
-            Venda.TransportadoraCodigo &&
-            Venda.Itens
-          ) {
-            let whatsContentwow = substituirMarcador(
-              whatsContentDBwow?.Mensagem,
-              "primeiroNome",
-              Venda.EntregaNome.split(" ")[0]
-            );
-            // {{nomeTransportadoraNotaFiscal}}
+              const resZAPI = await request
+                .post(
+                  "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+                )
+                .set("Content-Type", "application/json")
+                .set("Client-Token", `${tokenZapi}`)
+                .send(bodyWhats1);
 
-            // Substui dados da entrega
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "dadosEntrega",
-              `Dados da entrega\n--------------------\nEndereço de entrega: ${
-                Venda.EntregaLogradouro
-              }, ${Venda.EntregaLogradouroNumero}, ${
-                Venda.EntregaLogradouroComplemento
-              }, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${
-                Venda.EntregaUnidadeFederativa
-              }\nTransportadora: ${retornaNomeTransportadora(
-                Venda.TransportadoraCodigo
-              )}\nNúmero Nota Fiscal: ${Venda.NotaFiscalNumero}`
-            );
+              // Disparo e-mail - inicio
+              // estouaqui4
+              // Conteúdo do e-mail
+              // Caminho do arquivo HTML
+              const filePath = path.join(
+                __dirname,
+                "",
+                `template-email-resp-${qualMensagem}.html`
+              );
 
-            // Texto Itens
-            const itensVenda = JSON.parse(JSON.stringify(Venda.Itens));
-            let textoItens = "";
-            for (const row of itensVenda) {
-              (
-                row: {
-                  Codigo: number;
-                  ProdutoReferencia: string;
-                  ProdutoBarras: string;
-                  ProdutoBundleCodigo: number;
-                  VendaCodigo: number;
-                  ProdutoCodigo: number;
-                  PrecoUnitarioVenda: string;
-                  PrecoUnitarioCusto: string;
-                  EmbaladoParaPresente: boolean;
-                  ValorEmbalagemPresente: string;
-                  Quantidade: string;
-                  AtributosEspeciais: string;
-                  ItemNome: string;
-                  ItemDescontoPercentual: string;
-                  ItemDescontoValor: string;
-                  ItemValorBruto: string;
-                  ItemValorLiquido: string;
-                  Servico: boolean;
-                  Movimentacao: object;
-                },
-                index: number
-              ) => {
+              // Leitura do conteúdo do arquivo
+              let emailContentWow = await fs.readFile(filePath, "utf-8");
+
+              const emailContentDBWow =
+                await prisma.rastreioStatusEmail.findFirst({
+                  where: {
+                    Status: qualMensagem,
+                  },
+                });
+
+              if (emailContentDBWow?.Mensagem) {
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "primeiroNome",
+                  Venda.EntregaNome.split(" ")[0]
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "conteudoEmail",
+                  emailContentDBWow.Mensagem
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "numeroPedido",
+                  `${Venda.Codigo}`
+                );
+
+                const dataVendaFormatada = Venda.DataVenda.split("-")
+                  .reverse()
+                  .join("/");
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "dataVenda",
+                  dataVendaFormatada
+                );
+                // {{nomeTransportadoraNotaFiscal}}
+
+                // Substui dados da entrega
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "enderecoEntrega",
+                  `${Venda.EntregaLogradouro.split(",")[0]}, ${
+                    Venda.EntregaLogradouroNumero
+                  }, ${Venda.EntregaLogradouroComplemento}, ${
+                    Venda.EntregaBairro
+                  }, ${Venda.EntregaMunicipioNome} / ${
+                    Venda.EntregaUnidadeFederativa
+                  }`
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "transportadoraNome",
+                  `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "numeroNotaFiscal",
+                  `${Venda.NotaFiscalNumero}`
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "previsaoEntrega",
+                  previsaoEntrega
+                );
+
+                // Opções do e-mail
+                const mailOptions = {
+                  from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
+                  to: `${Email}`, // E-mail do destinatário
+                  subject: `${Venda.EntregaNome.split(" ")[0]}, seu pedido n. ${
+                    Venda.Codigo
+                  } está a caminho!`,
+                  text: whatsContentwow,
+                  html: emailContentWow,
+                };
+                enviarEmail(mailOptions);
+              }
+            } else if (
+              momentoTracking == 2 &&
+              whatsContentDBwow?.Mensagem &&
+              Venda.EntregaNome &&
+              Venda.TransportadoraCodigo &&
+              Venda.Itens
+            ) {
+              let whatsContentwow = substituirMarcador(
+                whatsContentDBwow?.Mensagem,
+                "primeiroNome",
+                Venda.EntregaNome.split(" ")[0]
+              );
+              // {{nomeTransportadoraNotaFiscal}}
+
+              // Substui dados da entrega
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "dadosEntrega",
+                `Dados da entrega\n--------------------\nEndereço de entrega: ${
+                  Venda.EntregaLogradouro.split(",")[0]
+                }, ${Venda.EntregaLogradouroNumero}, ${
+                  Venda.EntregaLogradouroComplemento
+                }, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${
+                  Venda.EntregaUnidadeFederativa
+                }\nTransportadora: ${retornaNomeTransportadora(
+                  Venda.TransportadoraCodigo
+                )}\nNúmero Nota Fiscal: ${Venda.NotaFiscalNumero}`
+              );
+
+              // Texto Itens
+              const itensVenda = JSON.parse(JSON.stringify(Venda.Itens));
+              let textoItens = "";
+              for (const row of itensVenda) {
                 const {
                   Codigo,
                   ProdutoReferencia,
@@ -1746,361 +1723,426 @@ app.get("/updateRastreio", async (request, reply) => {
 
                 textoItens += `${Quantidade.split(".")[0]} X ${ItemNome}\n`;
               }
-            }
 
-            // Substitui dados itens
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "dadosPedido",
-              `\n\nItens do Pedido n. ${Venda.Codigo}\n--------------------\n${textoItens}`
-            );
+              // Substitui dados itens
+              whatsContentwow = substituirMarcador(
+                whatsContentwow,
+                "dadosPedido",
+                `\n\nItens do Pedido n. ${Venda.Codigo}\n--------------------\n${textoItens}`
+              );
 
-            // Dispara msg whats
-            const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
+              // Dispara msg whats
+              const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
 
-            const resZAPI = await request
-              .post(
-                "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-              )
-              .set("Content-Type", "application/json")
-              .set("Client-Token", `${tokenZapi}`)
-              .send(bodyWhats1);
+              const resZAPI = await request
+                .post(
+                  "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+                )
+                .set("Content-Type", "application/json")
+                .set("Client-Token", `${tokenZapi}`)
+                .send(bodyWhats1);
 
-            // Disparo e-mail - inicio
-            // estouaqui5
-            // Conteúdo do e-mail
-            // Caminho do arquivo HTML
-            const filePath = path.join(
-              __dirname,
-              "src",
-              `template-email-${qualMensagem}.html`
-            );
+              // Disparo e-mail - inicio
+              // estouaqui5
+              // Conteúdo do e-mail
+              // Caminho do arquivo HTML
+              const filePath = path.join(
+                __dirname,
+                "",
+                `template-email-resp-${qualMensagem}.html`
+              );
 
-            // Leitura do conteúdo do arquivo
-            let emailContentWow = await fs.readFile(filePath, "utf-8");
+              // Leitura do conteúdo do arquivo
+              let emailContentWow = await fs.readFile(filePath, "utf-8");
 
-            const emailContentDBWow =
-              await prisma.rastreioStatusEmail.findFirst({
-                where: {
-                  Status: qualMensagem,
-                },
-              });
+              const emailContentDBWow =
+                await prisma.rastreioStatusEmail.findFirst({
+                  where: {
+                    Status: qualMensagem,
+                  },
+                });
 
-            if (emailContentDBWow?.Mensagem) {
-              emailContentWow = substituirMarcador(
-                emailContentWow,
+              if (emailContentDBWow?.Mensagem) {
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "primeiroNome",
+                  Venda.EntregaNome.split(" ")[0]
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "conteudoEmail",
+                  emailContentDBWow.Mensagem
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "numeroPedido",
+                  `${Venda.Codigo}`
+                );
+
+                const dataVendaFormatada = Venda.DataVenda.split("-")
+                  .reverse()
+                  .join("/");
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "dataVenda",
+                  dataVendaFormatada
+                );
+                // {{nomeTransportadoraNotaFiscal}}
+
+                // Substui dados da entrega
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "enderecoEntrega",
+                  `${Venda.EntregaLogradouro.split(",")[0]}, ${
+                    Venda.EntregaLogradouroNumero
+                  }, ${Venda.EntregaLogradouroComplemento}, ${
+                    Venda.EntregaBairro
+                  }, ${Venda.EntregaMunicipioNome} / ${
+                    Venda.EntregaUnidadeFederativa
+                  }`
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "transportadoraNome",
+                  `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "numeroNotaFiscal",
+                  `${Venda.NotaFiscalNumero}`
+                );
+
+                // Inicializa a variável que conterá o HTML dos itens
+                let htmlItens = "";
+
+                // Inicializa a variável para o total de itens
+                let totalItens = 0;
+
+                // Itera sobre cada item da venda
+                for (const row of itensVenda) {
+                  const {
+                    Quantidade,
+                    ItemNome,
+                    // Outras propriedades, se necessário
+                  } = row;
+
+                  // Converte a quantidade para um número inteiro
+                  const quantidadeInt = parseInt(Quantidade.split(".")[0], 10);
+
+                  // Acumula o total de itens
+                  totalItens += quantidadeInt;
+
+                  // Monta o HTML para cada item
+                  htmlItens += `
+      <tr style="font-size: 12px;display:table-row;vertical-align:inherit;border-color:inherit;text-align:left;color:#5a5a5a;font-size:14px;font-family:sans-serif" align="left" valign="inherit">
+        <td style="font-size: 12px;display:table-cell;vertical-align:inherit;border:none;padding-top:10px;padding-bottom:10px;padding-left:10px;border-bottom:1px solid #e0e0e0" valign="inherit">
+          <table style="font-size: 12px;display:table;border-collapse:separate;border-spacing:2px;border-color:gray">
+            <tbody style="font-size: 12px;display:table-row-group;vertical-align:middle;border-color:inherit" valign="middle">
+              <tr style="font-size: 12px;display:table-row;vertical-align:inherit;border-color:inherit" valign="inherit">
+                <td style="font-size: 12px;display:table-cell;vertical-align:inherit;border:none;color:#5a5a5a;font-family:sans-serif;" valign="inherit">
+                  <p style="font-size: 12px;display:block;margin:0;">${ItemNome}</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+        <td align="center" style="font-size: 12px;display:table-cell;vertical-align:inherit;border:none;font-family:sans-serif;padding-top:10px;padding-bottom:10px;border-bottom:1px solid #e0e0e0" valign="inherit">${quantidadeInt}</td>
+      </tr>
+    `;
+                }
+
+                // Adiciona a linha com o total de itens
+                htmlItens += `
+    <tr style="font-size: 12px;display:table-row;vertical-align:inherit;border-color:inherit;text-align:left;color:#5a5a5a;font-size:14px;font-family:sans-serif" align="left" valign="inherit">
+      <td align="right" colspan="1" style="font-size: 12px;display:table-cell;vertical-align:inherit;border:none;font-family:sans-serif;padding:5px 0px 5px 10px" valign="inherit">
+        <span style="font-size: 12px;color:#5A5A5A;font-weight:bold">Total de itens&nbsp;</span>
+      </td>
+      <td align="center" style="font-size: 12px;display:table-cell;vertical-align:inherit;border:none;font-family:sans-serif;font-weight:bold;padding-right:0px" valign="inherit">
+        <span style="font-size: 12px;color:#5A5A5A;font-weight:bold">${totalItens}</span>
+      </td>
+    </tr>
+  `;
+
+                // Monta a tabela completa com o HTML dos itens
+                const htmlTabelaItens = `
+  <table cellspacing="0" cellpadding="0" border="0" style="font-size: 12px; display: table; border-collapse: separate; border-spacing: 2px; border-color: gray; width: 100%; margin: auto; text-align: center; border-radius: 20px; background: #fff;" align="center">
+    <tbody style="font-size: 12px; display: table-row-group; vertical-align: middle; border-color: inherit;" valign="middle">
+      <tr style="font-size: 12px; display: table-row; vertical-align: inherit; border-color: inherit;" valign="inherit">
+        <td style="font-size: 12px; display: table-cell; vertical-align: inherit; border: none;" valign="inherit">
+          <table width="100%" border="0" cellpadding="10" cellspacing="0" style="font-size: 12px; display: table; border-collapse: separate; border-spacing: 2px; border-color: gray; background: #fff;">
+            <tbody style="font-size: 12px; display: table-row-group; vertical-align: middle; border-color: inherit;" valign="middle">
+              <tr style="font-size: 12px; display: table-row; vertical-align: inherit; border-color: inherit; background: #fff;" align="left" valign="inherit">
+                <td width="5%" style="font-size: 12px; display: table-cell; vertical-align: inherit; border: none; background: #fff;" align="left" valign="inherit">
+                  <img src="https://mcusercontent.com/a908519133e0aa5f85fd3dbf0/images/b73d39ca-5dfa-4d8b-543d-4ed1b9d2ce16.jpg" width="27" height="27" align="left" style="font-size: 12px; max-width: 100vw; max-height: 83.3333vw;">
+                </td>
+                <td width="95%" style="font-size: 12px; display: table-cell; vertical-align: inherit; border: none; font-family: sans-serif; background: #fff; color: #5a5a5a; text-align: left; font-weight: bold; font-size: 15px;" align="left" valign="inherit">
+                  Sua compra
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table width="100%" border="0" cellpadding="0" cellspacing="0" style="font-size: 12px; display: table; border-collapse: separate; border-spacing: 2px; border-color: gray; font-family: sans-serif; background: #fff; color: #5A5A5A; margin-top: 30px;">
+            <tbody style="font-size: 12px; display: table-row-group; vertical-align: middle; border-color: inherit;" valign="middle">
+              <tr style="font-size: 12px; display: table-row; vertical-align: inherit; border-color: inherit; text-align: left; color: #5a5a5a; font-family: sans-serif;" align="left" valign="inherit">
+                <td style="font-size: 12px; display: table-cell; vertical-align: inherit; border: none; font-family: sans-serif; padding-bottom: 5px; padding-left: 10px; border-bottom: 1px solid #E0E0E0;" width="80%" valign="inherit">
+                  <label style="font-size: 12px; cursor: default; font-size: 12px; font-weight: bold;">Produto</label>
+                </td>
+                <td align="center" style="font-size: 12px; display: table-cell; vertical-align: inherit; border: none; font-family: sans-serif; padding-bottom: 5px; border-bottom: 1px solid #E0E0E0;" width="20%" valign="inherit">
+                  <span style="font-size: 12px; font-size: 12px; font-weight: bold;">Qtd</span>
+                </td>
+              </tr>
+              ${htmlItens}
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  `;
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "listaItens",
+                  `${htmlTabelaItens}`
+                );
+
+                // Opções do e-mail
+                const mailOptions = {
+                  from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
+                  to: `${Email}`, // E-mail do destinatário
+                  subject: `${Venda.EntregaNome.split(" ")[0]}, seu pedido n. ${
+                    Venda.Codigo
+                  } está chegando!`,
+                  text: whatsContentwow,
+                  html: emailContentWow,
+                };
+                enviarEmail(mailOptions);
+              }
+            } else if (
+              momentoTracking == 3 &&
+              whatsContentDBwow?.Mensagem &&
+              Venda.EntregaNome
+            ) {
+              // Cenário 3 - início
+
+              let whatsContentwow = substituirMarcador(
+                whatsContentDBwow?.Mensagem,
                 "primeiroNome",
                 Venda.EntregaNome.split(" ")[0]
-              );
-
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "conteudoEmail",
-                emailContentDBWow.Mensagem
-              );
-
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "numeroPedido",
-                `${Venda.Codigo}`
-              );
-
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "dataVenda",
-                Venda.DataVenda
               );
               // {{nomeTransportadoraNotaFiscal}}
 
               // Substui dados da entrega
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "enderecoEntrega",
-                `${Venda.EntregaLogradouro}, ${Venda.EntregaLogradouroNumero}, ${Venda.EntregaLogradouroComplemento}, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${Venda.EntregaUnidadeFederativa}`
-              );
-
               whatsContentwow = substituirMarcador(
                 whatsContentwow,
-                "transportadoraNome",
-                `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
-              );
-
-              whatsContentwow = substituirMarcador(
-                whatsContentwow,
-                "numeroNotaFiscal",
-                `${Venda.NotaFiscalNumero}`
-              );
-
-              // Opções do e-mail
-              const mailOptions = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `${Venda.EntregaEmail}`, // E-mail do destinatário
-                subject: "Seu pedido está chegando!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptions);
-              
-              // Opções do e-mail - Rodrigo
-              const mailOptionsRodrigo = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
-                subject: "Seu pedido está chegando!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptionsRodrigo);
-
-              // Opções do e-mail - Renan
-              const mailOptionsRenan = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `renan@d1fitness.com.br`, // E-mail do destinatário
-                subject: "Seu pedido está chegando!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptionsRenan);
-            }
-          } else if (
-            momentoTracking == 3 &&
-            whatsContentDBwow?.Mensagem &&
-            Venda.EntregaNome
-          ) {
-            // Cenário 3 - início
-
-            let whatsContentwow = substituirMarcador(
-              whatsContentDBwow?.Mensagem,
-              "primeiroNome",
-              Venda.EntregaNome.split(" ")[0]
-            );
-            // {{nomeTransportadoraNotaFiscal}}
-
-            // Substui dados da entrega
-            whatsContentwow = substituirMarcador(
-              whatsContentwow,
-              "numeroPedido",
-              `${Venda.Codigo}`
-            );
-
-            // Dispara msg whats
-            const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
-
-            const resZAPI = await request
-              .post(
-                "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
-              )
-              .set("Content-Type", "application/json")
-              .set("Client-Token", `${tokenZapi}`)
-              .send(bodyWhats1);
-
-            // Disparo e-mail - inicio
-            // estouaqui5
-            // Conteúdo do e-mail
-            // Caminho do arquivo HTML
-            const filePath = path.join(
-              __dirname,
-              "src",
-              `template-email-${qualMensagem}.html`
-            );
-
-            // Leitura do conteúdo do arquivo
-            let emailContentWow = await fs.readFile(filePath, "utf-8");
-
-            const emailContentDBWow =
-              await prisma.rastreioStatusEmail.findFirst({
-                where: {
-                  Status: qualMensagem,
-                },
-              });
-
-            if (emailContentDBWow?.Mensagem) {
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "primeiroNome",
-                Venda.EntregaNome.split(" ")[0]
-              );
-
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "conteudoEmail",
-                emailContentDBWow.Mensagem
-              );
-
-              emailContentWow = substituirMarcador(
-                emailContentWow,
                 "numeroPedido",
                 `${Venda.Codigo}`
               );
 
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "dataVenda",
-                Venda.DataVenda
-              );
-              // {{nomeTransportadoraNotaFiscal}}
+              // Dispara msg whats
+              const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
 
-              // Substui dados da entrega
-              emailContentWow = substituirMarcador(
-                emailContentWow,
-                "enderecoEntrega",
-                `${Venda.EntregaLogradouro}, ${Venda.EntregaLogradouroNumero}, ${Venda.EntregaLogradouroComplemento}, ${Venda.EntregaBairro}, ${Venda.EntregaMunicipioNome} / ${Venda.EntregaUnidadeFederativa}`
-              );
+              const resZAPI = await request
+                .post(
+                  "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
+                )
+                .set("Content-Type", "application/json")
+                .set("Client-Token", `${tokenZapi}`)
+                .send(bodyWhats1);
 
-              whatsContentwow = substituirMarcador(
-                whatsContentwow,
-                "transportadoraNome",
-                `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
-              );
-
-              whatsContentwow = substituirMarcador(
-                whatsContentwow,
-                "numeroNotaFiscal",
-                `${Venda.NotaFiscalNumero}`
+              // Disparo e-mail - inicio
+              // estouaqui5
+              // Conteúdo do e-mail
+              // Caminho do arquivo HTML
+              const filePath = path.join(
+                __dirname,
+                "",
+                `template-email-resp-${qualMensagem}.html`
               );
 
-              // Opções do e-mail
-              const mailOptions = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `${Venda.EntregaEmail}`, // E-mail do destinatário
-                subject: "Seu pedido foi entregue!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptions);
-              
-              // Opções do e-mail - Rodrigo
-              const mailOptionsRodrigo = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
-                subject: "Seu foi entregue!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptionsRodrigo);
-              
-              // Opções do e-mail - Renan
-              const mailOptionsRenan = {
-                from: '"D1 Fitness" <naoresponda@d1fitness.com.br>',
-                to: `renan@d1fitness.com.br`, // E-mail do destinatário
-                subject: "Seu foi entregue!",
-                text: whatsContentwow,
-                html: emailContentWow,
-              };
-              enviarEmail(mailOptionsRenan);
+              // Leitura do conteúdo do arquivo
+              let emailContentWow = await fs.readFile(filePath, "utf-8");
+
+              const emailContentDBWow =
+                await prisma.rastreioStatusEmail.findFirst({
+                  where: {
+                    Status: qualMensagem,
+                  },
+                });
+
+              if (emailContentDBWow?.Mensagem) {
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "primeiroNome",
+                  Venda.EntregaNome.split(" ")[0]
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "conteudoEmail",
+                  emailContentDBWow.Mensagem
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "numeroPedido",
+                  `${Venda.Codigo}`
+                );
+
+                const dataVendaFormatada = Venda.DataVenda.split("-")
+                  .reverse()
+                  .join("/");
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "dataVenda",
+                  dataVendaFormatada
+                );
+                // {{nomeTransportadoraNotaFiscal}}
+
+                // Substui dados da entrega
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "enderecoEntrega",
+                  `${Venda.EntregaLogradouro.split(",")[0]}, ${
+                    Venda.EntregaLogradouroNumero
+                  }, ${Venda.EntregaLogradouroComplemento}, ${
+                    Venda.EntregaBairro
+                  }, ${Venda.EntregaMunicipioNome} / ${
+                    Venda.EntregaUnidadeFederativa
+                  }`
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "transportadoraNome",
+                  `${retornaNomeTransportadora(Venda.TransportadoraCodigo)}`
+                );
+
+                emailContentWow = substituirMarcador(
+                  emailContentWow,
+                  "numeroNotaFiscal",
+                  `${Venda.NotaFiscalNumero}`
+                );
+
+                // Opções do e-mail
+                const mailOptions = {
+                  from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
+                  to: `${Email}`, // E-mail do destinatário
+                  subject: `${Venda.EntregaNome.split(" ")[0]}, seu pedido n. ${
+                    Venda.Codigo
+                  } foi entregue!`,
+                  text: whatsContentwow,
+                  html: emailContentWow,
+                };
+                enviarEmail(mailOptions);
+              }
             }
           }
-        }
 
-        async function processaVendaSSW(
-          prismaClient: PrismaClient,
-          vendaString: string
-        ) {
-          const venda = JSON.parse(vendaString);
+          async function processaVendaSSW(
+            prismaClient: PrismaClient,
+            vendaString: string
+          ) {
+            const venda = JSON.parse(vendaString);
 
-          try {
-            const resVenda = await pegaVenda(venda.Codigo);
+            try {
+              const resVenda = await pegaVenda(venda.Codigo);
 
-            if (resVenda) {
-              const resListaIntegracaoJson = JSON.parse(resVenda);
+              if (resVenda) {
+                const resListaIntegracaoJson = JSON.parse(resVenda);
 
-              if (
-                resListaIntegracaoJson.venda &&
-                resListaIntegracaoJson.venda.length > 0
-              ) {
-                for (const vendaJson of resListaIntegracaoJson.venda) {
-                  const {
-                    Codigo,
-                    ClienteCodigo,
-                    ClienteDocumento,
-                    TransportadoraCodigo,
-                    TransportadoraNome,
-                    DataVenda,
-                    Entrega,
-                    EntregaNome,
-                    EntregaEmail,
-                    NumeroObjeto,
-                    EntregaTelefone,
-                    Observacoes,
-                    ObservacoesLoja,
-                    CodigoStatus,
-                    DescricaoStatus,
-                    DataHoraStatus,
-                    PrevisaoEntrega,
-                    CodigoNotaFiscal,
-                    DataEntrega,
-                    Cancelada,
-                    DataEnvio,
-                    NotaFiscalNumero,
-                    DataColeta,
-                    ItensVenda,
-                  } = vendaJson as VendaInterface;
+                if (
+                  resListaIntegracaoJson.venda &&
+                  resListaIntegracaoJson.venda.length > 0
+                ) {
+                  for (const vendaJson of resListaIntegracaoJson.venda) {
+                    const {
+                      Codigo,
+                      ClienteCodigo,
+                      ClienteDocumento,
+                      TransportadoraCodigo,
+                      TransportadoraNome,
+                      DataVenda,
+                      Entrega,
+                      EntregaNome,
+                      EntregaEmail,
+                      NumeroObjeto,
+                      EntregaTelefone,
+                      Observacoes,
+                      ObservacoesLoja,
+                      CodigoStatus,
+                      DescricaoStatus,
+                      DataHoraStatus,
+                      PrevisaoEntrega,
+                      CodigoNotaFiscal,
+                      DataEntrega,
+                      Cancelada,
+                      DataEnvio,
+                      NotaFiscalNumero,
+                      DataColeta,
+                      ItensVenda,
+                    } = vendaJson as VendaInterface;
 
-                  // Pega ocorrencias rastreio
-                  // SSW
+                    // Pega ocorrencias rastreio
+                    // SSW
 
-                  const request = require("superagent");
+                    const request = require("superagent");
 
-                  // Busca dados NFe
-                  const resNfe = await request
-                    .get(
-                      `http://cloud01.alternativa.net.br:2086/root/nfe/${venda.CodigoNotaFiscal}`
-                    )
-                    .set("Accept", "application/json")
-                    .set("accept-encoding", "gzip")
-                    .set(
-                      "X-Token",
-                      "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs"
-                    );
+                    // Busca dados NFe
+                    const resNfe = await request
+                      .get(
+                        `http://cloud01.alternativa.net.br:2086/root/nfe/${venda.CodigoNotaFiscal}`
+                      )
+                      .set("Accept", "application/json")
+                      .set("accept-encoding", "gzip")
+                      .set(
+                        "X-Token",
+                        "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs"
+                      );
 
-                  const NfeJson = JSON.parse(resNfe.text);
+                    const NfeJson = JSON.parse(resNfe.text);
 
-                  interface Nfe {
-                    Codigo: number;
-                    CodigoVenda: number;
-                    CodigoCliente: number;
-                    DataEmissao: string;
-                    HoraEmissao: string;
-                    HoraSaida: string;
-                    Nfe: boolean;
-                    Nfce: boolean;
-                    NotaFiscalNumero: number;
-                    TransportadoraCodigo: number;
-                    TransportadoraNome: string;
-                    MeioTransporte: string;
-                    NumeroObjeto: string;
-                    NotaFiscalEletronica: string;
-                    Cancelada: boolean;
-                    MotivoCancelamento: string;
-                  }
+                    interface Nfe {
+                      Codigo: number;
+                      CodigoVenda: number;
+                      CodigoCliente: number;
+                      DataEmissao: string;
+                      HoraEmissao: string;
+                      HoraSaida: string;
+                      Nfe: boolean;
+                      Nfce: boolean;
+                      NotaFiscalNumero: number;
+                      TransportadoraCodigo: number;
+                      TransportadoraNome: string;
+                      MeioTransporte: string;
+                      NumeroObjeto: string;
+                      NotaFiscalEletronica: string;
+                      Cancelada: boolean;
+                      MotivoCancelamento: string;
+                    }
 
-                  const NotaFiscalEletronica =
-                    NfeJson.nfe[0].NotaFiscalEletronica;
+                    const NotaFiscalEletronica =
+                      NfeJson.nfe[0].NotaFiscalEletronica;
 
-                  // Busca ocorrencias na SSW - início
-                  // estouaqui3
-                  const resSSW = await request
-                    .post("https://ssw.inf.br/api/trackingdanfe")
-                    .set("Accept", "application/json")
-                    .set("Content-Type", "application/json")
-                    .send(`{"chave_nfe": "${NotaFiscalEletronica}"}`);
+                    // Busca ocorrencias na SSW - início
+                    // estouaqui3
+                    const resSSW = await request
+                      .post("https://ssw.inf.br/api/trackingdanfe")
+                      .set("Accept", "application/json")
+                      .set("Content-Type", "application/json")
+                      .send(`{"chave_nfe": "${NotaFiscalEletronica}"}`);
 
-                  const SSWocorrenciasJson = JSON.parse(resSSW.text);
+                    const SSWocorrenciasJson = JSON.parse(resSSW.text);
 
-                  if (SSWocorrenciasJson.success) {
-                    for (const row of SSWocorrenciasJson.documento.tracking) {
-                      async (
-                        row: {
-                          data_hora: string;
-                          dominio: string;
-                          filial: string;
-                          cidade: string;
-                          ocorrencia: string;
-                          descricao: string;
-                          tipo: string;
-                          data_hora_efetiva: string;
-                        },
-                        index: number
-                      ) => {
+                    if (SSWocorrenciasJson.success) {
+                      for (const row of SSWocorrenciasJson.documento.tracking) {
                         const {
                           data_hora,
                           dominio,
@@ -2144,30 +2186,37 @@ app.get("/updateRastreio", async (request, reply) => {
                           if (!jaAvisouPrevisaoEntrega) {
                             // Envia ocorrencias pro Whats
                             const telefoneRodrigo = "51991508579";
+                            const emailRodrigo = "c.albuquerque.rodrigo@gmail.com";
                             const telefoneRenan = "48988038546";
+                            const emailRenan ="renan@d1fitness.com.br";
                             await enviaWhatsTracking(
                               telefoneRodrigo,
+                              emailRodrigo,
                               JSON.stringify(vendaJson),
                               1,
                               data_hora,
                               previsaoEntrega
                             );
                             
-                            await enviaWhatsTracking(
-                              telefoneRenan,
-                              JSON.stringify(vendaJson),
-                              1,
-                              data_hora,
-                              previsaoEntrega
-                            );
-                            await enviaWhatsTracking(
-                              vendaJson.EntregaTelefone,
-                              JSON.stringify(vendaJson),
-                              1,
-                              data_hora,
-                              previsaoEntrega
-                            );
-                            
+                              await enviaWhatsTracking(
+                                telefoneRenan,
+                                emailRenan,
+                                JSON.stringify(vendaJson),
+                                1,
+                                data_hora,
+                                previsaoEntrega
+                              );
+                              
+                              await enviaWhatsTracking(
+                                vendaJson.EntregaTelefone,
+                                vendaJson.EntregaEmail,
+                                JSON.stringify(vendaJson),
+                                1,
+                                data_hora,
+                                previsaoEntrega
+                              );
+                              /* Desligando whatsprevisao entrega*/
+
                             console.log(
                               `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Previsao Entrega`
                             );
@@ -2188,43 +2237,48 @@ app.get("/updateRastreio", async (request, reply) => {
                             },
                           });
 
-                          const jaAvisouLastMile = await prisma.venda.findFirst(
-                            {
-                              where: {
-                                Codigo: Codigo,
-                                NOT: [{ LastMileRastreioAviso: "NULL" }],
-                              },
-                            }
-                          );
+                          const jaAvisouLastMile = await prisma.venda.findFirst({
+                            where: {
+                              Codigo: Codigo,
+                              NOT: [{ LastMileRastreioAviso: "NULL" }],
+                            },
+                          });
 
                           // #estouaqui
                           if (!jaAvisouLastMile) {
                             // Envia ocorrencias pro Whats
                             const telefoneRodrigo = "51991508579";
+                            const emailRodrigo =
+                              "c.albuquerque.rodrigo@gmail.com";
                             const telefoneRenan = "48988038546";
+                            const emailRenan ="renan@d1fitness.com.br";
                             await enviaWhatsTracking(
                               telefoneRodrigo,
+                              emailRodrigo,
                               JSON.stringify(vendaJson),
                               2,
                               data_hora,
                               ""
                             );
                             
-                            await enviaWhatsTracking(
-                              telefoneRenan,
-                              JSON.stringify(vendaJson),
-                              2,
-                              data_hora,
-                              ""
-                            );
-                            await enviaWhatsTracking(
-                              vendaJson.EntregaTelefone,
-                              JSON.stringify(vendaJson),
-                              2,
-                              data_hora,
-                              ""
-                            );
-                            
+                              await enviaWhatsTracking(
+                                telefoneRenan,
+                                emailRenan,
+                                JSON.stringify(vendaJson),
+                                2,
+                                data_hora,
+                                ""
+                              );
+                              
+                              await enviaWhatsTracking(
+                                vendaJson.EntregaTelefone,
+                                vendaJson.EntregaEmail,
+                                JSON.stringify(vendaJson),
+                                2,
+                                data_hora,
+                                ""
+                              );
+                              /* Desligando mensagens LastMail Renan e Cliente */
                             console.log(
                               `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Last Mile`
                             );
@@ -2245,43 +2299,49 @@ app.get("/updateRastreio", async (request, reply) => {
                             },
                           });
 
-                          const jaAvisouEntregue = await prisma.venda.findFirst(
-                            {
-                              where: {
-                                Codigo: Codigo,
-                                NOT: [{ EntregueRastreioAviso: null }],
-                              },
-                            }
-                          );
+                          const jaAvisouEntregue = await prisma.venda.findFirst({
+                            where: {
+                              Codigo: Codigo,
+                              NOT: [{ EntregueRastreioAviso: null }],
+                            },
+                          });
 
                           // #estouaqui2
                           if (!jaAvisouEntregue) {
                             // Envia ocorrencias pro Whats
                             const telefoneRodrigo = "51991508579";
+                            const emailRodrigo =
+                              "c.albuquerque.rodrigo@gmail.com";
                             const telefoneRenan = "48988038546";
+                            const emailRenan ="renan@d1fitness.com.br";
                             await enviaWhatsTracking(
                               telefoneRodrigo,
-                              JSON.stringify(vendaJson),
-                              3,
-                              data_hora,
-                              ""
-                            );
-                            
-                            await enviaWhatsTracking(
-                              telefoneRenan,
+                              emailRodrigo,
                               JSON.stringify(vendaJson),
                               3,
                               data_hora,
                               ""
                             );
                             await enviaWhatsTracking(
-                              vendaJson.EntregaTelefone,
-                              JSON.stringify(vendaJson),
-                              3,
-                              data_hora,
-                              ""
-                            );
-                            
+                                telefoneRenan,
+                                emailRenan,
+                                JSON.stringify(vendaJson),
+                                3,
+                                data_hora,
+                                ""
+                              );
+                              
+                              
+                              await enviaWhatsTracking(
+                                vendaJson.EntregaTelefone,
+                                vendaJson.EntregaEmail,
+                                JSON.stringify(vendaJson),
+                                3,
+                                data_hora,
+                                ""
+                              );
+                              /* Desligando mensagens Entregue Renan e Cliente */
+
                             console.log(
                               `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Pedido Entregue`
                             );
@@ -2294,59 +2354,58 @@ app.get("/updateRastreio", async (request, reply) => {
                             });
                           }
                         }
-                      };
+                      }
+                    } else {
+                      console.log("Não retornou tracking SSW");
                     }
-                  } else {
-                    console.log("Não retornou tracking SSW");
                   }
                 }
+              } else {
+                console.error(`Erro ao obter a venda: ${venda.Codigo}`);
               }
-            } else {
-              console.error(`Erro ao obter a venda: ${venda.Codigo}`);
+            } catch (error) {
+              console.error(`Erro ao processar a venda ${venda.Codigo}:`, error);
             }
-          } catch (error) {
-            console.error(`Erro ao processar a venda ${venda.Codigo}:`, error);
           }
-        }
 
-        // Processa as vendas do lote atual
-        for (const venda of vendasFiltradasSSW) {
-          const vendaString = JSON.stringify(venda);
-          await processaVendaSSW(prisma, vendaString);
-        }
+          // Processa as vendas do lote atual
+          for (const venda of vendasFiltradasSSW) {
+            const vendaString = JSON.stringify(venda);
+            await processaVendaSSW(prisma, vendaString);
+          }
 
-        // Verifica se todos os registros foram processados
-        if (vendasFiltradasSSW.length < tamanhoLote) {
-          todasVendasProcessadas = true;
-        } else {
-          offset += tamanhoLote;
-        }
-      },
-      { timeout: 120000 }
-    );
-  }
+          // Verifica se todos os registros foram processados
+          if (vendasFiltradasSSW.length < tamanhoLote) {
+            todasVendasProcessadas = true;
+          } else {
+            offset += tamanhoLote;
+          }
+        },
+        { timeout: 120000 }
+      );
+    }
 
-  const totalVendasParaUpdate = await prisma.venda.findMany({
-    select: {
-      Codigo: true,
-    },
-    where: {
-      DataHoraStatus: {
-        gt: dataLimite.toISOString(),
+    const totalVendasParaUpdate = await prisma.venda.findMany({
+      select: {
+        Codigo: true,
       },
-      DescricaoStatus: "Enviado",
-      Cancelada: false,
-      TransportadoraCodigo: {
-        in: [122, 151, 112, 110, 120, 210, 223, 224],
+      where: {
+        DataHoraStatus: {
+          gt: dataLimite.toISOString(),
+        },
+        DescricaoStatus: "Enviado",
+        Cancelada: false,
+        TransportadoraCodigo: {
+          in: [122, 151, 112, 110, 120, 210, 223, 224],
+        },
       },
-    },
+    });
+
+    console.log(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
+    return reply
+      .status(200)
+      .send(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
   });
-
-  console.log(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
-  return reply
-    .status(200)
-    .send(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
-});
 
 // Endpoint: Update Tracking Rastreio - fim
 
