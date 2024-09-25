@@ -917,6 +917,7 @@ app.get("/updateVendas", async (request, reply) => {
 
       enviarEmail(mailOptions);
 
+      /* Desligando email Renan 
       const mailOptionsRenan = {
         from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `renan@d1fitness.com.br`, // E-mail do destinatário
@@ -928,7 +929,7 @@ app.get("/updateVendas", async (request, reply) => {
       };
       enviarEmail(mailOptionsRenan);
       
-      /* Desligando email Renan e Cliente */
+       */
 
     } else if (
       vendaJson.DescricaoStatus == "Enviado" &&
@@ -1043,6 +1044,7 @@ app.get("/updateVendas", async (request, reply) => {
 
       enviarEmail(mailOptions);
 
+      /* Desligando e-mail Renan 
       const mailOptionsRenan = {
         from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `renan@d1fitness.com.br`, // E-mail do destinatário
@@ -1054,7 +1056,7 @@ app.get("/updateVendas", async (request, reply) => {
       };
       enviarEmail(mailOptionsRenan);
       
-      /* Desligando e-mail Renan e Cliente */
+       */
     }
   }
 
@@ -2197,10 +2199,10 @@ app.get("/updateVendas", async (request, reply) => {
                               data_hora,
                               previsaoEntrega
                             );
-                            
+                            // Deixando apena whats pro Renan
                               await enviaWhatsTracking(
                                 telefoneRenan,
-                                emailRenan,
+                                emailRodrigo,
                                 JSON.stringify(vendaJson),
                                 1,
                                 data_hora,
@@ -2260,10 +2262,10 @@ app.get("/updateVendas", async (request, reply) => {
                               data_hora,
                               ""
                             );
-                            
+                            // Deixando apena o whats pro Renan
                               await enviaWhatsTracking(
                                 telefoneRenan,
-                                emailRenan,
+                                emailRodrigo,
                                 JSON.stringify(vendaJson),
                                 2,
                                 data_hora,
@@ -2278,7 +2280,7 @@ app.get("/updateVendas", async (request, reply) => {
                                 data_hora,
                                 ""
                               );
-                              /* Desligando mensagens LastMail Renan e Cliente */
+                              /* Desligando mensagens LastMile Renan e Cliente */
                             console.log(
                               `Envio whats cliente. Pedido: ${venda.Codigo}. Motivo: Last Mile`
                             );
@@ -2322,9 +2324,10 @@ app.get("/updateVendas", async (request, reply) => {
                               data_hora,
                               ""
                             );
+                            // Deixando apena whats pro Renan
                             await enviaWhatsTracking(
                                 telefoneRenan,
-                                emailRenan,
+                                emailRodrigo,
                                 JSON.stringify(vendaJson),
                                 3,
                                 data_hora,
