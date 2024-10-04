@@ -168,3 +168,13 @@ model RastreioUpdateStatus {
     CodigoVenda           String
     DataHora       DateTime @default(now())
 }
+
+model ConversationContext {
+  id        Int      @id @default(autoincrement())
+  phone     String   @unique
+  lastMessage String
+  context   String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}

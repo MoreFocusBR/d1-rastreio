@@ -16,6 +16,9 @@ import { error } from "console";
 import { Options } from "nodemailer/lib/mailer";
 import { json } from "stream/consumers";
 import { promises as fs } from "fs";
+import { handleIncomingMessage } from './zapi';
+import dayjs from "dayjs";
+
 
 const app = fastify();
 
@@ -3727,6 +3730,35 @@ app.post("/zapi", async (request, reply) => {
   }
 });
 
+
+// Webhook Z-API -> Blip Rastreio - inicio
+
+app.post("/botpress", async (request, reply) => {
+  const requestSA = require("superagent");
+
+  if (typeof request.body === "object" && request.body !== null) {
+    const telefoneCliente = (request.body as { phone: string }).phone;
+    const mensagemCliente = (request.body as { text: { message: string } }).text.message;
+
+      await prisma.conversationContext.create({
+        data: {
+          phone: "5551991508579",
+          lastMessage: JSON.stringify(request.body),
+          context: 'Experiência positiva',
+          expiresAt: dayjs().add(48, 'hour').toDate(),
+        },
+      });
+
+    return reply
+      .status(200)
+      .send(await JSON.parse(JSON.stringify(request.body)));
+  } else {
+    console.error(error);
+
+    return reply.status(500).send(error);
+  }
+});
+
 // Blip -> Whats Rastreio - inicio
 
 app.post("/whatsrastreio", async (request, reply) => {
@@ -3832,6 +3864,12 @@ app.get("/metricasPercTransportadora", async (request, reply) => {
 });
 
 // Endpoint: Retorna Metricas - fim
+
+// Chatbot pós-venda - início
+
+app.post('/zapi2', handleIncomingMessage);
+
+// Chatbot pós-venda - fim
 
 // Exibe HTML - inicio
 
