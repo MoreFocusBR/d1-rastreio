@@ -3737,8 +3737,8 @@ app.post("/botpress", async (request, reply) => {
   const requestSA = require("superagent");
 
   if (typeof request.body === "object" && request.body !== null) {
-    const telefoneCliente = (request.body as { phone: string }).phone;
-    const mensagemCliente = (request.body as { text: { message: string } }).text.message;
+    //const telefoneCliente = (request.body as { phone: string }).phone;
+    //const mensagemCliente = (request.body as { text: { message: string } }).text.message;
 
       await prisma.conversationContext.create({
         data: {
