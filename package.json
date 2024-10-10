@@ -27,6 +27,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "@botpress/chat": "^0.4.0",
     "@fastify/static": "github:fastify/fastify-static",
     "@prisma/adapter-pg": "^5.10.2",
     "@prisma/client": "^5.10.2",

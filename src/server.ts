@@ -16,7 +16,7 @@ import { error } from "console";
 import { Options } from "nodemailer/lib/mailer";
 import { json } from "stream/consumers";
 import { promises as fs } from "fs";
-import { handleIncomingMessage } from './zapi';
+import { enviaMsgAvaliacao, handleIncomingMessage } from './zapi';
 import dayjs from "dayjs";
 
 
@@ -3864,6 +3864,12 @@ app.get("/metricasPercTransportadora", async (request, reply) => {
 });
 
 // Endpoint: Retorna Metricas - fim
+
+// Chatbot pós-venda mensagem 25 dias - início
+
+app.post('/enviaMsgAvaliacao', enviaMsgAvaliacao);
+
+// Chatbot pós-venda mensagem 25 dias - fim
 
 // Chatbot pós-venda - início
 

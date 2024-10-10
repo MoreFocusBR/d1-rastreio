@@ -171,7 +171,7 @@ model RastreioUpdateStatus {
 
 model ConversationContext {
   id        Int      @id @default(autoincrement())
-  phone     String   @unique
+  phone     String   
   lastMessage String
   context   String
   updatedAt DateTime @updatedAt
