@@ -137,7 +137,7 @@ const handleNormalFlow = async (
         //Avisa que precisa de atendimento
         const whatsContent2 =
         `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${context}`;
-        await sendWhatsAppMessage(phone, whatsContent2);
+        await sendWhatsAppMessage("555119930373935", whatsContent2);
     } else if (mensagemCliente === "2") {
       // Envia mensagem de desculpas e cria um contexto
       await prisma.conversationContext.create({
@@ -178,6 +178,10 @@ const handleNormalFlow = async (
           expiresAt: dayjs().toDate(),
         },
       });
+
+      //Abrir tarefa Asana
+      
+      criarTarefaAsana(context);
 
     } else if (mensagemCliente === "2") {
       // Encerra conversa e cria um contexto
