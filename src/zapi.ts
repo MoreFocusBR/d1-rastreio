@@ -56,7 +56,7 @@ export const handleIncomingMessage = async (
     }
   } else {
     // Se tá no contexto posvenda, segue o fluxo
-    if (context?.context.includes("posvenda-")) {
+    if (context?.context.includes("posvenda-") && dayjs(context.expiresAt).isAfter(now)) {
       // Não há contexto prévio, segue o fluxo normal
       await handleNormalFlow(mensagemCliente, phone, context.context);
     } // Não há contexto ativo, perguntar se quer continuar o último assunto
@@ -81,19 +81,20 @@ const handleNormalFlow = async (
 ) => {
   const requestSA = require("superagent");
   if (context && context === "posvenda-avaliacao") {
+    // Experiencia POSITIVA
     if (mensagemCliente === "1") {
       // Envia mensagem de agradecimento e cria um contexto
       await prisma.conversationContext.create({
         data: {
           phone,
           lastMessage: mensagemCliente,
-          context: "posvenda-experienciaPositiva",
+          context: "posvenda-CSATEnviada",
           expiresAt: dayjs().add(48, "hour").toDate(),
         },
       });
       const whatsContent =
-        "Que ótimo saber disso! Estamos sempre à disposição e esperamos vê-lo novamente!";
-      await sendWhatsAppMessage(phone, whatsContent);
+        "Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://form.respondi.app/CEAQHsaj ";
+        await sendWhatsAppMessage(phone, whatsContent);
     } else if (mensagemCliente === "2") {
       // Envia mensagem de desculpas e cria um contexto
       await prisma.conversationContext.create({
@@ -105,7 +106,7 @@ const handleNormalFlow = async (
         },
       });
       const whatsContent =
-        "Poxa, sentimos muito que sua experiência não foi das melhores. Podemos encaminhar para o nosso atendimento?";
+        "Poxa, sentimos muito que sua experiência não foi das melhores. 😞 Essa definitivamente não é a impressão que queremos causar. Podemos encaminhar para o nosso atendimento e entender o que ocorreu? 🙏\n\n 1 Sim\n 2 Não";
       await sendWhatsAppMessage(phone, whatsContent);
     } else {
       // Pede para responder apenas o número
@@ -117,39 +118,50 @@ const handleNormalFlow = async (
     }
 
     // Experiencia POSITIVA
-  } else if (context && context === "posvenda-experienciaPositiva") {
-    // Pede pra avaliar no Respondi
-    const whatsContent =
-      "Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://form.respondi.app/CEAQHsaj ";
-    await sendWhatsAppMessage(
-      phone,
-      whatsContent
-    );
-    await prisma.conversationContext.create({
-      data: {
-        phone: "5551991508579",
-        lastMessage: JSON.stringify(whatsContent),
-        context: "posvenda-CSATEnviada",
-        expiresAt: dayjs().toDate(),
-      },
-    });
-
-    // Experiencia NEGATIVA
   } else if (context && context === "posvenda-experienciaNegativa") {
     // Pede pra avaliar no Respondi
-    const whatsContent = "Poxa, sentimos muito que sua experiência não foi das melhores. 😞 Essa definitivamente não é a impressão que queremos causar. Como forma de compensar sua experiência de compra, você aceitaria um cupom exclusivo de desconto para utilizar me nosso site?\n\n 1 Sim\n 2 Não";
-    await sendWhatsAppMessage(
-      phone,
-      whatsContent
-    );
-    await prisma.conversationContext.create({
-      data: {
-        phone: "5551991508579",
-        lastMessage: JSON.stringify(whatsContent),
-        context: "posvenda-desejaCupom",
-        expiresAt: dayjs().add(48, "hour").toDate(),
-      },
-    });
+    if (mensagemCliente === "1") {
+      // Envia mensagem de agradecimento e cria um contexto
+      await prisma.conversationContext.create({
+        data: {
+          phone,
+          lastMessage: mensagemCliente,
+          context: "posvenda-EncaminhadoAtendimento",
+          expiresAt: dayjs().add(48, "hour").toDate(),
+        },
+      });
+      const whatsContent =
+        "Um de nossos atendentesentrará em contato com você em breve para entender a situação. Agradecemos sua paciência e compreensão. 🙏";
+        await sendWhatsAppMessage(phone, whatsContent);
+
+        //Avisa que precisa de atendimento
+        const whatsContent2 =
+        `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${context}`;
+        await sendWhatsAppMessage(phone, whatsContent2);
+    } else if (mensagemCliente === "2") {
+      // Envia mensagem de desculpas e cria um contexto
+      await prisma.conversationContext.create({
+        data: {
+          phone,
+          lastMessage: mensagemCliente,
+          context: "posvenda-desejaCupom",
+          expiresAt: dayjs().add(48, "hour").toDate(),
+        },
+      });
+      const whatsContent =
+        "Entendemos sua decisão, mas gostaríamos muito de ajudar a resolver qualquer problema que tenha ocorrido. 😊 Sua satisfação é muito importante pra nós. Agradecemos por compartilhar sua experiência e esperamos poder atendê-lo melhor no futuro. 🙏";
+      await sendWhatsAppMessage(phone, whatsContent);
+      const whatsContent2 =
+        "Como forma de compansar sua experiência de compra, você aceitaria um cupom exclusivo de desconto para utilizar no nosso site? 😊\n\n 1 Sim\n 2 Não";
+      await sendWhatsAppMessage(phone, whatsContent2);
+    } else {
+      // Pede para responder apenas o número
+      const whatsContent = "Por favor, responda apenas com o número";
+      await sendWhatsAppMessage(
+        phone,
+        whatsContent
+      );
+    }
   } else if (context && context === "posvenda-desejaCupom") {
     if (mensagemCliente === "1") {
       // Envia Cupom
@@ -182,6 +194,8 @@ const handleNormalFlow = async (
           expiresAt: dayjs().toDate(),
         },
       })
+
+      criarTarefaAsana(context);
     } else {
       // Pede para responder apenas o número
       const whatsContent = "Por favor, responda apenas com o número";
@@ -211,8 +225,8 @@ export const enviaMsgAvaliacao = async (
   };
   const mensagemCliente = text.message.trim();
 
-  const whatsContent = `E aí, Rodrigo! Tudo certo? Queremos saber como foi sua experiência de compra na D1Fitness. 💪\n\n 1 Minha experiência foi top! 😀\n 2 Não curti muito a experiência 😕`;
-  const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
+  //const whatsContent = `E aí, Rodrigo! Tudo certo? Queremos saber como foi sua experiência de compra na D1Fitness. 💪\n\n 1 Minha experiência foi top! 😀\n 2 Não curti muito a experiência 😕`;
+  const bodyWhats = `{"phone": "${phone}","message": "${mensagemCliente}"}`;
 
   const resZAPI = await requestSA
     .post(
@@ -224,8 +238,8 @@ export const enviaMsgAvaliacao = async (
 
   await prisma.conversationContext.create({
     data: {
-      phone: "5551991508579",
-      lastMessage: JSON.stringify(whatsContent),
+      phone: `${phone}`,
+      lastMessage: JSON.stringify(mensagemCliente),
       context: "posvenda-avaliacao",
       expiresAt: dayjs().add(48, "hour").toDate(),
     },

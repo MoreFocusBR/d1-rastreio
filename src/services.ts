@@ -2,10 +2,10 @@ const request = require("superagent");
 
 // Endpoint para enviar mensagem via Z-API
 export const sendWhatsAppMessage = async (foneClient: string, whatsContent: string) => {
-  const tokenZapi = '996973B6263DE0E95A59EF47';
-  const url = `https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/${tokenZapi}/send-text`;
+  const tokenZapi = 'F622e76b1e3f64e2a9517d207fe923fa5S';
+  const url = `https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text`;
   
-  /*
+  
   await request
     .post(url)
     .set('Client-Token', tokenZapi)
@@ -13,7 +13,7 @@ export const sendWhatsAppMessage = async (foneClient: string, whatsContent: stri
       phone: foneClient,
       message: whatsContent,
     });
-    */
+    
    console.log(whatsContent);
 };
 
@@ -48,7 +48,7 @@ export const abrirProtocoloASC = async (foneClient: string) => {
 };
 
 // Criar uma tarefa no Asana
-export const criarTarefaAsana = async () => {
+export const criarTarefaAsana: (Codigo: string) => Promise<void>  = async () => {
   const asanaToken = 'Bearer your-asana-token';
   const url = 'https://app.asana.com/api/1.0/tasks';
   
@@ -57,9 +57,12 @@ export const criarTarefaAsana = async () => {
     .set('Authorization', asanaToken)
     .send({
       data: {
-        name: 'Análise de jornada negativa',
-        notes: 'A tarefa foi criada após uma experiência negativa de um cliente',
-        projects: ['12345'],
+        name: `Análise de jornada negativa - Pedido ${Codigo}`,
+        notes: `Pedido ${Codigo} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
+        projects: ['1208480182057658'], 
+        assignee: '1206778681943779',
+        followers: ['1208207258580881'],
+        workspace: '1208207335184759'
       }
     });
 };
