@@ -172,7 +172,7 @@ const handleNormalFlow = async (
       );
       await prisma.conversationContext.create({
         data: {
-          phone: "5551991508579",
+          phone,
           lastMessage: JSON.stringify(whatsContent),
           context: "posvenda-CupomEnviado",
           expiresAt: dayjs().toDate(),
@@ -188,7 +188,7 @@ const handleNormalFlow = async (
       );
       await prisma.conversationContext.create({
         data: {
-          phone: "5551991508579",
+          phone,
           lastMessage: mensagemCliente,
           context: "posvenda-naoQuisCupom",
           expiresAt: dayjs().toDate(),
