@@ -44,7 +44,7 @@ export const handleIncomingMessage = async (
       );
     } else if (mensagemCliente === "NÃO") {
       // Redireciona para o SAC e apaga o contexto
-      await prisma.conversationContext.delete({ where: { phone } });
+      // await prisma.conversationContext.delete({ where: { phone } });
       await sendWhatsAppMessage(
         phone,
         "Para retirar suas dúvidas, conte sempre com nosso time do SAC no número 11930373935 😉\n\n"
@@ -83,7 +83,7 @@ const handleNormalFlow = async (
     // Pega venda do cliente
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
-      where: { phone, NOT: { codigoVenda: null } },
+      where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
       orderBy: { createdAt: "desc" },
     });
 
@@ -129,7 +129,7 @@ const handleNormalFlow = async (
     // Pega venda do cliente
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
-      where: { phone, NOT: { codigoVenda: null } },
+      where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
       orderBy: { createdAt: "desc" },
     });
     
@@ -177,19 +177,19 @@ const handleNormalFlow = async (
       );
     }
   } else if (context && context === "posvenda-desejaCupom") {
-    // Verificar se há um contexto ativo
+    // Pega venda do cliente
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
-      where: { phone, NOT: { codigoVenda: null } },
+      where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
       orderBy: { createdAt: "desc" },
     });
 
     const request = require("superagent");
       
-    async function criarTarefaAsana (Codigo: string)  {
+    async function criarTarefaAsana(Codigo: string) {
       const asanaToken = 'Bearer your-asana-token';
       const url = 'https://app.asana.com/api/1.0/tasks';
-      
+    
       await request
         .post(url)
         .set('Authorization', asanaToken)
@@ -197,13 +197,13 @@ const handleNormalFlow = async (
           data: {
             name: `Análise de jornada negativa - Pedido ${Codigo}`,
             notes: `Pedido ${Codigo} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
-            projects: ['1208480182057658'], 
+            projects: ['1208480182057658'],
             assignee: '1206778681943779',
             followers: ['1208207258580881'],
             workspace: '1208207335184759'
           }
         });
-    };
+    }
     
     if (mensagemCliente === "1") {
       // Envia Cupom
