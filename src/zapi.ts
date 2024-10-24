@@ -80,6 +80,13 @@ const handleNormalFlow = async (
 ) => {
   const requestSA = require("superagent");
   if (context && context === "posvenda-avaliacao") {
+    // Pega venda do cliente
+    let contextoCodigoVenda: any = "";
+    contextoCodigoVenda = await prisma.conversationContext.findFirst({
+      where: { phone, NOT: { codigoVenda: null } },
+      orderBy: { createdAt: "desc" },
+    });
+
     // Experiencia POSITIVA
     if (mensagemCliente === "1") {
       // Envia mensagem de agradecimento e cria um contexto
@@ -92,7 +99,7 @@ const handleNormalFlow = async (
         },
       });
       const whatsContent =
-        "Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://form.respondi.app/CEAQHsaj ";
+        `Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://form.respondi.app/CEAQHsaj?utm_source=${contextoCodigoVenda.codigoVenda} `;
         await sendWhatsAppMessage(phone, whatsContent);
     } else if (mensagemCliente === "2") {
       // Envia mensagem de desculpas e cria um contexto
@@ -119,7 +126,7 @@ const handleNormalFlow = async (
     // Experiencia POSITIVA
   } else if (context && context === "posvenda-experienciaNegativa") {
     // Pede pra avaliar no Respondi
-    // Verificar se há um contexto ativo
+    // Pega venda do cliente
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
       where: { phone, NOT: { codigoVenda: null } },
