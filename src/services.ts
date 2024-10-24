@@ -58,7 +58,7 @@ export const criarTarefaAsana: (Codigo: string) => Promise<void>  = async () => 
     .send({
       data: {
         name: `Análise de jornada negativa - Pedido ${Codigo}`,
-        notes: `Pedido ${Codigo} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
+        notes: `Pedido 1234 - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
         projects: ['1208480182057658'], 
         assignee: '1206778681943779',
         followers: ['1208207258580881'],
