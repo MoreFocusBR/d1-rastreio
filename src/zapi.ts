@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client";
 import {
   sendWhatsAppMessage,
   abrirProtocoloASC,
-  criarTarefaAsana,
 } from "./services";
 import dayjs from "dayjs";
 
@@ -120,6 +119,13 @@ const handleNormalFlow = async (
     // Experiencia POSITIVA
   } else if (context && context === "posvenda-experienciaNegativa") {
     // Pede pra avaliar no Respondi
+    // Verificar se há um contexto ativo
+    let contextoCodigoVenda: any = "";
+    contextoCodigoVenda = await prisma.conversationContext.findFirst({
+      where: { phone, NOT: { codigoVenda: null } },
+      orderBy: { createdAt: "desc" },
+    });
+    
     if (mensagemCliente === "1") {
       // Envia mensagem de agradecimento e cria um contexto
       await prisma.conversationContext.create({
@@ -135,8 +141,9 @@ const handleNormalFlow = async (
         await sendWhatsAppMessage(phone, whatsContent);
 
         //Avisa que precisa de atendimento
+        
         const whatsContent2 =
-        `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${context}`;
+        `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${contextoCodigoVenda.codigoVenda}`;
         await sendWhatsAppMessage("555119930373935", whatsContent2);
     } else if (mensagemCliente === "2") {
       // Envia mensagem de desculpas e cria um contexto
@@ -152,7 +159,7 @@ const handleNormalFlow = async (
         "Entendemos sua decisão, mas gostaríamos muito de ajudar a resolver qualquer problema que tenha ocorrido. 😊 Sua satisfação é muito importante pra nós. Agradecemos por compartilhar sua experiência e esperamos poder atendê-lo melhor no futuro. 🙏";
       await sendWhatsAppMessage(phone, whatsContent);
       const whatsContent2 =
-        "Como forma de compansar sua experiência de compra, você aceitaria um cupom exclusivo de desconto para utilizar no nosso site? 😊\n\n 1 Sim\n 2 Não";
+        "Como forma de compensar sua experiência de compra, você aceitaria um cupom exclusivo de desconto para utilizar no nosso site? 😊\n\n 1 Sim\n 2 Não";
       await sendWhatsAppMessage(phone, whatsContent2);
     } else {
       // Pede para responder apenas o número
@@ -163,6 +170,34 @@ const handleNormalFlow = async (
       );
     }
   } else if (context && context === "posvenda-desejaCupom") {
+    // Verificar se há um contexto ativo
+    let contextoCodigoVenda: any = "";
+    contextoCodigoVenda = await prisma.conversationContext.findFirst({
+      where: { phone, NOT: { codigoVenda: null } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const request = require("superagent");
+      
+    async function criarTarefaAsana (Codigo: string)  {
+      const asanaToken = 'Bearer your-asana-token';
+      const url = 'https://app.asana.com/api/1.0/tasks';
+      
+      await request
+        .post(url)
+        .set('Authorization', asanaToken)
+        .send({
+          data: {
+            name: `Análise de jornada negativa - Pedido ${Codigo}`,
+            notes: `Pedido ${Codigo} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
+            projects: ['1208480182057658'], 
+            assignee: '1206778681943779',
+            followers: ['1208207258580881'],
+            workspace: '1208207335184759'
+          }
+        });
+    };
+    
     if (mensagemCliente === "1") {
       // Envia Cupom
       const whatsContent = "Ficamos felizes em oferecer uma forma de compensar sua experiência de compra. Aqui está um cupom exclusivo para você utilizar em nosso site: #EUVOLTEI. Esperamos que aproveite 😊";
@@ -181,7 +216,7 @@ const handleNormalFlow = async (
 
       //Abrir tarefa Asana
       
-      criarTarefaAsana(context);
+      criarTarefaAsana(contextoCodigoVenda.codigoVenda);
 
     } else if (mensagemCliente === "2") {
       // Encerra conversa e cria um contexto
@@ -223,9 +258,10 @@ export const enviaMsgAvaliacao = async (
   reply: FastifyReply
 ) => {
   const requestSA = require("superagent");
-  const { phone, text } = request.body as {
+  const { phone, text, codigoVenda } = request.body as {
     phone: string;
     text: { message: string };
+    codigoVenda: string;
   };
   const mensagemCliente = text.message.trim();
 
@@ -243,6 +279,7 @@ export const enviaMsgAvaliacao = async (
   await prisma.conversationContext.create({
     data: {
       phone: `${phone}`,
+      codigoVenda: `${codigoVenda}`,
       lastMessage: JSON.stringify(mensagemCliente),
       context: "posvenda-avaliacao",
       expiresAt: dayjs().add(48, "hour").toDate(),

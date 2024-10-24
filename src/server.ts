@@ -2415,6 +2415,218 @@ app.get("/updateVendas", async (request, reply) => {
 
 // Endpoint: Update Tracking Rastreio - fim
 
+
+// Endpoint: Update Tracking Rastreio - início
+
+app.get("/updateRastreioAvaliacao", async (request, reply) => {
+  interface RouteParams {
+    diasPeriodo: number;
+  }
+
+  const params = request.query as RouteParams;
+  const codigoInicial = params.diasPeriodo;
+
+  async function pegaVenda(Codigo: number) {
+    try {
+      const request = require("superagent");
+      const resVenda = await request
+        .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
+        .set("Accept", "application/json")
+        .set("accept-encoding", "gzip")
+        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+      //.set("Limit", "1");
+
+      //resVenda.body;
+
+      if (resVenda.status == 200) {
+        return JSON.stringify(resVenda.body);
+      } else {
+        throw new Error("Erro ao obter o lista integração.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Função para substituir o marcador pela variável
+  function substituirMarcador(
+    mensagem: string,
+    marcador: string,
+    conteudo: string
+  ) {
+    return mensagem.replace(new RegExp(`{{${marcador}}}`, "g"), conteudo);
+  }
+
+  const dataLimite = new Date();
+  dataLimite.setDate(dataLimite.getDate() - params.diasPeriodo); // Subtrai X dias da data atual
+  const dataLimiteFim = new Date();
+  dataLimiteFim.setDate(dataLimiteFim.getDate() - (params.diasPeriodo + 1)); // Subtrai X dias da data atual
+
+  // Define o tamanho do lote para a paginação
+  const tamanhoLote = 30; // Pode ajustar conforme necessário
+
+  let offset = 0;
+  let todasVendasProcessadas = false;
+
+  while (!todasVendasProcessadas) {
+    await prisma.$transaction(
+      async (prismaClient) => {
+        const vendasFiltradasSSW = await prismaClient.venda.findMany({
+          take: tamanhoLote,
+          skip: offset,
+          where: {
+            DataHoraStatus: {
+              gte: dataLimite.toISOString(),
+              lte: dataLimiteFim.toISOString(),
+            },
+            DescricaoStatus: "Enviado",
+            Cancelada: false,
+            NOT: [{ AvaliacaoAviso: null }],
+          },
+          orderBy: {
+            Codigo: "desc",
+          },
+        });
+
+        interface ItensVenda {
+          Codigo: number;
+          ProdutoReferencia: string;
+          ProdutoBarras: string;
+          ProdutoBundleCodigo: number;
+          VendaCodigo: number;
+          ProdutoCodigo: number;
+          PrecoUnitarioVenda: string;
+          PrecoUnitarioCusto: string;
+          EmbaladoParaPresente: boolean;
+          ValorEmbalagemPresente: string;
+          Quantidade: string;
+          AtributosEspeciais: string;
+          ItemNome: string;
+          ItemDescontoPercentual: string;
+          ItemDescontoValor: string;
+          ItemValorBruto: string;
+          ItemValorLiquido: string;
+          Servico: boolean;
+          Movimentacao: object;
+        }
+        interface VendaInterface {
+          Codigo: number;
+          ClienteCodigo: number;
+          ClienteDocumento: string;
+          TransportadoraCodigo: number | null;
+          TransportadoraNome: string | null;
+          DataVenda: string | null;
+          Entrega: boolean;
+          EntregaNome: string | null;
+          EntregaEmail: string | null;
+          NumeroObjeto: string | null;
+          EntregaTelefone: string | null;
+          EntregaLogradouro: string | null;
+          EntregaLogradouroNumero: string | null;
+          EntregaLogradouroComplemento: string | null;
+          EntregaBairro: string | null;
+          EntregaMunicipioNome: string | null;
+          EntregaUnidadeFederativa: string | null;
+          EntregaCEP: string | null;
+          Observacoes: string | null;
+          ObservacoesLoja: string | null;
+          CodigoStatus: number | null;
+          DescricaoStatus: string | null;
+          DataHoraStatus: string | null;
+          PrevisaoEntrega: string | null;
+          PrevisaoEntregaRastreio: string | null;
+          CodigoNotaFiscal: number | null;
+          DataEntrega: string | null;
+          Cancelada: boolean;
+          DataEnvio: string | null;
+          NotaFiscalNumero: number | null;
+          DataColeta: string | null;
+          ItensVenda: ItensVenda[];
+        }
+
+        async function enviaWhatsAvaliacao(
+          VendaString: any,
+        ) {
+          const Venda = JSON.parse(VendaString);
+          const request = require("superagent");
+          let qualMensagem = "";
+
+          // Mensagem Wow
+          const whatsContentDBwow = await prisma.rastreioStatusWhats.findFirst({
+            where: {
+              Status: "AvisoAvaliacaoPosVenda",
+            },
+          });
+
+          if (
+            whatsContentDBwow?.Mensagem &&
+            Venda.EntregaNome
+          ) {
+            let whatsContentwow = substituirMarcador(
+              whatsContentDBwow?.Mensagem,
+              "primeiroNome",
+              Venda.EntregaNome.split(" ")[0]
+            );
+
+
+            // Dispara msg whats
+            const bodyWhats1 = `{"phone": "55${Venda.EntregaTelefone}", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
+
+            const resZAPI = await request
+              .post(
+                "https://d1-rastreio.onrender.com/enviaMsgAvaliacao"
+              )
+              .set("Content-Type", "application/json")
+              .set("Client-Token", `${tokenZapi}`)
+              .send(bodyWhats1);
+
+            }
+          }
+        
+
+
+        // Processa as vendas do lote atual
+        for (const venda of vendasFiltradasSSW) {
+          const vendaString = JSON.stringify(venda);
+          await enviaWhatsAvaliacao(
+            JSON.stringify(venda));
+        }
+
+        // Verifica se todos os registros foram processados
+        if (vendasFiltradasSSW.length < tamanhoLote) {
+          todasVendasProcessadas = true;
+        } else {
+          offset += tamanhoLote;
+        }
+      },
+      { timeout: 120000 }
+    );
+  }
+
+  const totalVendasParaUpdate = await prisma.venda.findMany({
+    select: {
+      Codigo: true,
+    },
+    where: {
+      DataHoraStatus: {
+        gt: dataLimite.toISOString(),
+      },
+      DescricaoStatus: "Enviado",
+      Cancelada: false,
+      TransportadoraCodigo: {
+        in: [122, 151, 112, 110, 120, 210, 223, 224],
+      },
+    },
+  });
+
+  console.log(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
+  return reply
+    .status(200)
+    .send(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
+});
+
+// Endpoint: Update Tracking Rastreio - fim
+
 // Endpoint: Retorna Vendas - inicio
 
 app.get("/vendas", async (request, reply) => {
