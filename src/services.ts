@@ -48,21 +48,3 @@ export const abrirProtocoloASC = async (foneClient: string) => {
 };
 
 // Criar uma tarefa no Asana
-export const criarTarefaAsana: (Codigo: string) => Promise<void>  = async () => {
-  const asanaToken = 'Bearer your-asana-token';
-  const url = 'https://app.asana.com/api/1.0/tasks';
-  
-  await request
-    .post(url)
-    .set('Authorization', asanaToken)
-    .send({
-      data: {
-        name: `Análise de jornada negativa - Pedido ${Codigo}`,
-        notes: `Pedido 1234 - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
-        projects: ['1208480182057658'], 
-        assignee: '1206778681943779',
-        followers: ['1208207258580881'],
-        workspace: '1208207335184759'
-      }
-    });
-};

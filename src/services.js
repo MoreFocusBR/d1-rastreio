@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.criarTarefaAsana = exports.abrirProtocoloASC = exports.sendWhatsAppMessage = void 0;
+exports.abrirProtocoloASC = exports.sendWhatsAppMessage = void 0;
 const request = require("superagent");
 // Endpoint para enviar mensagem via Z-API
 const sendWhatsAppMessage = async (foneClient, whatsContent) => {
@@ -46,21 +46,3 @@ const abrirProtocoloASC = async (foneClient) => {
 };
 exports.abrirProtocoloASC = abrirProtocoloASC;
 // Criar uma tarefa no Asana
-const criarTarefaAsana = async () => {
-    const asanaToken = 'Bearer your-asana-token';
-    const url = 'https://app.asana.com/api/1.0/tasks';
-    await request
-        .post(url)
-        .set('Authorization', asanaToken)
-        .send({
-        data: {
-            name: `Análise de jornada negativa - Pedido ${Codigo}`,
-            notes: `Pedido 1234 - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
-            projects: ['1208480182057658'],
-            assignee: '1206778681943779',
-            followers: ['1208207258580881'],
-            workspace: '1208207335184759'
-        }
-    });
-};
-exports.criarTarefaAsana = criarTarefaAsana;

@@ -34,10 +34,10 @@ export const handleIncomingMessage = async (
     // Contexto ativo, perguntar se quer continuar o assunto
     if (mensagemCliente === "SIM") {
       // Renova o contexto por mais 48 horas
-      await prisma.conversationContext.update({
+      /* await prisma.conversationContext.update({
         where: { phone },
         data: { expiresAt: dayjs().add(48, "hour").toDate() },
-      });
+      }); */
       await sendWhatsAppMessage(
         phone,
         "Ótimo! Vamos continuar com o mesmo assunto. Como posso ajudar?"
@@ -186,7 +186,13 @@ const handleNormalFlow = async (
 
     const request = require("superagent");
       
-    async function criarTarefaAsana(Codigo: string) {
+    async function criarTarefaAsana(context: any) {
+      // Pega venda do cliente
+    let contextoCodigoVenda: any = "";
+    contextoCodigoVenda = await prisma.conversationContext.findFirst({
+      where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
+      orderBy: { createdAt: "desc" },
+    });
       const asanaToken = 'Bearer your-asana-token';
       const url = 'https://app.asana.com/api/1.0/tasks';
     
@@ -195,8 +201,8 @@ const handleNormalFlow = async (
         .set('Authorization', asanaToken)
         .send({
           data: {
-            name: `Análise de jornada negativa - Pedido ${Codigo}`,
-            notes: `Pedido ${Codigo} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
+            name: `Análise de jornada negativa - Pedido ${contextoCodigoVenda.codigoVenda}`,
+            notes: `Pedido ${contextoCodigoVenda.codigoVenda} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
             projects: ['1208480182057658'],
             assignee: '1206778681943779',
             followers: ['1208207258580881'],

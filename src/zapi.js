@@ -23,15 +23,15 @@ const handleIncomingMessage = async (request, reply) => {
         // Contexto ativo, perguntar se quer continuar o assunto
         if (mensagemCliente === "SIM") {
             // Renova o contexto por mais 48 horas
-            await prisma.conversationContext.update({
-                where: { phone },
-                data: { expiresAt: (0, dayjs_1.default)().add(48, "hour").toDate() },
-            });
+            /* await prisma.conversationContext.update({
+              where: { phone },
+              data: { expiresAt: dayjs().add(48, "hour").toDate() },
+            }); */
             await (0, services_1.sendWhatsAppMessage)(phone, "Ótimo! Vamos continuar com o mesmo assunto. Como posso ajudar?");
         }
         else if (mensagemCliente === "NÃO") {
             // Redireciona para o SAC e apaga o contexto
-            await prisma.conversationContext.delete({ where: { phone } });
+            // await prisma.conversationContext.delete({ where: { phone } });
             await (0, services_1.sendWhatsAppMessage)(phone, "Para retirar suas dúvidas, conte sempre com nosso time do SAC no número 11930373935 😉\n\n");
         }
         else {
@@ -152,7 +152,13 @@ const handleNormalFlow = async (mensagemCliente, phone, context) => {
             orderBy: { createdAt: "desc" },
         });
         const request = require("superagent");
-        async function criarTarefaAsana(Codigo) {
+        async function criarTarefaAsana(context) {
+            // Pega venda do cliente
+            let contextoCodigoVenda = "";
+            contextoCodigoVenda = await prisma.conversationContext.findFirst({
+                where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
+                orderBy: { createdAt: "desc" },
+            });
             const asanaToken = 'Bearer your-asana-token';
             const url = 'https://app.asana.com/api/1.0/tasks';
             await request
@@ -160,8 +166,8 @@ const handleNormalFlow = async (mensagemCliente, phone, context) => {
                 .set('Authorization', asanaToken)
                 .send({
                 data: {
-                    name: `Análise de jornada negativa - Pedido ${Codigo}`,
-                    notes: `Pedido ${Codigo} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
+                    name: `Análise de jornada negativa - Pedido ${contextoCodigoVenda.codigoVenda}`,
+                    notes: `Pedido ${contextoCodigoVenda.codigoVenda} - Tarefa criada automaticamente após experiência negativa de um cliente. Precisa de atenção imediata.`,
                     projects: ['1208480182057658'],
                     assignee: '1206778681943779',
                     followers: ['1208207258580881'],
@@ -169,7 +175,6 @@ const handleNormalFlow = async (mensagemCliente, phone, context) => {
                 }
             });
         }
-        ;
         if (mensagemCliente === "1") {
             // Envia Cupom
             const whatsContent = "Ficamos felizes em oferecer uma forma de compensar sua experiência de compra. Aqui está um cupom exclusivo para você utilizar em nosso site: #EUVOLTEI. Esperamos que aproveite 😊";
