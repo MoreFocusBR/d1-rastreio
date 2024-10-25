@@ -4110,6 +4110,8 @@ app.post("/zapi2", async (req, reply) => {
 
   const mensagemCliente = text.message.trim().toUpperCase();
 
+  console.log(`Mensagem recebida: ${mensagemCliente}, do telefone: ${phone}`);
+
   const request = require("superagent");
 
   async function sendWhatsAppMessage(foneClient: string, whatsContent: string) {
