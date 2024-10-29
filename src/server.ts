@@ -3349,6 +3349,49 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               return JSON.stringify(resultadoFormatado);
             }
 
+            
+            // Busca Ocorrências TRANSCARAPIA
+            else if (TransportadoraNome == "TRANSCARAPIÁ") {
+              // Realizar a requisição para o endpoint TRANSCARAPIA
+              const resTRANSCARAPIA = await request
+                  .get(`https://transcarapia.eslcloud.com.br/api/customer/invoice_occurrences?invoice_key=${NotaFiscalEletronica}`)
+                  .set("Accept", "application/json")
+                  .set("Authorization", `Bearer 22601e0d21db357b485e2ea5a21202d0`);
+          
+              // Parsear o JSON de resposta
+              const TRANSCARAPIAocorrenciasJson = JSON.parse(resTRANSCARAPIA.text);
+          
+              // Verificar se há ocorrências no array `data`
+              if (TRANSCARAPIAocorrenciasJson && TRANSCARAPIAocorrenciasJson.data) {
+                  TRANSCARAPIAocorrenciasJson.data.forEach(
+                      (
+                          row: { occurrence: { description: string }; manifest: { vehicle_license_plate: string }; occurrence_at: string },
+                          index: number
+                      ) => {
+                          // Extrair as informações relevantes
+                          const { description } = row.occurrence;
+                          const { vehicle_license_plate } = row.manifest;
+                          const data = row.occurrence_at;
+          
+                          // Formatar o resultado
+                          resultadoFormatado += `Data/Hora da ocorrência: ${dayjs(data).format("DD/MM/YYYY")}\n`;
+                          resultadoFormatado += `Observação: \n`;
+                          resultadoFormatado += `Descrição: ${description}\n`;
+          
+                          // Adicionar um separador se houver mais ocorrências
+                          if (index !== TRANSCARAPIAocorrenciasJson.data.length - 1) {
+                              resultadoFormatado += "------\n";
+                          }
+                      }
+                  );
+              } else {
+                  // Caso não haja ocorrências
+                  resultadoFormatado += "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+              }
+          
+              return JSON.stringify(resultadoFormatado);
+          }
+
             // Busca Ocorrências JAMEF
             else if (TransportadoraNome == "JAMEF") {
               const payloadJAMEF000000 = {
@@ -3550,7 +3593,8 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
     TransportadoraVenda == "TPL" ||
     TransportadoraVenda == "PREMIUMLOGTRANSPORTERODOVIARIODECARGASLTDA" ||
     TransportadoraVenda == "TRANSFARRAPOSTRANSPORTESRODOVIARIOSDECARGASLTDA" ||
-    TransportadoraVenda == "FLYVILLETRANSPORTESLTDA"
+    TransportadoraVenda == "FLYVILLETRANSPORTESLTDA" ||
+    TransportadoraVenda == "TRANSCARAPIÁ"
   ) {
     // Mantem formato já pronto
   } else {
