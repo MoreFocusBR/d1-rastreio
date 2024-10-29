@@ -3374,7 +3374,7 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
                           const data = row.occurrence_at;
           
                           // Formatar o resultado
-                          resultadoFormatado += `Data/Hora da ocorrência: ${dayjs(data).format("DD/MM/YYYY")}\n`;
+                          resultadoFormatado += `Data/Hora da ocorrência: ${dayjs(data).format("DD/MM/YYYY HH:mm")}\n`;
                           resultadoFormatado += `Observação: \n`;
                           resultadoFormatado += `Descrição: ${description}\n`;
           
