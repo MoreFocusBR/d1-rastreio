@@ -503,36 +503,46 @@ app.get("/cargaVendas", async (request, reply) => {
             resListaIntegracaoJson.venda.forEach(async (venda: any) => {
               try {
                 interface Venda {
+                  Id: string; // Adicionado, pois é o campo @id no modelo
                   Codigo: number;
                   ClienteCodigo: number;
-                  ClienteTipoPessoa: string;
+                  ClienteTipoPessoa: string | null; // Pode ser nulo
                   ClienteDocumento: string;
-                  TransportadoraCodigo: number;
-                  DataVenda: string;
+                  TransportadoraCodigo: number | null; // Pode ser nulo
+                  TransportadoraNome: string | null; // Pode ser nulo
+                  DataVenda: string | null; // Pode ser nulo
                   Entrega: boolean;
-                  EntregaNome: string;
-                  EntregaEmail: string;
-                  NumeroObjeto: string;
-                  EntregaTelefone: string;
-                  EntregaLogradouro: string;
-                  EntregaLogradouroNumero: string;
-                  EntregaLogradouroComplemento: string;
-                  EntregaBairro: string;
-                  EntregaMunicipioNome: string;
-                  EntregaUnidadeFederativa: string;
-                  EntregaCEP: string;
-                  Observacoes: string;
-                  ObservacoesLoja: string;
-                  CodigoStatus: number;
-                  DescricaoStatus: string;
-                  DataHoraStatus: string;
-                  PrevisaoEntrega: string;
-                  CodigoNotaFiscal: number;
-                  DataEntrega: string;
+                  EntregaNome: string | null; // Pode ser nulo
+                  EntregaEmail: string | null; // Pode ser nulo
+                  NumeroObjeto: string | null; // Pode ser nulo
+                  EntregaTelefone: string | null; // Pode ser nulo
+                  EntregaLogradouro: string | null; // Pode ser nulo
+                  EntregaLogradouroNumero: string | null; // Pode ser nulo
+                  EntregaLogradouroComplemento: string | null; // Pode ser nulo
+                  EntregaBairro: string | null; // Pode ser nulo
+                  EntregaMunicipioNome: string | null; // Pode ser nulo
+                  EntregaUnidadeFederativa: string | null; // Pode ser nulo
+                  EntregaCEP: string | null; // Pode ser nulo
+                  Observacoes: string | null; // Pode ser nulo
+                  ObservacoesLoja: string | null; // Pode ser nulo
+                  CodigoStatus: number | null; // Pode ser nulo
+                  DescricaoStatus: string | null; // Pode ser nulo
+                  DataHoraStatus: string | null; // Pode ser nulo
+                  PrevisaoEntrega: string | null; // Pode ser nulo
+                  CodigoNotaFiscal: number | null; // Pode ser nulo
+                  DataEntrega: string | null; // Pode ser nulo
                   Cancelada: boolean;
-                  DataEnvio: string;
-                  NotaFiscalNumero: number;
-                  DataColeta: string;
+                  DataEnvio: string | null; // Pode ser nulo
+                  NotaFiscalNumero: number | null; // Pode ser nulo
+                  DataColeta: string | null; // Pode ser nulo
+                  AvaliacaoGoogle: string | null; // Pode ser nulo
+                  PrevisaoEntregaRastreio: string | null; // Pode ser nulo
+                  PrevisaoEntregaRastreioAviso: string | null; // Pode ser nulo
+                  LastMileRastreio: string | null; // Pode ser nulo
+                  LastMileRastreioAviso: string | null; // Pode ser nulo
+                  EntregueRastreio: string | null; // Pode ser nulo
+                  EntregueRastreioAviso: string | null; // Pode ser nulo
+                  AvaliacaoAviso: string | null; // Pode ser nulo
                 }
 
                 const {
