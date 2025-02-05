@@ -39,7 +39,7 @@ const authToken = "effca82a-7127-45de-9a53-b71fc01a9064";
 
 const tokenZapi = "F622e76b1e3f64e2a9517d207fe923fa5S";
 
-const API_URL = "https://d1-rastreio.onrender.com"; // https://d1-rastreio.onrender.com   http://localhost:3334
+const API_URL = "https://200.80.111.222:10066"; // https://d1-rastreio.onrender.com   http://localhost:3334
 
 // Configurações de transporte para o servidor SMTP
 const transporter = nodemailer.createTransport({
@@ -455,7 +455,7 @@ app.get("/cargaVendas", async (request, reply) => {
 
   const params = request.query as RouteParams;
   const codigoInicial = params.codigoInicial;
-  const codigoFinal = params.codigoFinal;
+  const codigoFinal = params.codigoFinal + 4; // + 4 é para garantir que não perca os registros que "pularam um dente da engrenagem"
 
   // busca fila de integração Vendas - inicio
 
@@ -799,9 +799,35 @@ app.get("/updateVendas", async (request, reply) => {
         );
       }
 
+      const bodyNfe = await requestSA
+      .get(`http://cloud01.alternativa.net.br:2086/root/nfe/${vendaJson.CodigoNotaFiscal}`)
+      .set("Accept", "application/json")
+      .set("accept-encoding", "gzip")
+      .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+
+      const xmlFN = bodyNfe.NotaFiscalXML;
+
+      const danfeNF = await requestSA
+      .post(`https://ws.meudanfe.com/api/v1/get/nfe/xmltodanfepdf/API`)
+      .set("Accept", "*/*")
+      .set("accept-encoding", "gzip")
+      .set("Content-Type", "text/plain")
+      .send(`${xmlFN}`);
+
+      const bodyWhatsNF = `{"phone": "5551991508579","document": "${whatsContent}","fileName": "NFe ${xmlFN}"}`;
+
+      const resZAPINF = await requestSA
+        .post(
+          "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-document/pdf"
+        )
+        .set("Content-Type", "application/json")
+        .set("Client-Token", `${tokenZapi}`)
+        .send(bodyWhatsNF);
+
+        
       const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
-      const resZAPI = await requestSA
+      const resZAP = await requestSA
         .post(
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
