@@ -837,7 +837,7 @@ app.get("/updateVendas", async (request, reply) => {
         
       const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
-/*      const resZAP = await requestSA
+      const resZAP = await requestSA
         .post(
           "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
         )
@@ -866,7 +866,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "application/json")
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhats2);
-       Desligando Whats para Renan e cliente */
+      /* Desligando Whats para Renan e cliente */
 
       // estouaqui6
       // Envio e-mail - início
@@ -936,7 +936,7 @@ app.get("/updateVendas", async (request, reply) => {
       }
       // Opções do e-mail
 
-/*      const mailOptionsRodrigo = {
+      const mailOptionsRodrigo = {
         from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `c.albuquerque.rodrigo@gmail.com`, // E-mail do destinatário
         subject: `${
@@ -959,7 +959,7 @@ app.get("/updateVendas", async (request, reply) => {
 
       enviarEmail(mailOptions);
 
-       Desligando email Renan 
+      /* Desligando email Renan 
       const mailOptionsRenan = {
         from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
         to: `renan@d1fitness.com.br`, // E-mail do destinatário
@@ -1607,7 +1607,7 @@ app.get("/updateRastreio", async (request, reply) => {
 
             // Dispara msg whats
             const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
-            /* desativando whats estou aqui normalizando
+
             const resZAPI = await request
               .post(
                 "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
@@ -1615,7 +1615,6 @@ app.get("/updateRastreio", async (request, reply) => {
               .set("Content-Type", "application/json")
               .set("Client-Token", `${tokenZapi}`)
               .send(bodyWhats1);
-              */
 
             // Disparo e-mail - inicio
             // estouaqui4
@@ -1707,9 +1706,7 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
-              /* desativando e-mail estou aqui normalizando
               enviarEmail(mailOptions);
-              */
             }
           } else if (
             momentoTracking == 2 &&
@@ -1778,7 +1775,7 @@ app.get("/updateRastreio", async (request, reply) => {
 
             // Dispara msg whats
             const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
-            /* desativando whats estou aqui normalizando
+
             const resZAPI = await request
               .post(
                 "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
@@ -1786,7 +1783,6 @@ app.get("/updateRastreio", async (request, reply) => {
               .set("Content-Type", "application/json")
               .set("Client-Token", `${tokenZapi}`)
               .send(bodyWhats1);
-              */
 
             // Disparo e-mail - inicio
             // estouaqui5
@@ -1968,9 +1964,7 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
-              /* desativando e-mail estou aqui normalizando
               enviarEmail(mailOptions);
-              */
             }
           } else if (
             momentoTracking == 3 &&
@@ -1995,7 +1989,7 @@ app.get("/updateRastreio", async (request, reply) => {
 
             // Dispara msg whats
             const bodyWhats1 = `{"phone": "55${Telefone}","message": "${whatsContentwow}"}`;
-            /* estou aqui normalizando
+
             const resZAPI = await request
               .post(
                 "https://api.z-api.io/instances/39BD5CDB5E0400B490BE0E63F29971E4/token/996973B6263DE0E95A59EF47/send-text"
@@ -2003,7 +1997,6 @@ app.get("/updateRastreio", async (request, reply) => {
               .set("Content-Type", "application/json")
               .set("Client-Token", `${tokenZapi}`)
               .send(bodyWhats1);
-              */
 
             // Disparo e-mail - inicio
             // estouaqui5
@@ -2090,9 +2083,7 @@ app.get("/updateRastreio", async (request, reply) => {
                 text: whatsContentwow,
                 html: emailContentWow,
               };
-              /* estou aqui normalizando
               enviarEmail(mailOptions);
-              */
             }
           }
         }
