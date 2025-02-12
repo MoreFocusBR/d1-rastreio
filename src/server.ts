@@ -810,19 +810,21 @@ app.get("/updateVendas", async (request, reply) => {
       }
 
       const bodyNfe = await requestSA
-      .get(`http://cloud01.alternativa.net.br:2086/root/nfe/${vendaJson.CodigoNotaFiscal}`)
-      .set("Accept", "application/json")
-      .set("accept-encoding", "gzip")
-      .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
+        .get(
+          `http://cloud01.alternativa.net.br:2086/root/nfe/${vendaJson.CodigoNotaFiscal}`
+        )
+        .set("Accept", "application/json")
+        .set("accept-encoding", "gzip")
+        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
 
       const xmlFN = bodyNfe.NotaFiscalXML;
 
       const danfeNF = await requestSA
-      .post(`https://ws.meudanfe.com/api/v1/get/nfe/xmltodanfepdf/API`)
-      .set("Accept", "*/*")
-      .set("accept-encoding", "gzip")
-      .set("Content-Type", "text/plain")
-      .send(`${xmlFN}`);
+        .post(`https://ws.meudanfe.com/api/v1/get/nfe/xmltodanfepdf/API`)
+        .set("Accept", "*/*")
+        .set("accept-encoding", "gzip")
+        .set("Content-Type", "text/plain")
+        .send(`${xmlFN}`);
 
       const bodyWhatsNF = `{"phone": "5551991508579","document": "${whatsContent}","fileName": "NFe ${xmlFN}"}`;
 
@@ -834,7 +836,6 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhatsNF);
 
-        
       const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
 
       const resZAP = await requestSA
@@ -3385,48 +3386,64 @@ app.get("/retornaStatusEntregaBlip", async (request, reply) => {
               return JSON.stringify(resultadoFormatado);
             }
 
-            
             // Busca Ocorrências TRANSCARAPIA
             else if (TransportadoraNome == "TRANSCARAPIÁ") {
               // Realizar a requisição para o endpoint TRANSCARAPIA
               const resTRANSCARAPIA = await request
-                  .get(`https://transcarapia.eslcloud.com.br/api/customer/invoice_occurrences?invoice_key=${NotaFiscalEletronica}`)
-                  .set("Accept", "application/json")
-                  .set("Authorization", `Bearer 22601e0d21db357b485e2ea5a21202d0`);
-          
+                .get(
+                  `https://transcarapia.eslcloud.com.br/api/customer/invoice_occurrences?invoice_key=${NotaFiscalEletronica}`
+                )
+                .set("Accept", "application/json")
+                .set(
+                  "Authorization",
+                  `Bearer 22601e0d21db357b485e2ea5a21202d0`
+                );
+
               // Parsear o JSON de resposta
-              const TRANSCARAPIAocorrenciasJson = JSON.parse(resTRANSCARAPIA.text);
-          
+              const TRANSCARAPIAocorrenciasJson = JSON.parse(
+                resTRANSCARAPIA.text
+              );
+
               // Verificar se há ocorrências no array `data`
-              if (TRANSCARAPIAocorrenciasJson && TRANSCARAPIAocorrenciasJson.data) {
-                  TRANSCARAPIAocorrenciasJson.data.forEach(
-                      (
-                          row: { occurrence: { description: string }; manifest: { vehicle_license_plate: string }; occurrence_at: string },
-                          index: number
-                      ) => {
-                          // Extrair as informações relevantes
-                          const { description } = row.occurrence;
-                          const { vehicle_license_plate } = row.manifest;
-                          const data = row.occurrence_at;
-          
-                          // Formatar o resultado
-                          resultadoFormatado += `Data/Hora da ocorrência: ${dayjs(data).format("DD/MM/YYYY HH:mm")}\n`;
-                          resultadoFormatado += `Observação: \n`;
-                          resultadoFormatado += `Descrição: ${description}\n`;
-          
-                          // Adicionar um separador se houver mais ocorrências
-                          if (index !== TRANSCARAPIAocorrenciasJson.data.length - 1) {
-                              resultadoFormatado += "------\n";
-                          }
-                      }
-                  );
+              if (
+                TRANSCARAPIAocorrenciasJson &&
+                TRANSCARAPIAocorrenciasJson.data
+              ) {
+                TRANSCARAPIAocorrenciasJson.data.forEach(
+                  (
+                    row: {
+                      occurrence: { description: string };
+                      manifest: { vehicle_license_plate: string };
+                      occurrence_at: string;
+                    },
+                    index: number
+                  ) => {
+                    // Extrair as informações relevantes
+                    const { description } = row.occurrence;
+                    const { vehicle_license_plate } = row.manifest;
+                    const data = row.occurrence_at;
+
+                    // Formatar o resultado
+                    resultadoFormatado += `Data/Hora da ocorrência: ${dayjs(
+                      data
+                    ).format("DD/MM/YYYY HH:mm")}\n`;
+                    resultadoFormatado += `Observação: \n`;
+                    resultadoFormatado += `Descrição: ${description}\n`;
+
+                    // Adicionar um separador se houver mais ocorrências
+                    if (index !== TRANSCARAPIAocorrenciasJson.data.length - 1) {
+                      resultadoFormatado += "------\n";
+                    }
+                  }
+                );
               } else {
-                  // Caso não haja ocorrências
-                  resultadoFormatado += "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
+                // Caso não haja ocorrências
+                resultadoFormatado +=
+                  "A movimentação da Nota Fiscal não foi identificada. Por favor tente novamente em algumas horas.";
               }
-          
+
               return JSON.stringify(resultadoFormatado);
-          }
+            }
 
             // Busca Ocorrências JAMEF
             else if (TransportadoraNome == "JAMEF") {
@@ -4155,22 +4172,21 @@ app.get("/posVendaTeste", async (req, reply) => {
   const params = req.query as RouteParams;
   const telefone = params.telefone;
   const nome = params.nome;
-  
+
   const request = require("superagent");
 
-    const url = `http://d1-rastreio.onrender.com/enviaMsgAvaliacao`;
+  const url = `http://d1-rastreio.onrender.com/enviaMsgAvaliacao`;
 
-    await request.post(url)
-    .send({
-      phone: `55${telefone}`,
-      text: { 
-        message: `E aí, ${nome}! Tudo certo? Queremos saber como foi sua experiência de compra na D1Fitness. 💪\n\n 1 Minha experiência foi top! 😀\n 2 Não curti muito a experiência 😕` },
-        codigoVenda: "0001"  
-      });
+  await request.post(url).send({
+    phone: `55${telefone}`,
+    text: {
+      message: `E aí, ${nome}! Tudo certo? Queremos saber como foi sua experiência de compra na D1Fitness. 💪\n\n 1 Minha experiência foi top! 😀\n 2 Não curti muito a experiência 😕`,
+    },
+    codigoVenda: "0001",
+  });
 
-    console.log(`Criado contexto teste para ${telefone}`);
-    return { status: `Criado contexto teste para ${telefone}` };
-  
+  console.log(`Criado contexto teste para ${telefone}`);
+  return { status: `Criado contexto teste para ${telefone}` };
 });
 // Chatbot pós-venda - fim
 
@@ -4213,6 +4229,12 @@ app.post("/zapi2", async (req, reply) => {
   });
 
   const now = new Date();
+
+  if (context) {
+    console.log(
+      `context.expiresAt: ${context.expiresAt}, context.context: ${context.context}`
+    );
+  }
 
   if (
     context &&
