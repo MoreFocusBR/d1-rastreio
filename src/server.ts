@@ -4249,13 +4249,13 @@ app.post("/zapi2", async (req, reply) => {
     ) {
       // Não há contexto prévio, segue o fluxo normal
       await handleNormalFlow(mensagemCliente, phone, context.context);
-    } // Não há contexto ativo, perguntar se quer continuar o último assunto
+    } /* // Não há contexto ativo, perguntar se quer continuar o último assunto
     else if (context) {
       await sendWhatsAppMessage(
         phone,
         "Você gostaria de continuar falando sobre o mesmo assunto? Responda com SIM ou NÃO."
       );
-    } else {
+    } */ else {
       // Não há contexto prévio, segue o fluxo normal
       await handleNormalFlow(mensagemCliente, phone, "");
     }
