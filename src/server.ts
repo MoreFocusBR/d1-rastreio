@@ -4225,7 +4225,7 @@ app.post("/zapi2", async (req, reply) => {
   // Verificar se há um contexto ativo
   const context = await prisma.conversationContext.findFirst({
     where: { phone },
-    orderBy: { createdAt: "desc" },
+    orderBy: { id: "desc" },
   });
 
   const now = new Date();
@@ -4294,7 +4294,7 @@ app.post("/zapi2", async (req, reply) => {
       let contextoCodigoVenda: any = "";
       contextoCodigoVenda = await prisma.conversationContext.findFirst({
         where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-        orderBy: { createdAt: "desc" },
+        orderBy: { id: "desc" },
       });
 
       // Experiencia POSITIVA
@@ -4336,7 +4336,7 @@ app.post("/zapi2", async (req, reply) => {
       let contextoCodigoVenda: any = "";
       contextoCodigoVenda = await prisma.conversationContext.findFirst({
         where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-        orderBy: { createdAt: "desc" },
+        orderBy: { id: "desc" },
       });
 
       if (mensagemCliente === "1") {
@@ -4393,7 +4393,7 @@ app.post("/zapi2", async (req, reply) => {
       let contextoCodigoVenda: any = "";
       contextoCodigoVenda = await prisma.conversationContext.findFirst({
         where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-        orderBy: { createdAt: "desc" },
+        orderBy: { id: "desc" },
       });
 
       const request = require("superagent");
@@ -4403,7 +4403,7 @@ app.post("/zapi2", async (req, reply) => {
         let contextoCodigoVenda: any = "";
         contextoCodigoVenda = await prisma.conversationContext.findFirst({
           where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-          orderBy: { createdAt: "desc" },
+          orderBy: { id: "desc" },
         });
         const asanaToken =
           "2/1206778681943779/1208481548535973:0d17a3b10b8d993a80eb3ce1b6f3ba77";

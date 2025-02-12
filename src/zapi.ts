@@ -18,7 +18,7 @@ export const handleIncomingMessage = async (
   // Verificar se há um contexto ativo
   const context = await prisma.conversationContext.findFirst({
     where: { phone },
-    orderBy: { createdAt: "desc" },
+    orderBy: { id: "desc" },
   });
 
   const now = new Date();
@@ -84,7 +84,7 @@ const handleNormalFlow = async (
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
       where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-      orderBy: { createdAt: "desc" },
+      orderBy: { id: "desc" },
     });
 
     // Experiencia POSITIVA
@@ -126,7 +126,7 @@ const handleNormalFlow = async (
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
       where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-      orderBy: { createdAt: "desc" },
+      orderBy: { id: "desc" },
     });
 
     if (mensagemCliente === "1") {
@@ -173,7 +173,7 @@ const handleNormalFlow = async (
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
       where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-      orderBy: { createdAt: "desc" },
+      orderBy: { id: "desc" },
     });
 
     const request = require("superagent");
@@ -183,7 +183,7 @@ const handleNormalFlow = async (
       let contextoCodigoVenda: any = "";
       contextoCodigoVenda = await prisma.conversationContext.findFirst({
         where: { phone: `${phone}`, NOT: [{ codigoVenda: null }] },
-        orderBy: { createdAt: "desc" },
+        orderBy: { id: "desc" },
       });
       const asanaToken =
         "2/1206778681943779/1208481548535973:0d17a3b10b8d993a80eb3ce1b6f3ba77";
