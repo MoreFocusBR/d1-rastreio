@@ -4286,7 +4286,7 @@ app.post("/zapi2", async (req, reply) => {
             expiresAt: dayjs().add(48, "hour").toDate(),
           },
         });
-        const whatsContent = `Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://form.respondi.app/CEAQHsaj?utm_source=${contextoCodigoVenda.codigoVenda} `;
+        const whatsContent = `Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://g.page/r/Cej0Ag3nMfH9EAE/review `;
         await sendWhatsAppMessage(phone, whatsContent);
       } else if (mensagemCliente === "2") {
         // Envia mensagem de desculpas e cria um contexto

@@ -59,12 +59,12 @@ export const handleIncomingMessage = async (
       // Não há contexto prévio, segue o fluxo normal
       await handleNormalFlow(mensagemCliente, phone, context.context);
     } // Não há contexto ativo, perguntar se quer continuar o último assunto
-    else if (context) {
+    /* else if (context) {
       await sendWhatsAppMessage(
         phone,
         "Você gostaria de continuar falando sobre o mesmo assunto? Responda com SIM ou NÃO."
       );
-    } else {
+    } */ else {
       // Não há contexto prévio, segue o fluxo normal
       await handleNormalFlow(mensagemCliente, phone, "");
     }
@@ -98,7 +98,7 @@ const handleNormalFlow = async (
           expiresAt: dayjs().add(48, "hour").toDate(),
         },
       });
-      const whatsContent = `Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://form.respondi.app/CEAQHsaj?utm_source=${contextoCodigoVenda.codigoVenda} `;
+      const whatsContent = `Que ótimo saber disso! 😀 Estamos sempre à disposição e esperamos vê-lo novamente em sua próxima compra. 🛍️ Não deixe de avaliar a sua experiência de compra clicando no link abaixo ⭐ \n\nhttps://g.page/r/Cej0Ag3nMfH9EAE/review `;
       await sendWhatsAppMessage(phone, whatsContent);
     } else if (mensagemCliente === "2") {
       // Envia mensagem de desculpas e cria um contexto
