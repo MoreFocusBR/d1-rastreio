@@ -4329,9 +4329,9 @@ app.post("/zapi2", async (req, reply) => {
         await sendWhatsAppMessage(phone, whatsContent);
       }
 
-      // Experiencia POSITIVA
+      // Experiencia NEGATIVA
     } else if (context && context === "posvenda-experienciaNegativa") {
-      // Pede pra avaliar no Respondi
+      
       // Pega venda do cliente
       let contextoCodigoVenda: any = "";
       contextoCodigoVenda = await prisma.conversationContext.findFirst({
@@ -4356,12 +4356,12 @@ app.post("/zapi2", async (req, reply) => {
         //Avisa que precisa de atendimento
 
         const whatsContent2 = `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${contextoCodigoVenda.codigoVenda}`;
-        //await sendWhatsAppMessage("555119930373935", whatsContent2);
+        await sendWhatsAppMessage("5551991508579", whatsContent2); // trocar pelo da Tamara
         // Opções do e-mail
 
         const mailOptionsRodrigo = {
           from: '"D1Fitness" <naoresponda@d1fitness.com.br>',
-          to: `tamara@d1fitness.com.br`, // E-mail do destinatário
+          to: `rodrigo@d1fitness.com.br`, // E-mail do destinatário
           subject: `Iniciar atendimento - Experiencia de compra ruim - Pedido ${contextoCodigoVenda.codigoVenda}`,
           text: `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${contextoCodigoVenda.codigoVenda}`,
           html: `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${contextoCodigoVenda.codigoVenda}`,
