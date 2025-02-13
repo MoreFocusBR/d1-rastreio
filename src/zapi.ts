@@ -80,6 +80,7 @@ const handleNormalFlow = async (
 ) => {
   const requestSA = require("superagent");
   if (context && context === "posvenda-avaliacao") {
+    console.log(`entrou no nó do contexto posvenda-avaliacao `);
     // Pega venda do cliente
     let contextoCodigoVenda: any = "";
     contextoCodigoVenda = await prisma.conversationContext.findFirst({
