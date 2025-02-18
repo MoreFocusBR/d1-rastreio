@@ -2546,7 +2546,7 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
 
             await prisma.conversationContext.create({
               data: {
-                phone: "555191508579",
+                phone: Venda.EntregaTelefone,
                 lastMessage: JSON.stringify(whatsContentwow),
                 context: "posvenda-avaliacao",
                 expiresAt: dayjs().add(48, "hour").toDate(),
@@ -2563,7 +2563,7 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
 
             
             // Dispara msg whats
-            const bodyWhats1 = `{"phone": "555191508579", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
+            const bodyWhats1 = `{"phone": "${Venda.EntregaTelefone}", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
             // PRODUÇÂO: const bodyWhats1 = `{"phone": "55${Venda.EntregaTelefone}", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
             // Estou aqui envio avaliação 25 dias
             const resZAPI = await request
