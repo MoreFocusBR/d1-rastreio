@@ -2544,20 +2544,20 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
               Venda.EntregaNome.split(" ")[0]
             );
 
-            await prisma.conversationContext.create({
+            /* Criando duas vezes o context await prisma.conversationContext.create({
               data: {
                 phone: Venda.EntregaTelefone,
                 lastMessage: JSON.stringify(whatsContentwow),
                 context: "posvenda-avaliacao",
                 expiresAt: dayjs().add(48, "hour").toDate(),
               },
-            });
+            }); */
 
 
             await prisma.venda.update({
               where: { Codigo: Venda.Codigo },
               data: {
-                AvaliacaoAviso: (dayjs().add(48, "hour").toDate()).toISOString(),
+                AvaliacaoAviso: (dayjs().toDate()).toISOString(),
               },
             })
 
