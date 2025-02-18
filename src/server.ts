@@ -826,7 +826,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Content-Type", "text/plain")
         .send(`${xmlFN}`);
 
-      const bodyWhatsNF = `{"phone": "5551991508579","document": "${whatsContent}","fileName": "NFe ${xmlFN}"}`;
+      const bodyWhatsNF = `{"phone": "555191508579","document": "${whatsContent}","fileName": "NFe ${xmlFN}"}`;
 
       const resZAPINF = await requestSA
         .post(
@@ -836,7 +836,7 @@ app.get("/updateVendas", async (request, reply) => {
         .set("Client-Token", `${tokenZapi}`)
         .send(bodyWhatsNF);
 
-      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
+      const bodyWhats = `{"phone": "555191508579","message": "${whatsContent}"}`;
 
       const resZAP = await requestSA
         .post(
@@ -996,7 +996,7 @@ app.get("/updateVendas", async (request, reply) => {
 
       // Mensagem Wow - Envia via get /updateRastreio
 
-      const bodyWhats = `{"phone": "5551991508579","message": "${whatsContent}"}`;
+      const bodyWhats = `{"phone": "555191508579","message": "${whatsContent}"}`;
 
       const resZAPI = await requestSA
         .post(
@@ -2228,7 +2228,7 @@ app.get("/updateRastreio", async (request, reply) => {
                         // #estouaqui
                         if (!jaAvisouPrevisaoEntrega) {
                           // Envia ocorrencias pro Whats
-                          const telefoneRodrigo = "51991508579";
+                          const telefoneRodrigo = "5191508579";
                           const emailRodrigo =
                             "c.albuquerque.rodrigo@gmail.com";
                           const telefoneRenan = "48988038546";
@@ -2291,7 +2291,7 @@ app.get("/updateRastreio", async (request, reply) => {
                         // #estouaqui
                         if (!jaAvisouLastMile) {
                           // Envia ocorrencias pro Whats
-                          const telefoneRodrigo = "51991508579";
+                          const telefoneRodrigo = "5191508579";
                           const emailRodrigo =
                             "c.albuquerque.rodrigo@gmail.com";
                           const telefoneRenan = "48988038546";
@@ -2353,7 +2353,7 @@ app.get("/updateRastreio", async (request, reply) => {
                         // #estouaqui2
                         if (!jaAvisouEntregue) {
                           // Envia ocorrencias pro Whats
-                          const telefoneRodrigo = "51991508579";
+                          const telefoneRodrigo = "5191508579";
                           const emailRodrigo =
                             "c.albuquerque.rodrigo@gmail.com";
                           const telefoneRenan = "48988038546";
@@ -2497,7 +2497,7 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
   const dataLimite = new Date();
   dataLimite.setDate(dataLimite.getDate() - params.diasPeriodo); // Subtrai X dias da data atual
   const dataLimiteFim = new Date();
-  dataLimiteFim.setDate(dataLimiteFim.getDate() - (params.diasPeriodo + 1)); // Subtrai X dias da data atual
+  dataLimiteFim.setDate(dataLimiteFim.getDate() - (params.diasPeriodo - 1)); // Subtrai X dias da data atual
 
   // Define o tamanho do lote para a paginação
   const tamanhoLote = 30; // Pode ajustar conforme necessário
@@ -2512,74 +2512,18 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
           take: tamanhoLote,
           skip: offset,
           where: {
-            DataHoraStatus: {
+            DataVenda: {
               gte: dataLimite.toISOString(),
               lte: dataLimiteFim.toISOString(),
             },
             DescricaoStatus: "Enviado",
             Cancelada: false,
-            NOT: [{ AvaliacaoAviso: null }],
+            AvaliacaoAviso: null,
           },
           orderBy: {
             Codigo: "desc",
           },
         });
-
-        interface ItensVenda {
-          Codigo: number;
-          ProdutoReferencia: string;
-          ProdutoBarras: string;
-          ProdutoBundleCodigo: number;
-          VendaCodigo: number;
-          ProdutoCodigo: number;
-          PrecoUnitarioVenda: string;
-          PrecoUnitarioCusto: string;
-          EmbaladoParaPresente: boolean;
-          ValorEmbalagemPresente: string;
-          Quantidade: string;
-          AtributosEspeciais: string;
-          ItemNome: string;
-          ItemDescontoPercentual: string;
-          ItemDescontoValor: string;
-          ItemValorBruto: string;
-          ItemValorLiquido: string;
-          Servico: boolean;
-          Movimentacao: object;
-        }
-        interface VendaInterface {
-          Codigo: number;
-          ClienteCodigo: number;
-          ClienteDocumento: string;
-          TransportadoraCodigo: number | null;
-          TransportadoraNome: string | null;
-          DataVenda: string | null;
-          Entrega: boolean;
-          EntregaNome: string | null;
-          EntregaEmail: string | null;
-          NumeroObjeto: string | null;
-          EntregaTelefone: string | null;
-          EntregaLogradouro: string | null;
-          EntregaLogradouroNumero: string | null;
-          EntregaLogradouroComplemento: string | null;
-          EntregaBairro: string | null;
-          EntregaMunicipioNome: string | null;
-          EntregaUnidadeFederativa: string | null;
-          EntregaCEP: string | null;
-          Observacoes: string | null;
-          ObservacoesLoja: string | null;
-          CodigoStatus: number | null;
-          DescricaoStatus: string | null;
-          DataHoraStatus: string | null;
-          PrevisaoEntrega: string | null;
-          PrevisaoEntregaRastreio: string | null;
-          CodigoNotaFiscal: number | null;
-          DataEntrega: string | null;
-          Cancelada: boolean;
-          DataEnvio: string | null;
-          NotaFiscalNumero: number | null;
-          DataColeta: string | null;
-          ItensVenda: ItensVenda[];
-        }
 
         async function enviaWhatsAvaliacao(VendaString: any) {
           const Venda = JSON.parse(VendaString);
@@ -2600,9 +2544,28 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
               Venda.EntregaNome.split(" ")[0]
             );
 
-            // Dispara msg whats
-            const bodyWhats1 = `{"phone": "55${Venda.EntregaTelefone}", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
+            await prisma.conversationContext.create({
+              data: {
+                phone: "555191508579",
+                lastMessage: JSON.stringify(whatsContentwow),
+                context: "posvenda-avaliacao",
+                expiresAt: dayjs().add(48, "hour").toDate(),
+              },
+            });
 
+
+            await prisma.venda.update({
+              where: { Codigo: Venda.Codigo },
+              data: {
+                AvaliacaoAviso: (dayjs().add(48, "hour").toDate()).toISOString(),
+              },
+            })
+
+            
+            // Dispara msg whats
+            const bodyWhats1 = `{"phone": "555191508579", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
+            // PRODUÇÂO: const bodyWhats1 = `{"phone": "55${Venda.EntregaTelefone}", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
+            // Estou aqui envio avaliação 25 dias
             const resZAPI = await request
               .post("https://d1-rastreio.onrender.com/enviaMsgAvaliacao")
               .set("Content-Type", "application/json")
@@ -2628,26 +2591,11 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
     );
   }
 
-  const totalVendasParaUpdate = await prisma.venda.findMany({
-    select: {
-      Codigo: true,
-    },
-    where: {
-      DataHoraStatus: {
-        gt: dataLimite.toISOString(),
-      },
-      DescricaoStatus: "Enviado",
-      Cancelada: false,
-      TransportadoraCodigo: {
-        in: [122, 151, 112, 110, 120, 210, 223, 224],
-      },
-    },
-  });
-
-  console.log(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
+  
+  console.log(`Mensagens avaliação enviadas`);
   return reply
     .status(200)
-    .send(`Vendas para atualizar: ${totalVendasParaUpdate.length}`);
+    .send(`Mensagens avaliação enviadas`);
 });
 
 // Endpoint: Update Tracking Rastreio - fim
@@ -4038,7 +3986,7 @@ app.post("/botpress", async (request, reply) => {
 
     await prisma.conversationContext.create({
       data: {
-        phone: "5551991508579",
+        phone: "555191508579",
         lastMessage: JSON.stringify(request.body),
         context: "Experiência positiva",
         expiresAt: dayjs().add(48, "hour").toDate(),
@@ -4087,7 +4035,7 @@ app.post("/whatsrastreio", async (request, reply) => {
     }
 
     // const bodyWhats = `{"phone": "5548988038546","message": "Agente: ${data.respondent.respondent_utms.utm_source}\nProtocolo: ${data.respondent.respondent_utms.utm_campaign}\nNota: ${data.respondent.answers["Avalie o atendimento que você recebeu no Whatsapp!"]}\nSugestão: ${data.respondent.answers["Quer deixar alguma sugestão pra gente?"]} "}`;
-    const bodyWhats = `{"phone": "5551991508579","message": "${mensagem}"}`;
+    const bodyWhats = `{"phone": "555191508579","message": "${mensagem}"}`;
 
     const resZAPI = await requestSA
       .post(
@@ -4222,9 +4170,13 @@ app.post("/zapi2", async (req, reply) => {
     console.log(whatsContent);
   }
 
+  const phonelast8Digits = phone.slice(-8);
+
   // Verificar se há um contexto ativo
   const context = await prisma.conversationContext.findFirst({
-    where: { phone },
+    where: { phone: {
+      contains: phonelast8Digits
+    } },
     orderBy: { id: "desc" },
   });
 
@@ -4356,7 +4308,7 @@ app.post("/zapi2", async (req, reply) => {
         //Avisa que precisa de atendimento
 
         const whatsContent2 = `Abrir atendimento no ASC sobre experiência de compra ruim. Telefone cliente: ${phone}, Pedido: ${contextoCodigoVenda.codigoVenda}`;
-        await sendWhatsAppMessage("5551991508579", whatsContent2); // trocar pelo da Tamara
+        await sendWhatsAppMessage("555191508579", whatsContent2); // trocar pelo da Tamara
         // Opções do e-mail
 
         const mailOptionsRodrigo = {
