@@ -446,7 +446,8 @@ app.get("/redundanciaCargaVendas", async (req, reply) => {
 // Endpoint: Carga inicial Vendas - início
 
 app.get("/cargaVendas", async (request, reply) => {
-  const maxRegistros = request.headers.maxRegistros;
+  const maxRegistros = Number(request.headers.maxregistros) || 100; // Usando o header e fornecendo valor padrão
+  const requestSuperagent = require("superagent");
 
   interface RouteParams {
     codigoInicial: number;
@@ -454,187 +455,125 @@ app.get("/cargaVendas", async (request, reply) => {
   }
 
   const params = request.query as RouteParams;
-  const codigoInicial = params.codigoInicial;
-  const codigoFinal = params.codigoFinal + 4; // + 4 é para garantir que não perca os registros que "pularam um dente da engrenagem"
+  let codigoInicial = Number(params.codigoInicial) || 1;
+  let codigoFinal = Number(params.codigoFinal) || codigoInicial + maxRegistros - 1;
+  codigoFinal += 4; // + 4 é para garantir que não perca os registros
 
   // busca fila de integração Vendas - inicio
-
   async function pegaVenda(Codigo: number) {
     try {
-      const request = require("superagent");
-      const resVenda = await request
+      const resVenda = await requestSuperagent
         .get(`http://cloud01.alternativa.net.br:2086/root/venda/${Codigo}`)
         .set("Accept", "application/json")
         .set("accept-encoding", "gzip")
-        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs");
-      //.set("Limit", "1");
-
-      //resVenda.body;
+        .set("X-Token", "7Ugl10M0tNc4M8KxOk4q3K4f55mVBB2Rlw1OhI3WXYS0vRs")
+        .timeout({ response: 10000, deadline: 15000 }); // Adicionando timeout
 
       if (resVenda.status == 200) {
-        return JSON.stringify(resVenda.body);
+        return resVenda.body; // Retornando diretamente o objeto, não stringify
       } else {
-        throw new Error("Erro ao obter o lista integração.");
+        throw new Error(`Status inesperado: ${resVenda.status}`);
       }
     } catch (err) {
-      console.error(err);
+      console.error(`Erro ao buscar venda ${Codigo}:`, console.error( "Erro ao buscar venda:", err) );
+      return null;
     }
   }
-
-  // busca fila de integração Vendas - fim
 
   // consome cada item da fila de integração Vendas - inicio
-
   async function mainConsomeLista(codigoInicial: number, codigoFinal: number) {
+    const resultados = [];
+    
     for (let Codigo = codigoInicial; Codigo <= codigoFinal; Codigo++) {
-      const existingRecord = await prisma.venda.findFirst({
-        where: {
-          Codigo: Codigo * 1,
-        },
-      });
+      try {
+        const existingRecord = await prisma.venda.findFirst({
+          where: { Codigo: Codigo },
+        });
 
-      if (!existingRecord) {
-        const resVenda = await pegaVenda(Codigo);
+        if (!existingRecord) {
+          const resVenda = await pegaVenda(Codigo);
 
-        if (resVenda) {
-          const resListaIntegracaoJson = await JSON.parse(resVenda);
-
-          if (resListaIntegracaoJson.venda != "") {
-            resListaIntegracaoJson.venda.forEach(async (venda: any) => {
+          if (resVenda?.venda) {
+            for (const venda of resVenda.venda) {
               try {
-                interface Venda {
-                  Id: string; // Adicionado, pois é o campo @id no modelo
-                  Codigo: number;
-                  ClienteCodigo: number;
-                  ClienteTipoPessoa: string | null; // Pode ser nulo
-                  ClienteDocumento: string;
-                  TransportadoraCodigo: number | null; // Pode ser nulo
-                  TransportadoraNome: string | null; // Pode ser nulo
-                  DataVenda: string | null; // Pode ser nulo
-                  Entrega: boolean;
-                  EntregaNome: string | null; // Pode ser nulo
-                  EntregaEmail: string | null; // Pode ser nulo
-                  NumeroObjeto: string | null; // Pode ser nulo
-                  EntregaTelefone: string | null; // Pode ser nulo
-                  EntregaLogradouro: string | null; // Pode ser nulo
-                  EntregaLogradouroNumero: string | null; // Pode ser nulo
-                  EntregaLogradouroComplemento: string | null; // Pode ser nulo
-                  EntregaBairro: string | null; // Pode ser nulo
-                  EntregaMunicipioNome: string | null; // Pode ser nulo
-                  EntregaUnidadeFederativa: string | null; // Pode ser nulo
-                  EntregaCEP: string | null; // Pode ser nulo
-                  Observacoes: string | null; // Pode ser nulo
-                  ObservacoesLoja: string | null; // Pode ser nulo
-                  CodigoStatus: number | null; // Pode ser nulo
-                  DescricaoStatus: string | null; // Pode ser nulo
-                  DataHoraStatus: string | null; // Pode ser nulo
-                  PrevisaoEntrega: string | null; // Pode ser nulo
-                  CodigoNotaFiscal: number | null; // Pode ser nulo
-                  DataEntrega: string | null; // Pode ser nulo
-                  Cancelada: boolean;
-                  DataEnvio: string | null; // Pode ser nulo
-                  NotaFiscalNumero: number | null; // Pode ser nulo
-                  DataColeta: string | null; // Pode ser nulo
-                  AvaliacaoGoogle: string | null; // Pode ser nulo
-                  PrevisaoEntregaRastreio: string | null; // Pode ser nulo
-                  PrevisaoEntregaRastreioAviso: string | null; // Pode ser nulo
-                  LastMileRastreio: string | null; // Pode ser nulo
-                  LastMileRastreioAviso: string | null; // Pode ser nulo
-                  EntregueRastreio: string | null; // Pode ser nulo
-                  EntregueRastreioAviso: string | null; // Pode ser nulo
-                  AvaliacaoAviso: string | null; // Pode ser nulo
-                }
-
-                const {
-                  Codigo,
-                  ClienteCodigo,
-                  ClienteTipoPessoa,
-                  ClienteDocumento,
-                  TransportadoraCodigo,
-                  DataVenda,
-                  Entrega,
-                  EntregaNome,
-                  EntregaEmail,
-                  NumeroObjeto,
-                  EntregaTelefone,
-                  EntregaLogradouro,
-                  EntregaLogradouroNumero,
-                  EntregaLogradouroComplemento,
-                  EntregaBairro,
-                  EntregaMunicipioNome,
-                  EntregaUnidadeFederativa,
-                  EntregaCEP,
-                  Observacoes,
-                  ObservacoesLoja,
-                  CodigoStatus,
-                  DescricaoStatus,
-                  DataHoraStatus,
-                  PrevisaoEntrega,
-                  CodigoNotaFiscal,
-                  DataEntrega,
-                  Cancelada,
-                  DataEnvio,
-                  NotaFiscalNumero,
-                  DataColeta,
-                } = venda as Venda;
-
                 console.log("Inserindo Venda: " + Codigo);
-
-                await prisma.venda.create({
+                
+                const createdVenda = await prisma.venda.create({
                   data: {
-                    Codigo,
-                    ClienteCodigo,
-                    ClienteTipoPessoa,
-                    ClienteDocumento,
-                    TransportadoraCodigo,
-                    DataVenda,
-                    Entrega,
-                    EntregaNome,
-                    EntregaEmail,
-                    NumeroObjeto,
-                    EntregaTelefone,
-                    EntregaLogradouro,
-                    EntregaLogradouroNumero,
-                    EntregaLogradouroComplemento,
-                    EntregaBairro,
-                    EntregaMunicipioNome,
-                    EntregaUnidadeFederativa,
-                    EntregaCEP,
-                    Observacoes,
-                    ObservacoesLoja,
-                    CodigoStatus,
-                    DescricaoStatus,
-                    DataHoraStatus,
-                    PrevisaoEntrega,
-                    CodigoNotaFiscal,
-                    DataEntrega,
-                    Cancelada,
-                    DataEnvio,
-                    NotaFiscalNumero,
-                    DataColeta,
+                    Codigo: venda.Codigo,
+                    ClienteCodigo: venda.ClienteCodigo,
+                    ClienteTipoPessoa: venda.ClienteTipoPessoa,
+                    ClienteDocumento: venda.ClienteDocumento,
+                    TransportadoraCodigo: venda.TransportadoraCodigo,
+                    DataVenda: venda.DataVenda,
+                    Entrega: venda.Entrega,
+                    EntregaNome: venda.EntregaNome,
+                    EntregaEmail: venda.EntregaEmail,
+                    NumeroObjeto: venda.NumeroObjeto,
+                    EntregaTelefone: venda.EntregaTelefone,
+                    EntregaLogradouro: venda.EntregaLogradouro,
+                    EntregaLogradouroNumero: venda.EntregaLogradouroNumero,
+                    EntregaLogradouroComplemento: venda.EntregaLogradouroComplemento,
+                    EntregaBairro: venda.EntregaBairro,
+                    EntregaMunicipioNome: venda.EntregaMunicipioNome,
+                    EntregaUnidadeFederativa: venda.EntregaUnidadeFederativa,
+                    EntregaCEP: venda.EntregaCEP,
+                    Observacoes: venda.Observacoes,
+                    ObservacoesLoja: venda.ObservacoesLoja,
+                    CodigoStatus: venda.CodigoStatus,
+                    DescricaoStatus: venda.DescricaoStatus,
+                    DataHoraStatus: venda.DataHoraStatus,
+                    PrevisaoEntrega: venda.PrevisaoEntrega,
+                    CodigoNotaFiscal: venda.CodigoNotaFiscal,
+                    DataEntrega: venda.DataEntrega,
+                    Cancelada: venda.Cancelada,
+                    DataEnvio: venda.DataEnvio,
+                    NotaFiscalNumero: venda.NotaFiscalNumero,
+                    DataColeta: venda.DataColeta,
                   },
                 });
-              } catch (error) {
-                console.error(error);
+                
+                resultados.push({ success: true, codigo: Codigo, venda: createdVenda });
+              } catch (createError) {
+                console.error(`Erro ao criar venda ${Codigo}:`, createError);
+                resultados.push({ success: false, codigo: Codigo, error: console.error('Erro no endpoint /cargaVendas:', createError) });
               }
-            });
+            }
+          } else {
+            resultados.push({ success: false, codigo: Codigo, error: 'Dados de venda não encontrados' });
           }
         } else {
-          console.error("Erro ao obter o lista integração.");
-          return;
+          console.log(`Venda ${Codigo} já existe`);
+          resultados.push({ success: true, codigo: Codigo, exists: true });
         }
-      } else {
-        console.log(`Venda ${Codigo} já existe`);
+      } catch (error) {
+        console.error(`Erro geral no processamento da venda ${Codigo}:`, error);
+        resultados.push({ success: false, codigo: Codigo, error: console.error('Erro no endpoint /cargaVendas:', error) });
       }
     }
+    
+    return resultados;
   }
 
-  // consome cada item da fila de integração Vendas - fim
-
-  mainConsomeLista(codigoInicial, codigoFinal);
-
-  const numeroDeVendas = await prisma.venda.count();
-  return { numeroDeVendas };
+  try {
+    const resultados = await mainConsomeLista(codigoInicial, codigoFinal);
+    const numeroDeVendas = await prisma.venda.count();
+    
+    return reply.status(200).send({
+      success: true,
+      processados: resultados.length,
+      sucessos: resultados.filter(r => r.success).length,
+      falhas: resultados.filter(r => !r.success).length,
+      numeroDeVendas,
+      detalhes: resultados
+    });
+  } catch (error) {
+    console.error('Erro no endpoint /cargaVendas:', error);
+    return reply.status(500).send({
+      success: false,
+      error: console.error('Erro no endpoint /cargaVendas:', error)
+    });
+  }
 });
 
 // Endpoint: Carga inicial Vendas - fim
