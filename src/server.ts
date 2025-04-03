@@ -425,7 +425,7 @@ app.get("/redundanciaCargaVendas", async (req, reply) => {
     const request = require("superagent");
     const resVenda = await request
       .get(
-        `https://d1-rastreio.onrender.com/cargaVendas?codigoInicial=${
+        `http://200.80.111.222:10066/cargaVendas?codigoInicial=${
           ultimaVenda?.Codigo - 100
         }&codigoFinal=${ultimaVenda?.Codigo}`
       )
@@ -2567,7 +2567,7 @@ app.get("/updateRastreioAvaliacao", async (request, reply) => {
             // PRODUÇÂO: const bodyWhats1 = `{"phone": "55${Venda.EntregaTelefone}", "text":{"message": "${whatsContentwow}"}, "codigoVenda": "${Venda.Codigo}"}`;
             // Estou aqui envio avaliação 25 dias
             const resZAPI = await request
-              .post("https://d1-rastreio.onrender.com/enviaMsgAvaliacao")
+              .post("http://200.80.111.222:10066/enviaMsgAvaliacao")
               .set("Content-Type", "application/json")
               .set("Client-Token", `${tokenZapi}`)
               .send(bodyWhats1);
@@ -3900,7 +3900,7 @@ app.post("/zapi", async (request, reply) => {
         // Busca ocorrências
         const resOcorrencias = await requestSA
           .get(
-            `https://d1-rastreio.onrender.com/retornaStatusEntregaBlip?cpfcnpj=${cpfcnpf}&canal=WhatsApp-2`
+            `http://200.80.111.222:10066/retornaStatusEntregaBlip?cpfcnpj=${cpfcnpf}&canal=WhatsApp-2`
           )
           .set("Content-Type", "application/json");
 
